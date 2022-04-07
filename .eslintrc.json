@@ -1,0 +1,23 @@
+{
+    "env": {
+        "es6": true,
+        "node": true,
+        "jest": true
+    },
+    "parserOptions": {
+        "ecmaVersion": 2018
+    },
+    "extends": ["plugin:prettier/recommended"],
+    "rules": {
+        "prettier/prettier": ["warn"],
+        "no-dupe-else-if": "warn",
+        "no-undef": "error",
+        "no-setter-return": "warn",
+        "no-import-assign": "warn",
+        "no-console": "off",
+        "no-unused-vars": "warn",
+        "linebreak-style": ["error", "unix"],
+        "semi": ["warn", "never"],
+        "quote-props": ["warn", "as-needed"]
+    }
+}

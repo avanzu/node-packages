@@ -1,0 +1,19 @@
+{
+  "name": "root",
+  "private": true,
+  "devDependencies": {
+    "eslint": "^8.12.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "jest": "^27.5.1",
+    "jest-junit": "^13.1.0",
+    "lerna": "^4.0.0",
+    "prettier": "^2.6.2",
+    "trace-unhandled": "^2.0.1"
+  },
+  "scripts": {
+    "version": "lerna version  -y --conventional-commits --loglevel verbose",
+    "publish": "lerna publish from-package -y --loglevel verbose",
+    "test" : "lerna run test"
+  }
+}

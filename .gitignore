@@ -1,0 +1,14 @@
+.env
+node_modules
+*.log
+.npmrc
+junit.xml
+/migrations
+*.tfstate
+*.tfstate.backup
+*~
+.idea
+certs
+tinker.js
+**/coverage
+**/junit.xml
