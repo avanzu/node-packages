@@ -1,5 +1,5 @@
 const { SenderEvents } = require('rhea')
-const { inspect, debug } = require('./inspect')('useSender')
+const { inspect, debug, notice } = require('./inspect')('useSender')
 
 module.exports = () => {
     const openSender = (connection, options) => {
@@ -8,7 +8,7 @@ module.exports = () => {
 
         sender.on(SenderEvents.senderError, console.error)
 
-        sender.on(SenderEvents.accepted, inspect('Sender Accepted: %o'))
+        sender.on(SenderEvents.accepted, notice('Sender Accepted'))
         sender.on(SenderEvents.rejected, inspect('Sender Rejected: %s'))
         sender.on(SenderEvents.released, inspect('Sender Released: %s'))
 
