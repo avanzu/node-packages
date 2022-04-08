@@ -32,7 +32,8 @@
   "dependencies": {
     "debug": "^4.3.4",
     "ramda": "^0.28.0",
-    "rhea": "^3.0.0"
+    "rhea": "^3.0.0",
+    "nanoid": "^3.3.2"
   },
   "devDependencies": {}
 }
