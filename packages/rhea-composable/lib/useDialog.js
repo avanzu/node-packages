@@ -1,12 +1,13 @@
-const { debug, inspect } = require('./inspect')('useDialog')
+const { debug, inspect, notice } = require('./inspect')('useDialog')
 const { nanoid } = require('nanoid')
 const useRequests = require('./useRequests')
 const useSender = require('./useSender')
 const useReceiver = require('./useReceiver')
 const { ReceiverEvents } = require('rhea')
+const { requestTimedOut } = require('./errors')
 
 module.exports = (connection) => {
-    const { storeRequest, dropRequest, lookupRequest } = useRequests()
+    const { storeRequest, dropRequest, lookupRequest, storeTimeout } = useRequests()
     const { openReceiver, oneUp, allDone, noLuck } = useReceiver(connection)
     const { openSender } = useSender(connection)
 
@@ -25,36 +26,60 @@ module.exports = (connection) => {
 
         const onMesssage = (context) => {
             const { message, delivery } = context
-            const { correlation_id } = message
+            const { correlation_id, ttl } = message
+
+            debug('Message [%s] with TTL of %sms received', correlation_id, ttl)
 
             lookupRequest(correlation_id)
+                .then(notice(`Resolving request [${correlation_id}]`))
                 .then(({ onSuccess }) => onSuccess(message))
                 .then(() => dropRequest(correlation_id))
-                .then(() => receiver.add_credit(1))
                 .then(allDone(delivery), noLuck(delivery))
                 .then(oneUp(receiver))
         }
 
-        const replyTo = () => receiver.source.address
+        const replyTo = new Promise((resolve) => {
+            receiver.once(ReceiverEvents.receiverOpen, () => resolve(receiver.source.address))
+        })
 
         receiver.on(ReceiverEvents.message, onMesssage)
 
-        const messageOf = (cid, payload) => ({
-            ...payload,
-            reply_to: replyTo(),
-            correlation_id: cid,
-            message_id: nanoid(),
-        })
+        const messageOf = (cid, payload) =>
+            replyTo.then((reply_to) => ({
+                ttl: 5000,
+                ...payload,
+                reply_to,
+                correlation_id: cid,
+                message_id: nanoid(),
+            }))
+
+        const autoExpire = ({ key, message, delivery }) => {
+            const { ttl } = message
+            const conclude = ({ onError }) => onError(requestTimedOut(key, ttl))
+            const drop = () => dropRequest(key)
+            const settle = () => () => delivery.update(true)
+            const expire = () =>
+                Promise.resolve(key)
+                    .then(inspect('Expiring request [%s]'))
+                    .then(lookupRequest)
+                    .then(conclude, settle)
+                    .then(drop)
+
+            storeTimeout(key, setTimeout(expire, ttl))
+        }
 
         const send = (payload) =>
-            new Promise((resolve, reject) => {
-                const cid = nanoid()
-                const message = messageOf(cid, payload)
+            new Promise((onSuccess, onError) => {
+                const key = nanoid()
 
-                storeRequest(cid, resolve, reject, message).then((message) => sender.send(message))
+                messageOf(key, payload)
+                    .then(inspect('Sending message %o'))
+                    .then((message) => ({ message, delivery: sender.send(message) }))
+                    .then((receipt) => storeRequest({ key, onSuccess, onError, ...receipt }))
+                    .then(autoExpire)
             })
 
-        return { send }
+        return { send, sender, receiver }
     }
 
     return { openDialog }
