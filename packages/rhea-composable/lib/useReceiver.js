@@ -11,7 +11,10 @@ module.exports = () => {
 
     const allDone = (delivery) => () => delivery.update(true)
     // prettier-ignore
-    const noLuck = (delivery) => ({ conclude }) => conclude(delivery)
+    const noLuck = (delivery) => ({ conclude }) => {
+        debug('Concluding delivery [%s]', delivery.id)
+        conclude(delivery)
+    }
 
     const oneUp = (receiver) => receiver.add_credit(1)
 
