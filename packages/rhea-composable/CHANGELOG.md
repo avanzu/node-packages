@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.1.0...@avanzu/rhea-composable@1.2.0) (2022-04-08)
+
+
+### Bug Fixes
+
+* adds missing dependency ([d5c809e](https://github.com/avanzu/node-packages/commit/d5c809e1ea33c9518975a560abbec4d3e9b5a771))
+
+
+### Features
+
+* adds auto expire to requests ([eb5563b](https://github.com/avanzu/node-packages/commit/eb5563b98563250c5557079e1b77f29405f93829))
+* adds request/reply pattern ([4614e3b](https://github.com/avanzu/node-packages/commit/4614e3b78b7aa93f53c2fa3a87d783e89762d255))
+* adds timeout storage and auto clear on drop ([ee4bd42](https://github.com/avanzu/node-packages/commit/ee4bd429d405a22472395f1b22f83d9b409d556e))
+* use request ttl for reply ([70eab94](https://github.com/avanzu/node-packages/commit/70eab9457db32048123330c8291c36ce8fe18a6e))
+
+
+
+
+
 # 1.1.0 (2022-04-07)
 
 

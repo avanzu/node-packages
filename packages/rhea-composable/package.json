@@ -1,11 +1,11 @@
 {
   "name": "@avanzu/rhea-composable",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "> TODO: description",
   "author": "Marc Bach <mail@avanzu.de>",
   "homepage": "https://github.com/avanzu/node-packages#readme",
   "publishConfig": {
-      "access": "public"
+    "access": "public"
   },
   "license": "ISC",
   "main": "index.js",
@@ -31,9 +31,8 @@
   },
   "dependencies": {
     "debug": "^4.3.4",
+    "nanoid": "^3.3.2",
     "ramda": "^0.28.0",
-    "rhea": "^3.0.0",
-    "nanoid": "^3.3.2"
-  },
-  "devDependencies": {}
+    "rhea": "^3.0.0"
+  }
 }
