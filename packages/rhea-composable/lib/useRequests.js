@@ -4,25 +4,42 @@ const { pipe } = require('ramda')
 module.exports = () => {
     const store = new Map()
 
-    const storeRequest = (key, onSuccess, onError, payload) =>
+    const get = (key) => store.get(key)
+    const has = (key) => store.has(key)
+    const put = (key, value) => store.set(key, value)
+    const del = (key) => store.delete(key)
+
+    const storeRequest = ({ key, onSuccess, onError, delivery, message }) =>
         new Promise((resolve) => {
-            debug('Storing request [%s]', key)
-            store.set(key, { onSuccess, onError, payload })
-            resolve(payload)
+            debug(`Storing request [${key}]`)
+            put(key, { onSuccess, onError, delivery, message })
+            resolve({ key, message, delivery })
         })
 
     const lookupRequest = (key) =>
         new Promise((resolve, reject) => {
-            debug('Looking up request [%s]', key)
-            store.has(key)
-                ? pipe(notice('Requst [%s] found'), resolve)(store.get(key))
-                : pipe(noSuchRequest, inspect('Request [%s] not found'), reject)(key)
+            debug(`Looking up request [${key}]`)
+            const storeHit = pipe(notice(`Request [${key}] found`), get, resolve)
+            const storeMiss = pipe(noSuchRequest, inspect(`Request [${key}] not found. %o`), reject)
+
+            has(key) ? storeHit(key) : storeMiss(key)
         })
 
-    const dropRequest = (key) => {
-        debug('Dropping request [%s]', key)
-        store.has(key) && store.delete(key)
+    const cleanup = (key) => {
+        const { timeout } = get(key)
+        debug('Clearing Timeout of request [%s] %o', key, timeout)
+        timeout && clearTimeout(timeout)
+        del(key)
     }
 
-    return { storeRequest, lookupRequest, dropRequest }
+    const dropRequest = (key) => {
+        debug(`Dropping request [${key}]`)
+        has(key) && cleanup(key)
+    }
+
+    const storeTimeout = (key, timeout) => {
+        has(key) && put(key, { ...get(key), timeout })
+    }
+
+    return { storeRequest, lookupRequest, dropRequest, storeTimeout }
 }
