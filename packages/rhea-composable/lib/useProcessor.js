@@ -23,12 +23,13 @@ module.exports = (connection) => {
 
         const onMessage = (context) => {
             const { message, delivery, connection } = context
-            const { correlation_id, reply_to } = message
+            const { correlation_id, reply_to, ttl } = message
             debug('Message %s received %o', correlation_id, message)
 
             const messageOf = (payload) => ({
                 ...payload,
                 correlation_id,
+                ttl,
                 to: reply_to,
                 message_id: nanoid(),
             })
