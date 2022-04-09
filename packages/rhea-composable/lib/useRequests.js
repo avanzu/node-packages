@@ -1,6 +1,9 @@
 const { debug, inspect, notice } = require('./inspect')('useRequests')
-const { noSuchRequest } = require('./errors')
+const { noSuchRequest, requestTimedOut } = require('./errors')
 const { pipe } = require('ramda')
+const useDelivery = require('./useDelivery')
+const useMessage = require('./useMessage')
+
 module.exports = () => {
     const store = new Map()
 
@@ -41,5 +44,36 @@ module.exports = () => {
         has(key) && put(key, { ...get(key), timeout })
     }
 
-    return { storeRequest, lookupRequest, dropRequest, storeTimeout }
+    const autoExpire = ({ key, message, delivery }) => {
+        const { lifetime } = useMessage(message)
+        const { settle } = useDelivery(delivery)
+        const { drop } = useLookup(key)
+        const conclude = ({ onError }) => onError(requestTimedOut(key, lifetime()))
+        const expire = () =>
+            Promise.resolve(key)
+                .then(inspect('Expiring request [%s]'))
+                .then(lookupRequest)
+                .then(conclude, settle)
+                .then(drop)
+
+        storeTimeout(key, setTimeout(expire, lifetime()))
+    }
+
+    const storeReceipt = (key, onSuccess, onError) => (receipt) =>
+        storeRequest({ key, onSuccess, onError, ...receipt })
+
+    const useLookup = (id) => ({
+        retrieve: () => lookupRequest(id),
+        drop: () => dropRequest(id),
+    })
+
+    return {
+        storeRequest,
+        lookupRequest,
+        dropRequest,
+        storeTimeout,
+        autoExpire,
+        storeReceipt,
+        useLookup,
+    }
 }
