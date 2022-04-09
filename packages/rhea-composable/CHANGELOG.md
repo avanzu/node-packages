@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.2.0...@avanzu/rhea-composable@1.3.0) (2022-04-09)
+
+
+### Features
+
+* adds delivery composable ([3c2ca22](https://github.com/avanzu/node-packages/commit/3c2ca2216faf155d02eb18a43065a78989da829a))
+* adds dispatcher composable ([1b7da15](https://github.com/avanzu/node-packages/commit/1b7da150b66ec00f7bab7cfe5c038ef63e318db0))
+* adds duplex composable ([64ac263](https://github.com/avanzu/node-packages/commit/64ac26356f317b88ed73758210406ff670ef7891))
+* adds message composable ([4bcc3a5](https://github.com/avanzu/node-packages/commit/4bcc3a56450da6b58c51f760e308e6a569c02af8))
+* adds utility functions to errors module ([a8b1d59](https://github.com/avanzu/node-packages/commit/a8b1d59c43d2f985309d9caca5476360dba41e9d))
+
+
+
+
+
 # [1.2.0](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.1.0...@avanzu/rhea-composable@1.2.0) (2022-04-08)
 
 
