@@ -1,3 +1,5 @@
+const { pipe, pathOr, not } = require('ramda')
+
 const panic = (error) => {
     throw error
 }
@@ -7,6 +9,10 @@ const releasable = (target, props) =>
 
 const rejectable = (target, props) =>
     Object.assign(target, { props, conclude: (delivery) => delivery.reject(props) })
+
+const toPayload = ({ props }) => ({ subject: props.condition, body: props.description })
+
+const isDeliverable = pipe(pathOr(false, ['props', 'undeliverable_here']), not)
 
 const undeliverable = (description) =>
     releasable(new Error(description), {
@@ -30,4 +36,12 @@ const requestTimedOut = (key) =>
         description: `Request [${key}] timed out`,
     })
 
-module.exports = { panic, undeliverable, processFault, noSuchRequest, requestTimedOut }
+module.exports = {
+    panic,
+    toPayload,
+    isDeliverable,
+    undeliverable,
+    processFault,
+    noSuchRequest,
+    requestTimedOut,
+}
