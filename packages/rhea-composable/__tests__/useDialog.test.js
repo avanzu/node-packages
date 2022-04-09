@@ -1,5 +1,6 @@
 const { useConnection, useDialog, useProcessor } = require('..')
-
+const { panic } = require('../lib/errors')
+const { debug } = require('../lib/inspect')('test/useDialog')
 describe('useDialog', () => {
     const { connectionOf } = useConnection()
 
@@ -8,6 +9,8 @@ describe('useDialog', () => {
     const { processMessages } = useProcessor(connection)
 
     test('autoExpire', async () => {
+        debug('autoExpire', '-'.repeat(40))
+
         const { send } = openDialog('some-dialog')
 
         const promise = send({ ttl: 250, body: { foo: true }, subject: 'The Foo' })
@@ -20,9 +23,27 @@ describe('useDialog', () => {
         })
     })
 
+    test('lateResponse', async () => {
+        debug('lateResponse', '-'.repeat(40))
+        const { send } = openDialog('late-response')
+        processMessages('late-response', {
+            Idle: () => new Promise((resolve) => setTimeout(resolve, 300)),
+        })
+
+        const promise = send({ ttl: 250, body: { foo: true }, subject: 'Idle' })
+
+        await expect(promise).rejects.toMatchObject({
+            props: {
+                condition: 'request:timeout',
+                description: expect.stringContaining('timed out'),
+            },
+        })
+    })
+
     test('goodResponse', async () => {
-        const { send } = openDialog('some-dialog')
-        processMessages('some-dialog', {
+        debug('goodResponse', '-'.repeat(40))
+        const { send } = openDialog('some-foo')
+        processMessages('some-foo', {
             'The Foo': () => ({ subject: 'The Bar', body: { bar: true } }),
         })
 
@@ -31,6 +52,21 @@ describe('useDialog', () => {
         await expect(promise).resolves.toMatchObject({
             subject: 'The Bar',
             body: { bar: true },
+        })
+    })
+
+    test('badResponse', async () => {
+        debug('badResponse', '-'.repeat(40))
+        const { send } = openDialog('some-bar')
+        processMessages('some-bar', {
+            'The Bar': () => panic(new Error('No bueno')),
+        })
+
+        const promise = send({ ttl: 250, body: { foo: true }, subject: 'The Bar' })
+
+        await expect(promise).rejects.toMatchObject({
+            subject: 'processing:failed',
+            body: expect.stringContaining('No bueno'),
         })
     })
 })

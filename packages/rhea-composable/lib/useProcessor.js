@@ -1,56 +1,33 @@
-const { debug, inspect } = require('./inspect')('useProcessor')
+const { debug } = require('./inspect')('useProcessor')
 const { ReceiverEvents } = require('rhea')
-const { undeliverable, panic, processFault } = require('./errors')
-const { either, prop, applyTo, pipe } = require('ramda')
-const { nanoid } = require('nanoid')
+const { isDeliverable } = require('./errors')
+const { pipe, when, always } = require('ramda')
 const useReceiver = require('./useReceiver')
-
-const subjectOrBody = either(prop('subject'), prop('body'))
-const fromNullable = (value, otherwise) =>
-    new Promise((Ok, Fail) => (value == null ? Fail(otherwise) : Ok(value)))
+const useMessage = require('./useMessage')
+const useDelivery = require('./useDelivery')
+const useDispatcher = require('./useDispatcher')
 
 module.exports = (connection) => {
     const processMessages = (topic, dispatchTable) => {
-        const { openReceiver, oneUp, allDone, noLuck } = useReceiver()
-
+        const { openReceiver, oneUp } = useReceiver()
+        const { dispatch } = useDispatcher(dispatchTable)
         const receiver = openReceiver(connection, topic)
-
-        const matchCallable = (key) =>
-            fromNullable(
-                prop(key, dispatchTable),
-                undeliverable(`Message ${key} cannot be processed here.`)
-            )
 
         const onMessage = (context) => {
             const { message, delivery, connection } = context
-            const { correlation_id, reply_to, ttl } = message
-            debug('Message %s received %o', correlation_id, message)
+            const { whenReplyIsExpected, replyOK, replyError } = useMessage(message)
+            const { allDone, noLuck } = useDelivery(delivery)
 
-            const messageOf = (payload) => ({
-                ...payload,
-                correlation_id,
-                ttl,
-                to: reply_to,
-                message_id: nanoid(),
-            })
+            const maybeReply = whenReplyIsExpected((message) => connection.send(message))
 
-            const respondTo = (payload) => connection.send(messageOf(payload))
+            const sendPositiveReply = replyOK(pipe(maybeReply, allDone))
 
-            // const allDone = () => delivery.update(true)
-            // const noLuck = ({ conclude }) => conclude(delivery)
-            // const oneUp = () => receiver.add_credit(1)
+            const sendNegativeReply = (error) => {
+                debug('Attempt reply negatively %o', error)
+                pipe(when(isDeliverable, replyError(maybeReply)), always(error), noLuck)(error)
+            }
 
-            const findCallable = pipe(subjectOrBody, matchCallable)
-
-            const runWith = (message) => (callable) =>
-                Promise.resolve(callable).then(applyTo(message)).catch(pipe(processFault, panic))
-
-            findCallable(message)
-                .then(runWith(context))
-                .then(inspect('Responding with %o'))
-                .then(respondTo)
-                .then(allDone(delivery), noLuck(delivery))
-                .then(oneUp(receiver))
+            dispatch(context).then(sendPositiveReply, sendNegativeReply).then(oneUp(receiver))
         }
 
         receiver.on(ReceiverEvents.message, onMessage)

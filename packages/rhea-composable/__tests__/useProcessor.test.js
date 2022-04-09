@@ -16,7 +16,7 @@ describe('useProcessor', () => {
 
         receiver.emit(ReceiverEvents.message, {
             connection: dummy,
-            message: { subject: 'foo', correlation_id: 'foo-bar' },
+            message: { subject: 'foo', correlation_id: 'foo-bar', reply_to: 'someone' },
             delivery,
         })
 
@@ -37,7 +37,7 @@ describe('useProcessor', () => {
 
         receiver.emit(ReceiverEvents.message, {
             connection: dummy,
-            message: { subject: 'bar', correlation_id: 'foo-bar' },
+            message: { subject: 'bar', correlation_id: 'foo-bar', reply_to: 'someone' },
             delivery,
         })
 
@@ -61,13 +61,13 @@ describe('useProcessor', () => {
 
         receiver.emit(ReceiverEvents.message, {
             connection: dummy,
-            message: { subject: 'badness', correlation_id: 'foo-bar' },
+            message: { subject: 'badness', correlation_id: 'foo-bar', reply_to: 'someone' },
             delivery,
         })
 
         await new Promise((resolve) => process.nextTick(resolve))
 
-        expect(dummy.send).not.toHaveBeenCalled()
+        expect(dummy.send).toHaveBeenCalled()
         expect(delivery.reject).toHaveBeenCalled()
     })
 })
