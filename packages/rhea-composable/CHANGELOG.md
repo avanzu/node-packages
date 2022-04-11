@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.4.1](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.4.0...@avanzu/rhea-composable@1.4.1) (2022-04-11)
+
+
+### Bug Fixes
+
+* expired requests will now set the delivery to undeliverable_here ([e8fe44c](https://github.com/avanzu/node-packages/commit/e8fe44c1ae6e2d1edaa6540c0267c63ecff0d163))
+
+
+
+
+
 # [1.4.0](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.3.0...@avanzu/rhea-composable@1.4.0) (2022-04-11)
 
 
