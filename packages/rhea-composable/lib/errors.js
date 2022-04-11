@@ -27,7 +27,7 @@ const processFault = (reason) =>
 
 const noSuchRequest = (key) =>
     releasable(new Error(`Request [${key}] not found`), {
-        delivery_failed: true,
+        undeliverable_here: true,
     })
 
 const requestTimedOut = (key) =>
