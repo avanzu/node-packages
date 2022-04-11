@@ -10,11 +10,8 @@ describe('useDialog', () => {
 
     test('autoExpire', async () => {
         debug('autoExpire', '-'.repeat(40))
-
         const { send } = openDialog('some-dialog')
-
         const promise = send({ ttl: 250, body: { foo: true }, subject: 'The Foo' })
-
         await expect(promise).rejects.toMatchObject({
             props: {
                 condition: 'request:timeout',
@@ -29,9 +26,7 @@ describe('useDialog', () => {
         processMessages('late-response', {
             Idle: () => new Promise((resolve) => setTimeout(resolve, 300)),
         })
-
         const promise = send({ ttl: 250, body: { foo: true }, subject: 'Idle' })
-
         await expect(promise).rejects.toMatchObject({
             props: {
                 condition: 'request:timeout',

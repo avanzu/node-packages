@@ -5,4 +5,5 @@ module.exports = {
     useProcessor: require('./useProcessor'),
     useDialog: require('./useDialog'),
     useRequests: require('./useRequests'),
+    useConnectionString: require('./useConnectionString'),
 }

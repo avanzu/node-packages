@@ -1,12 +1,16 @@
 const rhea = require('rhea')
 const { ConnectionEvents } = rhea
 const { debug } = require('./inspect')('useConnection')
+const useConnectionString = require('./useConnectionString')
+
 module.exports = () => {
     const connections = new Map()
+    const { parse } = useConnectionString()
 
     const makeConnection = (id, options) => {
-        debug('Creating new connection [%s] with options %o', id, options)
-        const connection = rhea.create_connection(options)
+        const opts = parse(options)
+        debug('Creating new connection [%s] with options %o', id, opts)
+        const connection = rhea.create_connection(opts)
         connections.set(id, connection)
         connection.on(ConnectionEvents.connectionClose, () => {
             debug('Connection [%s] closed. Removing from pool.', id)
