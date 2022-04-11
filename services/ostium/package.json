@@ -1,0 +1,64 @@
+{
+    "name": "ostium",
+    "description": "",
+    "version": "0.0.0",
+    "homepage": "",
+    "private": true,
+    "main": "src",
+    "keywords": [
+        "feathers"
+    ],
+    "author": {
+        "name": "Marc Bach",
+        "email": "mail@avanzu.de"
+    },
+    "contributors": [],
+    "bugs": {},
+    "directories": {
+        "lib": "src",
+        "test": "test/",
+        "config": "config/"
+    },
+    "engines": {
+        "node": "^16.0.0",
+        "npm": ">= 3.0.0"
+    },
+    "scripts": {
+        "test": "npm run lint && npm run jest",
+        "lint": "eslint src/. test/. --fix",
+        "dev": "nodemon src/",
+        "start": "node src/",
+        "jest": "jest --forceExit",
+        "format": "prettier --write ."
+    },
+    "standard": {
+        "env": [
+            "jest"
+        ],
+        "ignore": []
+    },
+    "dependencies": {
+        "@avanzu/redis-composable": "^1.0.0",
+        "@avanzu/rhea-composable": "^1.3.0",
+        "@feathersjs/authentication": "^4.5.12",
+        "@feathersjs/authentication-local": "^4.5.12",
+        "@feathersjs/authentication-oauth": "^4.5.12",
+        "@feathersjs/configuration": "^4.5.12",
+        "@feathersjs/errors": "^4.5.12",
+        "@feathersjs/express": "^4.5.12",
+        "@feathersjs/feathers": "^4.5.12",
+        "@feathersjs/transport-commons": "^4.5.12",
+        "compression": "^1.7.4",
+        "cors": "^2.8.5",
+        "feathers-memory": "^4.1.0",
+        "helmet": "^4.6.0",
+        "serve-favicon": "^2.5.0",
+        "winston": "^3.7.2"
+    },
+    "devDependencies": {
+        "axios": "^0.26.1",
+        "eslint": "^8.12.0",
+        "jest": "^27.5.1",
+        "nodemon": "^2.0.15"
+    }
+}

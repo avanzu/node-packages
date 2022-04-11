@@ -3,6 +3,30 @@ services:
   activemq:
     image: rmohr/activemq:latest
     ports:
-      - 61616:61616
-      - 8161:8161
-      - 5672:5672
+      - '61616:61616'
+      - '8161:8161'
+      - '5672:5672'
+  redis:
+    image: bitnami/redis:latest
+    environment:
+      ALLOW_EMPTY_PASSWORD: 'yes'
+    ports:
+      - '6379:6379'
+
+  ostium:
+    build:
+      context: . 
+      dockerfile: dev.dockerfile
+      args:
+        SERVICE: ostium
+    command: ['npm', '--prefix', 'services/ostium', 'run', 'dev']  
+    env_file: '.env'
+    environment:
+      PORT: 3030
+    ports:
+      - '3030:3030'
+    volumes:
+      - './node_modules:/opt/app/node_modules:ro'
+      - './packages:/opt/app/packages:ro'
+      - './services/ostium:/opt/app/services/ostium:ro'
+      - './docker/volumes/users.json:/opt/users.json'

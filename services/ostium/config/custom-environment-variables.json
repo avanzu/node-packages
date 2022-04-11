@@ -1,0 +1,7 @@
+{
+    "host": "HOST",
+    "service": "SERVICE",
+    "port": "PORT",
+    "redis": "REDIS_URL",
+    "ampq": "ACTIVEMQ_URL"
+}
