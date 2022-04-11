@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.4.0](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.3.0...@avanzu/rhea-composable@1.4.0) (2022-04-11)
+
+
+### Features
+
+* adds connection string support ([bfa30e2](https://github.com/avanzu/node-packages/commit/bfa30e22c8ddf794024c20ac8d3eb79901e93cb4))
+
+
+
+
+
 # [1.3.0](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.2.0...@avanzu/rhea-composable@1.3.0) (2022-04-09)
 
 

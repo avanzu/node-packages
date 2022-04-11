@@ -1,6 +1,6 @@
 {
   "name": "@avanzu/redis-composable",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "> TODO: description",
   "author": "Marc Bach <mail@avanzu.de>",
   "homepage": "https://github.com/avanzu/node-packages#readme",
@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "debug": "^4.3.4",
-    "redis": "^4.0.6",
-    "ramda": "^0.28.0"
+    "ramda": "^0.28.0",
+    "redis": "^4.0.6"
   }
 }
