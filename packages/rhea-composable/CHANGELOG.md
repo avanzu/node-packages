@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.4.2](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.4.1...@avanzu/rhea-composable@1.4.2) (2022-04-12)
+
+
+### Bug Fixes
+
+* adds error handler for issues during send ([c93e94f](https://github.com/avanzu/node-packages/commit/c93e94fa1ac91f57ad9e00c33763b45ef7588b9a))
+
+
+
+
+
 ## [1.4.1](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.4.0...@avanzu/rhea-composable@1.4.1) (2022-04-11)
 
 
