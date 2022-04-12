@@ -25,6 +25,26 @@ describe('useProcessor', () => {
         expect(dummy.send).toHaveBeenCalled()
     })
 
+    test('with default dispatchable', async () => {
+        const dummy = { send: jest.fn() }
+        const delivery = { update: jest.fn() }
+        const connection = connectionOf('foo', { username: 'admin' })
+
+        const { processMessages } = useProcessor(connection)
+
+        const receiver = processMessages('my-channel', { default: () => 'bar' })
+
+        receiver.emit(ReceiverEvents.message, {
+            connection: dummy,
+            message: { subject: 'foo', correlation_id: 'foo-bar', reply_to: 'someone' },
+            delivery,
+        })
+
+        await new Promise((resolve) => process.nextTick(resolve))
+
+        expect(dummy.send).toHaveBeenCalled()
+    })
+
     test('without dispatchable', async () => {
         const dummy = { send: jest.fn() }
         const delivery = { update: jest.fn(), reject: jest.fn(), release: jest.fn() }
