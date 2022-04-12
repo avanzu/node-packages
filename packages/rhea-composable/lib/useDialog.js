@@ -6,6 +6,8 @@ const useReceiver = require('./useReceiver')
 const useDelivery = require('./useDelivery')
 const useMessage = require('./useMessage')
 const useDuplex = require('./useDuplex')
+const { sendingFault, toPayload } = require('./errors')
+const { pipe } = require('ramda')
 
 const { ReceiverEvents } = require('rhea')
 
@@ -55,6 +57,7 @@ module.exports = (connection) => {
                     .then(sendMessage)
                     .then(storeReceipt(key, onSuccess, onError))
                     .then(autoExpire)
+                    .catch(pipe(sendingFault, toPayload, onError))
             })
 
         return { send, sender, receiver }

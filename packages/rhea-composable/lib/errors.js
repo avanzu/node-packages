@@ -25,6 +25,12 @@ const processFault = (reason) =>
         description: `${reason}`,
     })
 
+const sendingFault = (reason) =>
+    rejectable(new Error(`${reason}`), {
+        condition: 'sending:failed',
+        description: `${reason}`,
+    })
+
 const noSuchRequest = (key) =>
     releasable(new Error(`Request [${key}] not found`), {
         undeliverable_here: true,
@@ -42,6 +48,7 @@ module.exports = {
     isDeliverable,
     undeliverable,
     processFault,
+    sendingFault,
     noSuchRequest,
     requestTimedOut,
 }

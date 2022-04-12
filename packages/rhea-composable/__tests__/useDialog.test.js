@@ -64,4 +64,19 @@ describe('useDialog', () => {
             body: expect.stringContaining('No bueno'),
         })
     })
+
+    test('malformed message', async () => {
+        debug('malformed message', '-'.repeat(40))
+        const { send } = openDialog('some-bar')
+        processMessages('some-bar', {
+            'The Bar': () => panic(new Error('No bueno')),
+        })
+
+        const promise = send({ ttl: 250, body: { foo: true }, user_id: 123, subject: 'The Bar' })
+
+        await expect(promise).rejects.toMatchObject({
+            subject: 'sending:failed',
+            body: expect.stringContaining('ERR_INVALID_ARG_TYPE'),
+        })
+    })
 })
