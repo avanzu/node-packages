@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.5.0](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.4.2...@avanzu/rhea-composable@1.5.0) (2022-04-12)
+
+
+### Features
+
+* adds support for default processing callable ([786c463](https://github.com/avanzu/node-packages/commit/786c4636d78b7d5970d6f3e065c1c4a9272a031a))
+
+
+
+
+
 ## [1.4.2](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.4.1...@avanzu/rhea-composable@1.4.2) (2022-04-12)
 
 
