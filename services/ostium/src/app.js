@@ -16,7 +16,8 @@ const channels = require('./channels')
 
 const authentication = require('./authentication')
 
-const { useConnection } = require('@avanzu/rhea-composable')
+const messaging = require('./messaging')
+const discovery = require('./discovery')
 
 const app = express(feathers())
 
@@ -46,6 +47,8 @@ app.configure(authentication)
 app.configure(services)
 // Set up event channels (see channels.js)
 app.configure(channels)
+app.configure(messaging)
+app.configure(discovery)
 
 // Configure a middleware for 404s and the error handler
 // app.use(express.notFound())

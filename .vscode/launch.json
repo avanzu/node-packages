@@ -4,13 +4,50 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        {
 
+        {
             "command": "npm  --prefix=packages/rhea-composable test",
             "name": "rhea-composable [TEST]",
             "request": "launch",
             "type": "node-terminal",
             "localRoot": "packages/rhea-composable"
-        }
+        },
+        {
+            "env": {
+                "NODE_ENV": "development",
+                "ACTIVEMQ_URL": "amqp10://admin@localhost:5672",
+                "REDIS_HOST": "redis://localhost:6379",
+                "PORT": "4030",
+                "DEBUG": "@avanzu/*"
+            },
+            "cwd": "${workspaceFolder}/services/ostium",
+            "command": "npm run dev",
+            "name": "Ostium [Launch]",
+            "request": "launch",
+            "type": "node-terminal",
+            "localRoot": "${workspaceFolder}/services/ostium"
+        },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Ostium [Attach]",
+            "remoteRoot": "/opt/app",
+            "localRoot": "${workspaceFolder}/services/ostium",
+            "port": 9030
+        },
+        {
+            "env": {
+                "NODE_ENV": "development",
+                "ACTIVEMQ_URL": "amqp10://admin@localhost:5672",
+                "REDIS_HOST": "redis://localhost:6379",
+                "DEBUG": "@avanzu/*"
+            },
+            "cwd": "${workspaceFolder}/services/celtic-sun",
+            "command": "npm run dev",
+            "name": "Celtic-Sun [Launch]",
+            "request": "launch",
+            "type": "node-terminal",
+            "localRoot": "${workspaceFolder}/services/celtic-sun"
+        },
     ]
 }

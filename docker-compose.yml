@@ -19,14 +19,34 @@ services:
       dockerfile: dev.dockerfile
       args:
         SERVICE: ostium
-    command: ['npm', '--prefix', 'services/ostium', 'run', 'dev']  
+    command: ['npm', '--prefix', 'services/ostium', 'run', 'dev:debug']  
     env_file: '.env'
     environment:
       PORT: 3030
+      DEBUG_PORT: 9030
     ports:
       - '3030:3030'
+      - '9030:9030'
     volumes:
       - './node_modules:/opt/app/node_modules:ro'
       - './packages:/opt/app/packages:ro'
       - './services/ostium:/opt/app/services/ostium:ro'
-      - './docker/volumes/users.json:/opt/users.json'
+      - './docker/volumes/users.json:/opt/app/fixtures/users.json'
+  celtic-sun:
+    build:
+      context: . 
+      dockerfile: dev.dockerfile
+      args:
+        SERVICE: celtic-sun
+    command: ['npm', '--prefix', 'services/celtic-sun', 'run', 'dev:debug']  
+    env_file: '.env'
+    environment:
+      DEBUG_PORT: 9040
+    # ports:
+    #   - '9040:9040'
+    volumes:
+      - './node_modules:/opt/app/node_modules:ro'
+      - './packages:/opt/app/packages:ro'
+      - './services/celtic-sun:/opt/app/services/celtic-sun:ro'
+    deploy:
+      replicas: 3

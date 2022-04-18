@@ -1,7 +1,7 @@
 // Initializes the `users` service on path `/users`
 const memory = require('feathers-memory')
 const hooks = require('./users.hooks')
-const users = require('/opt/users.json')
+const users = require('../../../fixtures/users.json')
 
 module.exports = function (app) {
     const options = {
