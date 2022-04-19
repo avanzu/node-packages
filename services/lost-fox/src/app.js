@@ -1,14 +1,16 @@
 const { useConnection } = require('@avanzu/rhea-composable')
 const { useRedis } = require('@avanzu/redis-composable')
-const configureQueries = require('./queries')
 const configureProcessing = require('./processing')
 const startAdvertising = require('./advertising')
+const useCatalog = require('./catalog')
+const startProcessing = require('./processor')
 
 module.exports = ({ amqp, redis }) => {
-    const rheaLink = useConnection().connectionOf('celtic-sun', amqp)
+    const rheaLink = useConnection().connectionOf('lost-fox', amqp)
     const redisLink = useRedis().connectionOf('celtic-sun', { url: redis })
-    const queries = configureQueries(rheaLink)
+    const catalog = useCatalog()
+    configureProcessing(catalog)
 
-    configureProcessing(rheaLink, queries)
-    startAdvertising(redisLink)
+    startProcessing(catalog, rheaLink)
+    startAdvertising(catalog, redisLink)
 }

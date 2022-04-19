@@ -50,3 +50,21 @@ services:
       - './services/celtic-sun:/opt/app/services/celtic-sun:ro'
     deploy:
       replicas: 3
+  lost-fox:
+    build:
+      context: . 
+      dockerfile: dev.dockerfile
+      args:
+        SERVICE: lost-fox
+    command: ['npm', '--prefix', 'services/lost-fox', 'run', 'dev:debug']  
+    env_file: '.env'
+    environment:
+      DEBUG_PORT: 9050
+    # ports:
+    #   - '9040:9040'
+    volumes:
+      - './node_modules:/opt/app/node_modules:ro'
+      - './packages:/opt/app/packages:ro'
+      - './services/lost-fox:/opt/app/services/lost-fox:ro'
+    deploy:
+      replicas: 3
