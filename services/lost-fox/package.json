@@ -1,7 +1,7 @@
 {
     "name": "lost-fox",
     "description": "",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "homepage": "",
     "private": true,
     "main": "src",
@@ -12,7 +12,6 @@
     },
     "contributors": [],
     "bugs": {},
-    
     "scripts": {
         "test": "npm run lint && npm run jest",
         "lint": "eslint src/. __tests__/. --fix",
@@ -30,7 +29,7 @@
     },
     "dependencies": {
         "@avanzu/redis-composable": "^1.1.0",
-        "@avanzu/rhea-composable": "^1.5.0"
+        "@avanzu/rhea-composable": "^1.5.1"
     },
     "devDependencies": {
         "axios": "^0.26.1",

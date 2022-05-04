@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.1](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.5.0...@avanzu/rhea-composable@1.5.1) (2022-05-04)
+
+
+### Bug Fixes
+
+* moves connection pool outside of the composable ([2018b60](https://github.com/avanzu/node-packages/commit/2018b60634dfa24ce37ecdbd1c38354eca12eff5))
+
+
+
+
+
 # [1.5.0](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.4.2...@avanzu/rhea-composable@1.5.0) (2022-04-12)
 
 
