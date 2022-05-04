@@ -3,8 +3,9 @@ const { ConnectionEvents } = rhea
 const { debug } = require('./inspect')('useConnection')
 const useConnectionString = require('./useConnectionString')
 
+const connections = new Map()
+
 module.exports = () => {
-    const connections = new Map()
     const { parse } = useConnectionString()
 
     const makeConnection = (id, options) => {
