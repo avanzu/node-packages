@@ -10,7 +10,7 @@ module.exports = () => {
         )
 
     const acceptAction = (name, callable) => actions.set(name, callable)
-    const rejectAction = (name) => actions.delete(name)
+    const dismissAction = (name) => actions.delete(name)
 
     const methods = {
         find: (...args) => action('find', args),
@@ -20,8 +20,8 @@ module.exports = () => {
         create: (...args) => action('create', args),
         remove: (...args) => action('remove', args),
         acceptAction,
-        rejectAction,
+        rejectAction: dismissAction,
     }
 
-    return { methods, acceptAction, rejectAction }
+    return { methods, acceptAction, dismissAction }
 }

@@ -49,5 +49,33 @@
             "type": "node-terminal",
             "localRoot": "${workspaceFolder}/services/celtic-sun"
         },
+        {
+            "env": {
+                "NODE_ENV": "development",
+                "ACTIVEMQ_URL": "amqp10://admin@localhost:5672",
+                "REDIS_HOST": "redis://localhost:6379",
+                "DEBUG": "@avanzu/*"
+            },
+            "cwd": "${workspaceFolder}/services/icy-omega",
+            "command": "npm run dev",
+            "name": "IcyOmega [Launch]",
+            "request": "launch",
+            "type": "node-terminal",
+            "localRoot": "${workspaceFolder}/services/icy-omega"
+        },
+        {
+            "env": {
+                "NODE_ENV": "development",
+                "ACTIVEMQ_URL": "amqp10://admin@localhost:5672",
+                "REDIS_HOST": "redis://localhost:6379",
+                "DEBUG": "@avanzu/*"
+            },
+            "cwd": "${workspaceFolder}/services/icy-omega",
+            "command": "npm run test",
+            "name": "IcyOmega [TEST]",
+            "request": "launch",
+            "type": "node-terminal",
+            "localRoot": "${workspaceFolder}/services/icy-omega"
+        },
     ]
 }

@@ -34,8 +34,8 @@ module.exports = ({ app, connection }) => {
 
     const onServiceDown = (event) => {
         const { path, action } = event
-        const { rejectAction } = serviceOf(path)
-        rejectAction(action)
+        const { dismissAction } = serviceOf(path)
+        dismissAction(action)
     }
 
     app.on('ServiceUp', oneServiceUp).on('ServiceDown', onServiceDown)
