@@ -87,7 +87,15 @@ describe('useProcessor', () => {
 
         await new Promise((resolve) => process.nextTick(resolve))
 
-        expect(dummy.send).toHaveBeenCalled()
+        expect(dummy.send).toHaveBeenCalledWith(
+            expect.objectContaining({
+                subject: 'processing:failed',
+                application_properties: expect.objectContaining({
+                    success: false,
+                    statusCode: 500,
+                }),
+            })
+        )
         expect(delivery.reject).toHaveBeenCalled()
     })
 })

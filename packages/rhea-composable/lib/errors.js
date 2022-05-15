@@ -1,8 +1,14 @@
-const { pipe, pathOr, not } = require('ramda')
+const { pipe, pathOr, not, when, is, complement, propOr, path, either, prop } = require('ramda')
 
 const panic = (error) => {
     throw error
 }
+
+const makeError = (reason) => new Error(`${reason}`)
+const toError = when(complement(is(Error)), makeError)
+const descriptionOrMessage = either(path(['props', 'description']), prop('message'))
+const conditionOf = pathOr('', ['props', 'condition'])
+const statusOf = propOr(500, 'code')
 
 const releasable = (target, props) =>
     Object.assign(target, { props, conclude: (delivery) => delivery.release(props) })
@@ -10,7 +16,13 @@ const releasable = (target, props) =>
 const rejectable = (target, props) =>
     Object.assign(target, { props, conclude: (delivery) => delivery.reject(props) })
 
-const toPayload = ({ props }) => ({ subject: props.condition, body: props.description })
+const toPayload = (error) => ({
+    subject: conditionOf(error),
+    body: descriptionOrMessage(error),
+    application_properties: {
+        statusCode: statusOf(error),
+    },
+})
 
 const isDeliverable = pipe(pathOr(false, ['props', 'undeliverable_here']), not)
 
@@ -20,7 +32,7 @@ const undeliverable = (description) =>
     })
 
 const processFault = (reason) =>
-    rejectable(new Error(`${reason}`), {
+    rejectable(toError(reason), {
         condition: 'processing:failed',
         description: `${reason}`,
     })
