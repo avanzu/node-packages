@@ -1,6 +1,6 @@
 const { debug, notice } = require('./inspect')('useMessage')
 const { nanoid } = require('nanoid')
-const { pipe, when, pathOr, complement, cond, T } = require('ramda')
+const { pipe, when, pathOr, complement, cond, T, over, lensPath, always } = require('ramda')
 const { toPayload } = require('./errors')
 
 module.exports = (message) => {
@@ -19,10 +19,8 @@ module.exports = (message) => {
         message_id: nanoid(),
     })
 
-    const withSuccessStatus = (success) => (message) => ({
-        ...message,
-        application_properties: { success },
-    })
+    const withSuccessStatus = (success) =>
+        over(lensPath(['application_properties', 'success']), always(success))
 
     const replyOK = (send) => pipe(inReplyTo, withSuccessStatus(true), send)
     const replyError = (send) => pipe(toPayload, inReplyTo, withSuccessStatus(false), send)
