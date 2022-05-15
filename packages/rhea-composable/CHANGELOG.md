@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.6.0](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.5.1...@avanzu/rhea-composable@1.6.0) (2022-05-15)
+
+
+### Bug Fixes
+
+* actual error instances will now be preserved during processing ([351682b](https://github.com/avanzu/node-packages/commit/351682b25f3932b4f0419eb617b7c2502d873f95))
+* success status assignment will now preserve application_properties ([592c9b3](https://github.com/avanzu/node-packages/commit/592c9b30ecae6e46057384300bf255a0a45b781e))
+
+
+### Features
+
+* adds catch all dispatcher convenience ([ad31fae](https://github.com/avanzu/node-packages/commit/ad31faeef407790da5da0d78372857588e72c632))
+
+
+
+
+
 ## [1.5.1](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.5.0...@avanzu/rhea-composable@1.5.1) (2022-05-04)
 
 
