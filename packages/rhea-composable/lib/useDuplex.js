@@ -1,5 +1,6 @@
 const { ReceiverEvents } = require('rhea')
 const { nanoid } = require('nanoid')
+const { panic, creditsExhausted } = require('./errors')
 
 module.exports = (receiver, sender) => {
     const replyTo = new Promise((resolve) => {
@@ -15,7 +16,10 @@ module.exports = (receiver, sender) => {
             message_id: nanoid(),
         }))
 
-    const sendMessage = (message) => ({ message, delivery: sender.send(message) })
+    const affirmSendable = () =>
+        sender.sendable() || panic(creditsExhausted('No credits available'))
+
+    const sendMessage = (message) => (affirmSendable(), { message, delivery: sender.send(message) })
 
     return { replyTo, messageOf, sendMessage }
 }

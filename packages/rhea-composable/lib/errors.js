@@ -43,6 +43,12 @@ const sendingFault = (reason) =>
         description: `${reason}`,
     })
 
+const creditsExhausted = (reason) =>
+    rejectable(new Error(`${reason}`), {
+        condition: 'credits:exhausted',
+        description: `${reason}`,
+    })
+
 const noSuchRequest = (key) =>
     releasable(new Error(`Request [${key}] not found`), {
         undeliverable_here: true,
@@ -63,4 +69,5 @@ module.exports = {
     sendingFault,
     noSuchRequest,
     requestTimedOut,
+    creditsExhausted,
 }
