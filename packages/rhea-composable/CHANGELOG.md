@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.7.0](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.6.0...@avanzu/rhea-composable@1.7.0) (2022-05-17)
+
+
+### Features
+
+* adds exception when trying to send whilst not sendable ([4871e46](https://github.com/avanzu/node-packages/commit/4871e4692335ac2cf69df3f5928ff256fd3fee56))
+
+
+
+
+
 # [1.6.0](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.5.1...@avanzu/rhea-composable@1.6.0) (2022-05-15)
 
 

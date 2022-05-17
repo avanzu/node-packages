@@ -1,7 +1,7 @@
 {
     "name": "ostium",
     "description": "",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "homepage": "",
     "private": true,
     "main": "src",
@@ -40,7 +40,7 @@
     },
     "dependencies": {
         "@avanzu/redis-composable": "^1.1.0",
-        "@avanzu/rhea-composable": "^1.6.0",
+        "@avanzu/rhea-composable": "^1.7.0",
         "@feathersjs/authentication": "^4.5.12",
         "@feathersjs/authentication-local": "^4.5.12",
         "@feathersjs/authentication-oauth": "^4.5.12",
