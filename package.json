@@ -7,7 +7,7 @@
     "eslint-plugin-prettier": "^4.0.0",
     "jest": "^27.5.1",
     "jest-junit": "^13.1.0",
-    "lerna": "^4.0.0",
+    "lerna": "^5.1.4",
     "prettier": "^2.6.2",
     "trace-unhandled": "^2.0.1"
   },

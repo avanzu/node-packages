@@ -1,0 +1,7 @@
+exports.GET = 'get'
+exports.POST = 'post'
+exports.PUT = 'put'
+exports.PATCH = 'patch'
+exports.DELETE = 'delete'
+exports.OPTIONS = 'options'
+exports.HEAD = 'head'

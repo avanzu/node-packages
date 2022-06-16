@@ -1,0 +1,39 @@
+{
+  "name": "@avanzu/oas-builder",
+  "version": "1.0.0",
+  "description": "> TODO: description",
+  "author": "Marc Bach <mail@avanzu.de>",
+  "homepage": "https://github.com/avanzu/node-packages#readme",
+  "license": "ISC",
+  "main": "index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "lib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/avanzu/node-packages.git"
+  },
+  "scripts": {
+    "start": "node ./index.js",
+    "test": "npm run lint && npm run jest",
+    "lint": "eslint . ",
+    "jest": "jest --forceExit",
+    "format": "prettier --write ."
+  },
+  "bugs": {
+    "url": "https://github.com/avanzu/node-packages/issues"
+  },
+  "dependencies": {
+    "ramda": "^0.28.0"
+  },
+  "devDependencies": {
+    "oas-validator": "^5.0.8"
+  }
+}
