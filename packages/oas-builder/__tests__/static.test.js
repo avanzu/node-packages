@@ -75,7 +75,7 @@ describe('Static', () => {
                                 [OAS.StatusCode.Unprocessable]:
                                     OAS.body().description('replaces stuff'),
                             })
-                            .default(OAS.reponse().description('foo'))
+                            .default(OAS.response().description('foo'))
                     )
             )
             .response(

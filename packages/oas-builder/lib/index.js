@@ -7,6 +7,7 @@ exports.operation = Builder.Operation.new
 exports.op = Builder.Operation.new
 exports.body = Builder.Body.new
 exports.request = Builder.Body.new
+exports.response = Builder.Body.new
 exports.reponse = Builder.Body.new
 exports.content = Builder.Content.new
 exports.param = Builder.Param.new
