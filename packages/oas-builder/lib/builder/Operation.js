@@ -5,13 +5,15 @@ const Body = require('./Body')
 
 const defaultTo = (description) => Body.new().description(description)
 
-const defaults = () => ({ responses: Map(), parameters: List(), security: Map(), tags: [] })
+const defaults = () => ({ responses: Map(), parameters: List(), security: List(), tags: [] })
 const Schema = (state = {}) => ({
     valueOf: () => valueOf(state),
     raw: (raw) => Schema({ ...state, ...raw }),
     id: (operationId) => Schema({ ...state, operationId }),
-    security: (name, value) => Schema({ ...state, security: state.security.add(name, value) }),
+    security: (name, ...scopes) =>
+        Schema({ ...state, security: state.security.add({ [name]: scopes }) }),
     summary: (summary) => Schema({ ...state, summary }),
+    description: (description) => Schema({ ...state, description }),
     deprecated: () => Schema({ ...state, deprecated: true }),
 
     tag: (tag) => Schema({ ...state, tags: [...state.tags, tag] }),

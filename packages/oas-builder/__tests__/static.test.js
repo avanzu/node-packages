@@ -25,7 +25,7 @@ describe('Static', () => {
                     .get(
                         OAS.op()
                             .tag('Foo')
-                            .security('oauth', {})
+                            .security('oauth', 'read:stuff', 'write:stuff')
                             .id('FindStuff')
                             .parameter(OAS.param().name('foo'))
                             .request(
@@ -56,6 +56,8 @@ describe('Static', () => {
                     )
                     .post(
                         OAS.op('WriteStuff')
+                            .description('Vestibulum ante ipsum primis in faucibus orci.')
+                            .security('api_key')
                             .Ok(OAS.body().description('writes stuff'))
                             .NoContent()
                             .BadRequest()
