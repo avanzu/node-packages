@@ -9,8 +9,15 @@ describe('Static', () => {
 
     test('Building', async () => {
         const paths = {
-            '/bar': OAS.path().description('The bar'),
-            '/baz': OAS.path().description('The foo'),
+            '/bar': OAS.path()
+                .description('The bar')
+                .get(
+                    OAS.op()
+                        .query({ type: 'object', properties: { foo: { type: 'string' } } })
+                        .NotFound()
+                        .BadRequest()
+                ),
+            '/baz/{id}': OAS.path().description('The foo').get(OAS.op().idPath('id').NotFound()),
         }
 
         const doc = OAS.document()
@@ -102,6 +109,8 @@ describe('Static', () => {
                             .scope('write:stuff', '')
                     )
             )
+
+        // console.log(JSON.stringify(doc.valueOf(), null, 2))
 
         const promise = validator.validate(doc.valueOf(), {})
         promise.catch(console.error)

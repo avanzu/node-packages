@@ -7,6 +7,9 @@ const Parameter = require('./Parameter')
 const { toPairs, pipe, pathOr } = require('ramda')
 const propsOf = pipe(toValue, pathOr({}, ['properties']), toPairs)
 
+const IdPath = (name, schema, description) =>
+    Parameter.new().inPath().required().name(name).schema(schema).description(description)
+
 const defaultTo = (description) => Body.new().description(description)
 
 const defaults = () => ({ responses: Map(), parameters: List(), security: List(), tags: [] })
@@ -28,6 +31,9 @@ const Schema = (state = {}) => ({
     response: (status, body) => Schema({ ...state, responses: state.responses.add(status, body) }),
     parameter: (param) => Schema({ ...state, parameters: state.parameters.add(param) }),
 
+    // shorthands
+    idPath: (name, description = '', type = 'string') =>
+        Schema({ ...state, parameters: state.parameters.add(IdPath(name, { type }, description)) }),
     query: (schema) =>
         Schema(
             propsOf(schema)
