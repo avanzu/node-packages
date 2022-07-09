@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0](https://github.com/avanzu/node-packages/compare/@avanzu/oas-builder@1.1.2...@avanzu/oas-builder@1.2.0) (2022-07-09)
+
+
+### Features
+
+* adds shorthand for id path parameter ([51cfb7f](https://github.com/avanzu/node-packages/commit/51cfb7f0e804799666344cc7b2b34dac0ca01760))
+* adds shorthand method to add query parameters ([800852c](https://github.com/avanzu/node-packages/commit/800852c0387780c3d09c4780fa907aa6ed289c0d))
+
+
+
+
+
 ## [1.1.2](https://github.com/avanzu/node-packages/compare/@avanzu/oas-builder@1.1.1...@avanzu/oas-builder@1.1.2) (2022-07-08)
 
 
