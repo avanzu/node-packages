@@ -1,7 +1,11 @@
-const { valueOf } = require('../util')
+const { valueOf, toValue } = require('../util')
 const { Map, List } = require('./Collections')
 const Status = require('./StatusCodes')
 const Body = require('./Body')
+const Parameter = require('./Parameter')
+
+const { toPairs, pipe, pathOr } = require('ramda')
+const propsOf = pipe(toValue, pathOr({}, ['properties']), toPairs)
 
 const defaultTo = (description) => Body.new().description(description)
 
@@ -23,6 +27,13 @@ const Schema = (state = {}) => ({
     responses: (responses) => Schema({ ...state, responses: state.responses.merge(responses) }),
     response: (status, body) => Schema({ ...state, responses: state.responses.add(status, body) }),
     parameter: (param) => Schema({ ...state, parameters: state.parameters.add(param) }),
+
+    query: (schema) =>
+        Schema(
+            propsOf(schema)
+                .map(([name, schema]) => Parameter.new().inQuery().name(name).schema(schema))
+                .reduce((acc, param) => ({ ...acc, parameters: acc.parameters.add(param) }), state)
+        ),
 
     default: (body = defaultTo('NotImplemented')) =>
         Schema({ ...state, responses: state.responses.add('default', body) }),
