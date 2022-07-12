@@ -14,6 +14,25 @@ describe('Static', () => {
                 .get(
                     OAS.op()
                         .query({ type: 'object', properties: { foo: { type: 'string' } } })
+                        .Ok(
+                            OAS.body()
+                                .description('bar body')
+                                .json(
+                                    OAS.content()
+                                        .addExample(
+                                            'HavingFoo',
+                                            OAS.example()
+                                                .description('A Foo')
+                                                .value({ foo: 'some foo' })
+                                        )
+                                        .addExample(
+                                            'Having Bar',
+                                            OAS.example()
+                                                .description('A Bar')
+                                                .value({ foo: 'some bar' })
+                                        )
+                                )
+                        )
                         .NotFound()
                         .BadRequest()
                 ),

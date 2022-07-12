@@ -18,6 +18,7 @@ exports.securityScheme = Builder.SecurityScheme.new
 exports.flow = Builder.OAuthFlow.new
 exports.oauthFlow = Builder.OAuthFlow.new
 exports.tag = Builder.Tag.new
+exports.example = Builder.Example.new
 
 exports.map = Builder.Collection.Map
 exports.list = Builder.Collection.List
