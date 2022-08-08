@@ -18,7 +18,7 @@ describe('useErors', () => {
             })
             expect(toPayload(err)).toMatchObject({
                 subject: 'some-condition',
-                body: 'some description',
+                body: { message: 'With status' },
                 application_properties: expect.objectContaining({
                     statusCode: 404,
                 }),
@@ -29,7 +29,7 @@ describe('useErors', () => {
             const err = new Error('With status')
             expect(toPayload(err)).toMatchObject({
                 subject: '',
-                body: 'With status',
+                body: { message: 'With status' },
                 application_properties: expect.objectContaining({
                     statusCode: 500,
                 }),

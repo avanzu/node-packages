@@ -61,7 +61,7 @@ describe('useDialog', () => {
 
         await expect(promise).rejects.toMatchObject({
             subject: 'processing:failed',
-            body: expect.stringContaining('No bueno'),
+            body: { message: expect.stringContaining('No bueno') },
         })
     })
 
@@ -76,7 +76,7 @@ describe('useDialog', () => {
 
         await expect(promise).rejects.toMatchObject({
             subject: 'sending:failed',
-            body: expect.stringContaining('ERR_INVALID_ARG_TYPE'),
+            body: { message: expect.stringContaining('ERR_INVALID_ARG_TYPE') },
         })
     })
 })

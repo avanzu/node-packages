@@ -1,4 +1,4 @@
-const { pipe, pathOr, not, when, is, complement, propOr, path, either, prop } = require('ramda')
+const { pipe, pathOr, not, when, is, complement, propOr, path, either, pick } = require('ramda')
 
 const panic = (error) => {
     throw error
@@ -6,7 +6,10 @@ const panic = (error) => {
 
 const makeError = (reason) => new Error(`${reason}`)
 const toError = when(complement(is(Error)), makeError)
-const descriptionOrMessage = either(path(['props', 'description']), prop('message'))
+const descriptionOrMessage = either(
+    pick(['message', 'errors', 'data']),
+    path(['props', 'description'])
+)
 const conditionOf = pathOr('', ['props', 'condition'])
 const statusOf = propOr(500, 'code')
 
