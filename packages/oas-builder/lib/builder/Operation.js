@@ -4,11 +4,18 @@ const Status = require('./StatusCodes')
 const Body = require('./Body')
 const Parameter = require('./Parameter')
 
-const { toPairs, pipe, pathOr } = require('ramda')
+const { toPairs, pipe, pathOr, includes, curry } = require('ramda')
 const propsOf = pipe(toValue, pathOr({}, ['properties']), toPairs)
+const isRequired = (name, schema) => pipe(toValue, pathOr([], ['required']), includes(name))(schema)
 
 const IdPath = (name, schema, description) =>
     Parameter.new().inPath().required().name(name).schema(schema).description(description)
+
+const buildParam = curry((schema, [name, type]) =>
+    Parameter.new().inQuery().name(name).schema(type).mandatory(isRequired(name, schema))
+)
+
+const addParam = (acc, param) => ({ ...acc, parameters: acc.parameters.add(param) })
 
 const defaultTo = (description) => Body.new().description(description)
 
@@ -20,7 +27,7 @@ const Schema = (state = {}) => ({
     security: (name, ...scopes) =>
         Schema({ ...state, security: state.security.add({ [name]: scopes }) }),
     summary: (summary) => Schema({ ...state, summary }),
-    description: (description) => Schema({ ...state, description }),
+    description: (...description) => Schema({ ...state, description: description.join('\n') }),
     deprecated: () => Schema({ ...state, deprecated: true }),
 
     tag: (tag) => Schema({ ...state, tags: [...state.tags, tag] }),
@@ -34,12 +41,7 @@ const Schema = (state = {}) => ({
     // shorthands
     idPath: (name, description = '', type = 'string') =>
         Schema({ ...state, parameters: state.parameters.add(IdPath(name, { type }, description)) }),
-    query: (schema) =>
-        Schema(
-            propsOf(schema)
-                .map(([name, schema]) => Parameter.new().inQuery().name(name).schema(schema))
-                .reduce((acc, param) => ({ ...acc, parameters: acc.parameters.add(param) }), state)
-        ),
+    query: (schema) => Schema(propsOf(schema).map(buildParam(schema)).reduce(addParam, state)),
 
     default: (body = defaultTo('NotImplemented')) =>
         Schema({ ...state, responses: state.responses.add('default', body) }),

@@ -1,5 +1,6 @@
 const OAS = require('..')
 const validator = require('oas-validator')
+const S = require('fluent-json-schema')
 
 describe('Static', () => {
     test('document', () => {
@@ -13,7 +14,13 @@ describe('Static', () => {
                 .description('The bar')
                 .get(
                     OAS.op()
-                        .query({ type: 'object', properties: { foo: { type: 'string' } } })
+                        .query(
+                            S.object()
+                                .prop('foo', S.string())
+                                .prop('bar', S.string())
+                                .required(['bar'])
+                        )
+                        // .query({ type: 'object', properties: { foo: { type: 'string' } } })
                         .Ok(
                             OAS.body()
                                 .description('bar body')

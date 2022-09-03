@@ -6,7 +6,7 @@ const Schema = (state = {}) => ({
     valueOf: () => valueOf(state),
     raw: (raw) => Schema({ ...state, ...raw }),
     summary: (summary) => Schema({ ...state, summary }),
-    description: (description) => Schema({ ...state, description }),
+    description: (...description) => Schema({ ...state, description: description.join('\n') }),
     get: (value) => Schema({ ...state, [Methods.GET]: value }),
     put: (value) => Schema({ ...state, [Methods.PUT]: value }),
     post: (value) => Schema({ ...state, [Methods.POST]: value }),
