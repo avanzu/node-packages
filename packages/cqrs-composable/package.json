@@ -28,5 +28,9 @@
   },
   "bugs": {
     "url": "https://github.com/avanzu/node-packages/issues"
+  },
+  "dependencies": {
+    "nanoid": "^4.0.0",
+    "ramda": "^0.28.0"
   }
 }
