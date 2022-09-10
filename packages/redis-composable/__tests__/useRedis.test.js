@@ -3,7 +3,7 @@ const { useRedis } = require('..')
 describe('useRedis', () => {
     const { connectionOf, closeConnection, connectionExists } = useRedis()
 
-    const connection = connectionOf('testing', { url: 'redis://localhost:6379' })
+    const connection = connectionOf('testing', { url: process.env.REDIS_URL })
 
     test('presence', () => {
         expect(connection).toBeDefined()
@@ -11,7 +11,7 @@ describe('useRedis', () => {
     })
 
     test('reuse', () => {
-        const instance = connectionOf('testing', { url: 'redis://localhost:6379' })
+        const instance = connectionOf('testing', { url: process.env.REDIS_URL })
         expect(instance).toBe(connection)
     })
 
