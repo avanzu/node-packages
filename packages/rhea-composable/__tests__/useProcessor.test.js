@@ -8,7 +8,11 @@ describe('useProcessor', () => {
     test('with dispatchable', async () => {
         const dummy = { send: jest.fn() }
         const delivery = { update: jest.fn() }
-        const connection = connectionOf('foo', { username: 'admin' })
+        const connection = connectionOf('foo', {
+            host: process.env.__ACTIVEMQ_HOST__,
+            port: process.env.__ACTIVEMQ_PORT__,
+            username: 'admin',
+        })
 
         const { processMessages } = useProcessor(connection)
 

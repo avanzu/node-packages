@@ -1,10 +1,15 @@
 const { useConnection, useDialog, useProcessor } = require('..')
 const { panic } = require('../lib/errors')
 const { debug } = require('../lib/inspect')('test/useDialog')
+
 describe('useDialog', () => {
     const { connectionOf } = useConnection()
 
-    const connection = connectionOf('dialog', { username: 'admin' })
+    const connection = connectionOf('dialog', {
+        host: process.env.__ACTIVEMQ_HOST__,
+        port: process.env.__ACTIVEMQ_PORT__,
+        username: 'admin',
+    })
     const { openDialog } = useDialog(connection)
     const { processMessages } = useProcessor(connection)
 

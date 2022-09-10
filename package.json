@@ -7,8 +7,9 @@
     "eslint-plugin-prettier": "^4.0.0",
     "jest": "^27.5.1",
     "jest-junit": "^13.1.0",
-    "lerna": "^5.1.4",
+    "lerna": "^5.5.1",
     "prettier": "^2.6.2",
+    "testcontainers": "^8.13.1",
     "trace-unhandled": "^2.0.1"
   },
   "scripts": {
@@ -19,6 +20,7 @@
     "bootstrap": "lerna bootstrap  --concurrency 2"
   },
   "dependencies": {
-    "nanoid": "^3.3.2"
+    "nanoid": "^3.3.2",
+    "nx": "^14.7.3"
   }
 }
