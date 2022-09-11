@@ -2,7 +2,7 @@ const { mutate } = require('./mutations')
 const { useEntity } = require('./entity')
 const { tap } = require('ramda')
 
-exports.useStore = (app, crud) => {
+exports.useStore = (app, crud, context) => {
     const { create } = useEntity()
 
     const reconstitute = ({ id, state, events, revision }) =>
@@ -20,12 +20,12 @@ exports.useStore = (app, crud) => {
     )
     const clearEvents = (data) => ({ ...data, events: [] })
 
-    const loadEntity = (id, context) =>
+    const loadEntity = (id) =>
         new Promise((Ok, Err) => {
             crud.load(id, context).then(reconstitute).then(Ok, Err)
         })
 
-    const saveEntity = (entity, context) =>
+    const saveEntity = (entity) =>
         new Promise((Ok, Err) => {
             crud.save({ ...entity, context })
                 .then(emitEvents)
@@ -34,7 +34,7 @@ exports.useStore = (app, crud) => {
                 .then(Ok, Err)
         })
 
-    const removeEntity = (entity, context) =>
+    const removeEntity = (entity) =>
         new Promise((Ok, Err) => {
             const { id } = entity
             crud.remove(id, context)

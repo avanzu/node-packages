@@ -1,6 +1,5 @@
-const commands = require('./commands')
-const mutations = require('./mutations')
+const interaction = require('./interaction')
+const { addInteraction } = require('../..')
 module.exports = () => {
-    commands()
-    mutations()
+    addInteraction(interaction)
 }

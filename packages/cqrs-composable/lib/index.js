@@ -6,4 +6,5 @@ module.exports = {
     ...require('./entity'),
     ...require('./store'),
     ...require('./stores'),
+    ...require('./interaction'),
 }
