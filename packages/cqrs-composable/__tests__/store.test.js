@@ -11,7 +11,7 @@ describe('Store', () => {
         const app = new EventEmitter()
         const { loadEntity, saveEntity, removeEntity } = useStore(app, memoryState)
 
-        test('storing entities', async () => {
+        it('should persist the entity state', async () => {
             const { generate } = useEntity()
             const { dispatch } = useDispatch({})
             const entity = await generate()
@@ -38,7 +38,7 @@ describe('Store', () => {
             })
         })
 
-        test('loading entities', async () => {
+        it('should load entity state', async () => {
             memoryState.save({
                 id: 'entity-999',
                 state: { aThing: 10, anotherThing: 99 },
@@ -54,7 +54,7 @@ describe('Store', () => {
             })
         })
 
-        test('removing entities', async () => {
+        it('should remove the entity state', async () => {
             memoryState.save('entity-999', { aThing: 10, anotherThing: 99 }, [])
 
             const entity = await loadEntity('entity-999')
@@ -62,7 +62,7 @@ describe('Store', () => {
             expect(memoryState.exists(entity.id)).toEqual(false)
         })
 
-        test('loading non existent entites', async () => {
+        it('should panic when the entity id is not present', async () => {
             const promise = loadEntity('not-present')
             await expect(promise).rejects.toBeInstanceOf(CQRSError)
         })
@@ -72,7 +72,7 @@ describe('Store', () => {
         const app = new EventEmitter()
         const { loadEntity, saveEntity, removeEntity } = useStore(app, memoryStream)
 
-        test('storing entities', async () => {
+        it('should persist the entities event stream', async () => {
             const { generate } = useEntity()
             const { dispatch } = useDispatch({})
             const entity = await generate()
@@ -103,7 +103,7 @@ describe('Store', () => {
             })
         })
 
-        test('loading entities', async () => {
+        it('should load the entities event stream', async () => {
             memoryStream.save({
                 id: 'entity-999',
                 state: {},
@@ -118,7 +118,7 @@ describe('Store', () => {
             })
         })
 
-        test('removing entities', async () => {
+        it('should remove the entities event stream', async () => {
             memoryStream.save({ id: 'entity-999', state: {}, events: [] })
 
             const entity = await loadEntity('entity-999')
@@ -126,7 +126,7 @@ describe('Store', () => {
             expect(memoryStream.exists(entity.id)).toEqual(false)
         })
 
-        test('loading non existent entites', async () => {
+        it('should panic when the given entity id is not present', async () => {
             const promise = loadEntity('not-present')
             await expect(promise).rejects.toBeInstanceOf(CQRSError)
         })
