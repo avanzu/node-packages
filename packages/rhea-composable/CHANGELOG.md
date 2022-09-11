@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.8.2](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.8.1...@avanzu/rhea-composable@1.8.2) (2022-09-11)
+
+**Note:** Version bump only for package @avanzu/rhea-composable
+
+
+
+
+
 ## [1.8.1](https://github.com/avanzu/node-packages/compare/@avanzu/rhea-composable@1.8.0...@avanzu/rhea-composable@1.8.1) (2022-08-08)
 
 
