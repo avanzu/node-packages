@@ -1,9 +1,14 @@
 {
   "name": "@avanzu/oas-builder",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Code your openapi specifications using a fluent interface that integrates seamlessly with fluent-json-schema",
   "author": "Marc Bach <mail@avanzu.de>",
-  "keywords": ["openapi", "oas", "swagger", "fluent-json-schema"],
+  "keywords": [
+    "openapi",
+    "oas",
+    "swagger",
+    "fluent-json-schema"
+  ],
   "homepage": "https://github.com/avanzu/node-packages/blob/main/packages/oas-builder/README.md",
   "license": "ISC",
   "main": "index.js",
