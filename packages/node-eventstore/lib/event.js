@@ -1,6 +1,5 @@
 var debug = require('debug')('eventstore:event'),
-    dotty = require('dotty'),
-    _ = require('lodash')
+    dotty = require('dotty')
 
 /**
  * Event constructor
@@ -28,7 +27,7 @@ class Event {
             throw new Error(errAggIdMsg)
         }
 
-        if (!_.isArray(eventstream.uncommittedEvents)) {
+        if (!Array.isArray(eventstream.uncommittedEvents)) {
             var errAggIdMsg = 'eventstream.uncommittedEvents not injected!'
             debug(errAggIdMsg)
             throw new Error(errAggIdMsg)
@@ -48,7 +47,7 @@ class Event {
         this.position = null
 
         this.applyMappings = () => {
-            _.keys(eventMappings).forEach(
+            Object.keys(eventMappings).forEach(
                 function (key) {
                     if (this[key] !== undefined && this[key] !== null) {
                         dotty.put(this.payload, eventMappings[key], this[key])
