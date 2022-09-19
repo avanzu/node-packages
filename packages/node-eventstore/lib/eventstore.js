@@ -21,7 +21,7 @@ class Eventstore extends EventEmitter {
      */
     useEventPublisher(fn) {
         if (fn.length === 1) {
-            fn = _.wrap(fn, function (func, evt, callback) {
+            fn = _.wrap(fn, (func, evt, callback) => {
                 func(evt)
                 callback(null)
             })
@@ -62,35 +62,33 @@ class Eventstore extends EventEmitter {
      * @param {Function} callback the function that will be called when this action has finished [optional]
      */
     init(callback) {
-        var self = this
-
-        function initDispatcher() {
+        const initDispatcher = () => {
             debug('init event dispatcher')
-            self.dispatcher = new EventDispatcher(self.publisher, self)
-            self.dispatcher.start(callback)
+            this.dispatcher = new EventDispatcher(this.publisher, this)
+            this.dispatcher.start(callback)
         }
 
-        this.store.on('connect', function () {
-            self.emit('connect')
+        this.store.on('connect', () => {
+            this.emit('connect')
         })
 
-        this.store.on('disconnect', function () {
-            self.emit('disconnect')
+        this.store.on('disconnect', () => {
+            this.emit('disconnect')
         })
 
-        process.nextTick(function () {
+        process.nextTick(() => {
             tolerate(
-                function (callback) {
-                    self.store.connect(callback)
+                (callback) => {
+                    this.store.connect(callback)
                 },
-                self.options.timeout || 0,
-                function (err) {
+                this.options.timeout || 0,
+                (err) => {
                     if (err) {
                         debug(err)
                         if (callback) callback(err)
                         return
                     }
-                    if (!self.publisher) {
+                    if (!this.publisher) {
                         debug('no publisher defined')
                         if (callback) callback(null)
                         return
@@ -218,13 +216,11 @@ class Eventstore extends EventEmitter {
             query = { aggregateId: query }
         }
 
-        var self = this
-
-        function nextFn(callback) {
+        const nextFn = (callback) => {
             if (limit < 0) {
                 var resEvts = []
                 resEvts.next = nextFn
-                return process.nextTick(function () {
+                return process.nextTick(() => {
                     callback(null, resEvts)
                 })
             }
@@ -232,8 +228,8 @@ class Eventstore extends EventEmitter {
             _getEvents(query, skip, limit, callback)
         }
 
-        function _getEvents(query, skip, limit, callback) {
-            self.store.getEvents(query, skip, limit, function (err, evts) {
+        const _getEvents = (query, skip, limit, callback) => {
+            this.store.getEvents(query, skip, limit, (err, evts) => {
                 if (err) return callback(err)
                 evts.next = nextFn
                 callback(null, evts)
@@ -267,13 +263,11 @@ class Eventstore extends EventEmitter {
             limit = -1
         }
 
-        var self = this
-
-        function nextFn(callback) {
+        const nextFn = (callback) => {
             if (limit < 0) {
                 var resEvts = []
                 resEvts.next = nextFn
-                return process.nextTick(function () {
+                return process.nextTick(() => {
                     callback(null, resEvts)
                 })
             }
@@ -283,8 +277,8 @@ class Eventstore extends EventEmitter {
 
         commitStamp = new Date(commitStamp)
 
-        function _getEventsSince(commitStamp, skip, limit, callback) {
-            self.store.getEventsSince(commitStamp, skip, limit, function (err, evts) {
+        const _getEventsSince = (commitStamp, skip, limit, callback) => {
+            this.store.getEventsSince(commitStamp, skip, limit, (err, evts) => {
                 if (err) return callback(err)
                 evts.next = nextFn
                 callback(null, evts)
@@ -355,13 +349,11 @@ class Eventstore extends EventEmitter {
             return
         }
 
-        var self = this
-
-        this.getEventsByRevision(query, revMin, revMax, function (err, evts) {
+        this.getEventsByRevision(query, revMin, revMax, (err, evts) => {
             if (err) {
                 return callback(err)
             }
-            callback(null, new EventStream(self, query, evts))
+            callback(null, new EventStream(this, query, evts))
         })
     }
 
@@ -389,22 +381,20 @@ class Eventstore extends EventEmitter {
             return
         }
 
-        var self = this
-
         async.waterfall(
             [
-                function getSnapshot(callback) {
-                    self.store.getSnapshot(query, revMax, callback)
+                (callback) => {
+                    this.store.getSnapshot(query, revMax, callback)
                 },
 
-                function getEventStream(snap, callback) {
+                (snap, callback) => {
                     var rev = 0
 
                     if (snap && snap.revision !== undefined && snap.revision !== null) {
                         rev = snap.revision + 1
                     }
 
-                    self.getEventStream(query, rev, revMax, function (err, stream) {
+                    this.getEventStream(query, rev, revMax, (err, stream) => {
                         if (err) {
                             return callback(err)
                         }
@@ -452,14 +442,12 @@ class Eventstore extends EventEmitter {
             }
         }
 
-        var self = this
-
         async.waterfall(
             [
-                function getNewIdFromStorage(callback) {
-                    self.getNewId(callback)
+                (callback) => {
+                    this.getNewId(callback)
                 },
-                function commit(id, callback) {
+                (id, callback) => {
                     try {
                         var snap = new Snapshot(id, obj)
                         snap.commitStamp = new Date()
@@ -467,9 +455,9 @@ class Eventstore extends EventEmitter {
                         return callback(err)
                     }
 
-                    self.store.addSnapshot(snap, function (error) {
-                        if (self.options.maxSnapshotsCount) {
-                            self.store.cleanSnapshots(
+                    this.store.addSnapshot(snap, (error) => {
+                        if (this.options.maxSnapshotsCount) {
+                            this.store.cleanSnapshots(
                                 _.pick(obj, 'aggregateId', 'aggregate', 'context'),
                                 callback
                             )
@@ -490,64 +478,59 @@ class Eventstore extends EventEmitter {
      *                             `function(err, eventstream){}` (hint: eventstream.eventsToDispatch)
      */
     commit(eventstream, callback) {
-        var self = this
-
         async.waterfall(
             [
-                function getNewCommitId(callback) {
-                    self.getNewId(callback)
+                (callback) => {
+                    this.getNewId(callback)
                 },
 
-                function commitEvents(id, callback) {
+                (id, callback) => {
                     // start committing.
                     var event,
                         currentRevision = eventstream.currentRevision(),
                         uncommittedEvents = [].concat(eventstream.uncommittedEvents)
                     eventstream.uncommittedEvents = []
 
-                    self.store.getNextPositions(
-                        uncommittedEvents.length,
-                        function (err, positions) {
-                            if (err) return callback(err)
+                    this.store.getNextPositions(uncommittedEvents.length, (err, positions) => {
+                        if (err) return callback(err)
 
-                            for (var i = 0, len = uncommittedEvents.length; i < len; i++) {
-                                event = uncommittedEvents[i]
-                                event.id = id + i.toString()
-                                event.commitId = id
-                                event.commitSequence = i
-                                event.restInCommitStream = len - 1 - i
-                                event.commitStamp = new Date()
-                                currentRevision++
-                                event.streamRevision = currentRevision
-                                if (positions) event.position = positions[i]
+                        for (var i = 0, len = uncommittedEvents.length; i < len; i++) {
+                            event = uncommittedEvents[i]
+                            event.id = id + i.toString()
+                            event.commitId = id
+                            event.commitSequence = i
+                            event.restInCommitStream = len - 1 - i
+                            event.commitStamp = new Date()
+                            currentRevision++
+                            event.streamRevision = currentRevision
+                            if (positions) event.position = positions[i]
 
-                                event.applyMappings()
+                            event.applyMappings()
+                        }
+
+                        this.store.addEvents(uncommittedEvents, (err) => {
+                            if (err) {
+                                // add uncommitted events back to eventstream
+                                eventstream.uncommittedEvents = uncommittedEvents.concat(
+                                    eventstream.uncommittedEvents
+                                )
+                                return callback(err)
                             }
 
-                            self.store.addEvents(uncommittedEvents, function (err) {
-                                if (err) {
-                                    // add uncommitted events back to eventstream
-                                    eventstream.uncommittedEvents = uncommittedEvents.concat(
-                                        eventstream.uncommittedEvents
-                                    )
-                                    return callback(err)
-                                }
+                            if (this.publisher && this.dispatcher) {
+                                // push to undispatchedQueue
+                                this.dispatcher.addUndispatchedEvents(uncommittedEvents)
+                            } else {
+                                eventstream.eventsToDispatch = [].concat(uncommittedEvents)
+                            }
 
-                                if (self.publisher && self.dispatcher) {
-                                    // push to undispatchedQueue
-                                    self.dispatcher.addUndispatchedEvents(uncommittedEvents)
-                                } else {
-                                    eventstream.eventsToDispatch = [].concat(uncommittedEvents)
-                                }
+                            // move uncommitted events to events
+                            eventstream.events = eventstream.events.concat(uncommittedEvents)
+                            eventstream.currentRevision()
 
-                                // move uncommitted events to events
-                                eventstream.events = eventstream.events.concat(uncommittedEvents)
-                                eventstream.currentRevision()
-
-                                callback(null, eventstream)
-                            })
-                        }
-                    )
+                            callback(null, eventstream)
+                        })
+                    })
                 },
             ],
 
@@ -609,12 +592,10 @@ class Eventstore extends EventEmitter {
             query = { aggregateId: query }
         }
 
-        var self = this
-
-        this.store.getLastEvent(query, function (err, evt) {
+        this.store.getLastEvent(query, (err, evt) => {
             if (err) return callback(err)
 
-            callback(null, new EventStream(self, query, evt ? [evt] : []))
+            callback(null, new EventStream(this, query, evt ? [evt] : []))
         })
     }
 

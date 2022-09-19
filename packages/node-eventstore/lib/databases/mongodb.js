@@ -3,9 +3,7 @@ var Store = require('../base'),
     async = require('async'),
     stream = require('stream'),
     mongo = Store.use('mongodb'),
-    mongoVersion = Store.use('mongodb/package.json').version,
-    isNew = mongoVersion.indexOf('1.') !== 0,
-    ObjectID = isNew ? mongo.ObjectID : mongo.BSONPure.ObjectID,
+    ObjectID = mongo.ObjectID,
     debug = require('debug')('eventstore:store:mongodb')
 
 const noop = () => {}
@@ -22,11 +20,11 @@ const streamEventsByRevision = (self, findStatement, revMin, revMax, resultStrea
     })
 
     async.during(
-        function (clb) {
+        (clb) => {
             mongoStream.hasNext(clb)
         },
-        function (clb) {
-            mongoStream.next(function (error, e) {
+        (clb) => {
+            mongoStream.next((error, e) => {
                 if (error) return clb(error)
 
                 if (!lastEvent) {
@@ -47,7 +45,7 @@ const streamEventsByRevision = (self, findStatement, revMin, revMax, resultStrea
                 resultStream.write(lastEvent, clb)
             })
         },
-        function (error) {
+        (error) => {
             if (error) {
                 return resultStream.destroy(error)
             }
@@ -67,7 +65,7 @@ const streamEventsByRevision = (self, findStatement, revMin, revMax, resultStrea
                 resultStream.end() // lastEvent was keep duplicated from this line. We should not re-write last event into the stream when ending it. thus end() rather then end(lastEvent).
             }
 
-            self.repairFailedTransaction(lastEvent, function (err) {
+            self.repairFailedTransaction(lastEvent, (err) => {
                 if (err) {
                     if (err.message.indexOf('missing tx entry') >= 0) {
                         return resultStream.end(lastEvent) // Maybe we should check on this line too?
@@ -140,7 +138,7 @@ class Mongo extends Store {
     }
 
     connect(callback = noop) {
-        var self = this
+        //
 
         var options = this.options
 
@@ -153,7 +151,7 @@ class Mongo extends Store {
                 ? options.servers
                 : [{ host: options.host, port: options.port }]
 
-            var memberString = _(members).map(function (m) {
+            var memberString = _(members).map((m) => {
                 return m.host + ':' + m.port
             })
             var authString =
@@ -172,88 +170,88 @@ class Mongo extends Store {
         if (mongo.MongoClient.length === 2) {
             ensureIndex = 'createIndex'
             client = new mongo.MongoClient(connectionUrl, options.options)
-            client.connect(function (err, cl) {
+            client.connect((err, cl) => {
                 if (err) {
                     debug(err)
                     callback(err)
                     return
                 }
 
-                self.db = cl.db(cl.s.options.dbName)
-                if (!self.db.close) {
-                    self.db.close = cl.close.bind(cl)
+                this.db = cl.db(cl.s.options.dbName)
+                if (!this.db.close) {
+                    this.db.close = cl.close.bind(cl)
                 }
                 initDb()
             })
         } else {
             client = new mongo.MongoClient()
-            client.connect(connectionUrl, options.options, function (err, db) {
+            client.connect(connectionUrl, options.options, (err, db) => {
                 if (err) {
                     debug(err)
                     callback(err)
                     return
                 }
 
-                self.db = db
+                this.db = db
                 initDb()
             })
         }
 
-        function initDb() {
-            self.db.on('close', function () {
-                self.emit('disconnect')
-                self.stopHeartbeat()
+        const initDb = () => {
+            this.db.on('close', () => {
+                this.emit('disconnect')
+                this.stopHeartbeat()
             })
 
-            function finish(err) {
+            const finish = (err) => {
                 if (err) {
                     debug(err)
                     callback(err)
                     return
                 }
 
-                self.events = self.db.collection(options.eventsCollectionName)
-                self.events[ensureIndex]({ aggregateId: 1, streamRevision: 1 }, function (err) {
+                this.events = this.db.collection(options.eventsCollectionName)
+                this.events[ensureIndex]({ aggregateId: 1, streamRevision: 1 }, (err) => {
                     if (err) {
                         debug(err)
                     }
                 })
-                self.events[ensureIndex]({ commitStamp: 1 }, function (err) {
+                this.events[ensureIndex]({ commitStamp: 1 }, (err) => {
                     if (err) {
                         debug(err)
                     }
                 })
-                self.events[ensureIndex]({ dispatched: 1 }, { sparse: true }, function (err) {
+                this.events[ensureIndex]({ dispatched: 1 }, { sparse: true }, (err) => {
                     if (err) {
                         debug(err)
                     }
                 })
-                self.events[ensureIndex](
+                this.events[ensureIndex](
                     { commitStamp: 1, streamRevision: 1, commitSequence: 1 },
-                    function (err) {
+                    (err) => {
                         if (err) {
                             debug(err)
                         }
                     }
                 )
 
-                self.snapshots = self.db.collection(options.snapshotsCollectionName)
-                self.snapshots[ensureIndex]({ aggregateId: 1, revision: -1 }, function (err) {
+                this.snapshots = this.db.collection(options.snapshotsCollectionName)
+                this.snapshots[ensureIndex]({ aggregateId: 1, revision: -1 }, (err) => {
                     if (err) {
                         debug(err)
                     }
                 })
 
-                self.transactions = self.db.collection(options.transactionsCollectionName)
-                self.transactions[ensureIndex](
+                this.transactions = this.db.collection(options.transactionsCollectionName)
+                this.transactions[ensureIndex](
                     { aggregateId: 1, 'events.streamRevision': 1 },
-                    function (err) {
+                    (err) => {
                         if (err) {
                             debug(err)
                         }
                     }
                 )
-                self.events[ensureIndex](
+                this.events[ensureIndex](
                     {
                         aggregate: 1,
                         aggregateId: 1,
@@ -261,7 +259,7 @@ class Mongo extends Store {
                         streamRevision: -1,
                         commitSequence: -1,
                     },
-                    function (err) {
+                    (err) => {
                         if (err) {
                             debug(err)
                         }
@@ -269,15 +267,15 @@ class Mongo extends Store {
                 )
 
                 if (options.positionsCollectionName) {
-                    self.positions = self.db.collection(options.positionsCollectionName)
-                    self.positionsCounterId = options.eventsCollectionName
+                    this.positions = this.db.collection(options.positionsCollectionName)
+                    this.positionsCounterId = options.eventsCollectionName
                 }
 
-                self.emit('connect')
-                if (self.options.heartbeat) {
-                    self.startHeartbeat()
+                this.emit('connect')
+                if (this.options.heartbeat) {
+                    this.startHeartbeat()
                 }
-                callback(null, self)
+                callback(null, this)
             }
 
             finish()
@@ -292,24 +290,24 @@ class Mongo extends Store {
     }
 
     startHeartbeat() {
-        var self = this
+        //
 
         var gracePeriod = Math.round(this.options.heartbeat / 2)
-        this.heartbeatInterval = setInterval(function () {
-            var graceTimer = setTimeout(function () {
-                if (self.heartbeatInterval) {
+        this.heartbeatInterval = setInterval(() => {
+            var graceTimer = setTimeout(() => {
+                if (this.heartbeatInterval) {
                     console.error(
                         new Error('Heartbeat timeouted after ' + gracePeriod + 'ms (mongodb)').stack
                     )
-                    self.disconnect()
+                    this.disconnect()
                 }
             }, gracePeriod)
 
-            self.db.command({ ping: 1 }, function (err) {
+            this.db.command({ ping: 1 }, (err) => {
                 if (graceTimer) clearTimeout(graceTimer)
                 if (err) {
                     console.error(err.stack || err)
-                    self.disconnect()
+                    this.disconnect()
                 }
             })
         }, this.options.heartbeat)
@@ -323,7 +321,7 @@ class Mongo extends Store {
             return
         }
 
-        this.db.close(function (err) {
+        this.db.close((err) => {
             if (err) {
                 debug(err)
             }
@@ -332,24 +330,23 @@ class Mongo extends Store {
     }
 
     clear(callback = noop) {
-        var self = this
         async.parallel(
             [
-                function (callback) {
-                    self.events.deleteMany({}, callback)
+                (callback) => {
+                    this.events.deleteMany({}, callback)
                 },
-                function (callback) {
-                    self.snapshots.deleteMany({}, callback)
+                (callback) => {
+                    this.snapshots.deleteMany({}, callback)
                 },
-                function (callback) {
-                    self.transactions.deleteMany({}, callback)
+                (callback) => {
+                    this.transactions.deleteMany({}, callback)
                 },
-                function (callback) {
-                    if (!self.positions) return callback(null)
-                    self.positions.deleteMany({}, callback)
+                (callback) => {
+                    if (!this.positions) return callback(null)
+                    this.positions.deleteMany({}, callback)
                 },
             ],
-            function (err) {
+            (err) => {
                 if (err) {
                     debug(err)
                 }
@@ -369,7 +366,7 @@ class Mongo extends Store {
             { _id: this.positionsCounterId },
             { $inc: { position: positions } },
             { returnOriginal: false, upsert: true },
-            function (err, pos) {
+            (err, pos) => {
                 if (err) return callback(err)
 
                 pos.value.position += 1
@@ -391,9 +388,7 @@ class Mongo extends Store {
         var noAggregateId = false,
             invalidCommitId = false
 
-        var self = this
-
-        _.forEach(events, function (evt) {
+        _.forEach(events, (evt) => {
             if (!evt.aggregateId) {
                 noAggregateId = true
             }
@@ -421,7 +416,7 @@ class Mongo extends Store {
         }
 
         if (events.length === 1) {
-            return self.events.insertOne(events[0], callback)
+            return this.events.insertOne(events[0], callback)
         }
 
         var tx = {
@@ -432,21 +427,21 @@ class Mongo extends Store {
             context: events[0].context,
         }
 
-        self.transactions.insertOne(tx, function (err) {
+        this.transactions.insertOne(tx, (err) => {
             if (err) {
                 debug(err)
                 callback(err)
                 return
             }
 
-            self.events.insertMany(events, function (err) {
+            this.events.insertMany(events, (err) => {
                 if (err) {
                     debug(err)
                     callback(err)
                     return
                 }
 
-                self.removeTransactions(events[events.length - 1], callback)
+                this.removeTransactions(events[events.length - 1], callback)
             })
         })
         // });
@@ -526,10 +521,8 @@ class Mongo extends Store {
             findStatement.context = query.context
         }
 
-        var self = this
-
         var resultStream = new stream.PassThrough({ objectMode: true, highWaterMark: 1 })
-        streamEventsByRevision(self, findStatement, revMin, revMax, resultStream)
+        streamEventsByRevision(this, findStatement, revMin, revMax, resultStream)
         return resultStream
     }
 
@@ -567,8 +560,6 @@ class Mongo extends Store {
             findStatement.context = query.context
         }
 
-        var self = this
-
         this.events
             .find(findStatement, {
                 sort: [
@@ -577,7 +568,7 @@ class Mongo extends Store {
                     ['commitSequence', 'asc'],
                 ],
             })
-            .toArray(function (err, res) {
+            .toArray((err, res) => {
                 if (err) {
                     debug(err)
                     return callback(err)
@@ -596,12 +587,12 @@ class Mongo extends Store {
 
                 if (txOk) {
                     // the following is usually unnecessary
-                    self.removeTransactions(lastEvt)
+                    this.removeTransactions(lastEvt)
 
                     return callback(null, res)
                 }
 
-                self.repairFailedTransaction(lastEvt, function (err) {
+                this.repairFailedTransaction(lastEvt, (err) => {
                     if (err) {
                         if (err.message.indexOf('missing tx entry') >= 0) {
                             return callback(null, res)
@@ -610,7 +601,7 @@ class Mongo extends Store {
                         return callback(err)
                     }
 
-                    self.getEventsByRevision(query, revMin, revMax, callback)
+                    this.getEventsByRevision(query, revMin, revMax, callback)
                 })
             })
     }
@@ -748,7 +739,7 @@ class Mongo extends Store {
         }
 
         // the following is usually unnecessary
-        this.transactions.deleteMany(findStatement, function (err) {
+        this.transactions.deleteMany(findStatement, (err) => {
             if (err) {
                 debug(err)
             }
@@ -757,8 +748,8 @@ class Mongo extends Store {
     }
 
     getPendingTransactions(callback = noop) {
-        var self = this
-        this.transactions.find({}).toArray(function (err, txs) {
+        //
+        this.transactions.find({}).toArray((err, txs) => {
             if (err) {
                 debug(err)
                 return callback(err)
@@ -772,7 +763,7 @@ class Mongo extends Store {
 
             async.map(
                 txs,
-                function (tx, clb) {
+                (tx, clb) => {
                     var findStatement = { commitId: tx._id, aggregateId: tx.aggregateId }
 
                     if (tx.aggregate) {
@@ -783,7 +774,7 @@ class Mongo extends Store {
                         findStatement.context = tx.context
                     }
 
-                    self.events.findOne(findStatement, function (err, evt) {
+                    this.events.findOne(findStatement, (err, evt) => {
                         if (err) {
                             return clb(err)
                         }
@@ -793,10 +784,10 @@ class Mongo extends Store {
                             return clb(null)
                         }
 
-                        self.transactions.deleteOne({ _id: tx._id }, clb)
+                        this.transactions.deleteOne({ _id: tx._id }, clb)
                     })
                 },
-                function (err) {
+                (err) => {
                     if (err) {
                         debug(err)
                         return callback(err)
@@ -840,23 +831,9 @@ class Mongo extends Store {
     }
 
     repairFailedTransaction(lastEvt, callback = noop) {
-        var self = this
-
-        //var findStatement = {
-        //  aggregateId: lastEvt.aggregateId,
-        //  'events.streamRevision': lastEvt.streamRevision + 1
-        //};
         //
-        //if (lastEvt.aggregate) {
-        //  findStatement.aggregate = lastEvt.aggregate;
-        //}
-        //
-        //if (lastEvt.context) {
-        //  findStatement.context = lastEvt.context;
-        //}
 
-        //this.transactions.findOne(findStatement, function (err, tx) {
-        this.transactions.findOne({ _id: lastEvt.commitId }, function (err, tx) {
+        this.transactions.findOne({ _id: lastEvt.commitId }, (err, tx) => {
             if (err) {
                 debug(err)
                 return callback(err)
@@ -870,13 +847,13 @@ class Mongo extends Store {
 
             var missingEvts = tx.events.slice(tx.events.length - lastEvt.restInCommitStream)
 
-            self.events.insertMany(missingEvts, function (err) {
+            this.events.insertMany(missingEvts, (err) => {
                 if (err) {
                     debug(err)
                     return callback(err)
                 }
 
-                self.removeTransactions(lastEvt)
+                this.removeTransactions(lastEvt)
 
                 callback(null)
             })

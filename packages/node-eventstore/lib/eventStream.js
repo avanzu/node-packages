@@ -10,63 +10,6 @@ var debug = require('debug')('eventstore:eventstream'),
  * @param {Array} events the events (from store)
  * @constructor
  */
-// eslint-disable-next-line no-unused-vars
-function _EventStream(eventstore, query, events) {
-    if (!eventstore) {
-        var errESMsg = 'eventstore not injected!'
-        debug(errESMsg)
-        throw new Error(errESMsg)
-    }
-
-    if (typeof eventstore.commit !== 'function') {
-        var errESfnMsg = 'eventstore.commit not injected!'
-        debug(errESfnMsg)
-        throw new Error(errESfnMsg)
-    }
-
-    if (!query) {
-        var errQryMsg = 'query not injected!'
-        debug(errQryMsg)
-        throw new Error(errQryMsg)
-    }
-
-    if (!query.aggregateId) {
-        var errAggIdMsg = 'query.aggregateId not injected!'
-        debug(errAggIdMsg)
-        throw new Error(errAggIdMsg)
-    }
-
-    if (events) {
-        if (!_.isArray(events)) {
-            var errEvtsArrMsg = 'events should be an array!'
-            debug(errEvtsArrMsg)
-            throw new Error(errEvtsArrMsg)
-        }
-
-        for (var i = 0, len = events.length; i < len; i++) {
-            var evt = events[i]
-            if (evt.streamRevision === undefined || evt.streamRevision === null) {
-                var errEvtMsg = 'The events passed should all have a streamRevision!'
-                debug(errEvtMsg)
-                throw new Error(errEvtMsg)
-            }
-        }
-    }
-
-    this.eventstore = eventstore
-    this.streamId = query.aggregateId
-    this.aggregateId = query.aggregateId
-    this.aggregate = query.aggregate
-    this.context = query.context
-    this.events = events || []
-    this.uncommittedEvents = []
-    this.lastRevision = -1
-
-    this.events = _.sortBy(this.events, 'streamRevision')
-
-    // to update lastRevision...
-    this.currentRevision()
-}
 
 class EventStream {
     constructor(eventstore, query, events) {
@@ -157,9 +100,9 @@ class EventStream {
             debug(errEvtsArrMsg)
             throw new Error(errEvtsArrMsg)
         }
-        var self = this
-        _.each(events, function (evt) {
-            self.addEvent(evt)
+
+        _.each(events, (evt) => {
+            this.addEvent(evt)
         })
     }
 

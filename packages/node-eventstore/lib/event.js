@@ -47,7 +47,7 @@ class Event {
         this.payload = event || null
         this.position = null
 
-        this.applyMappings = function applyMappings() {
+        this.applyMappings = () => {
             _.keys(eventMappings).forEach(
                 function (key) {
                     if (this[key] !== undefined && this[key] !== null) {

@@ -13,7 +13,7 @@ function deepFind(obj, pattern) {
         for (var i in parts) {
             found = found[parts[i]]
             if (_.isArray(found)) {
-                found = _.filter(found, function (item) {
+                found = _.filter(found, (item) => {
                     var deepFound = deepFind(item, parts.slice(i + 1).join('.'))
                     return !!deepFound
                 })
@@ -74,7 +74,7 @@ class InMemory extends Store {
             return
         }
 
-        var found = _.find(events, function (evt) {
+        var found = _.find(events, (evt) => {
             return !evt.aggregateId
         })
 
@@ -104,9 +104,8 @@ class InMemory extends Store {
         this.undispatchedEvents[context][aggregate][aggregateId] =
             this.undispatchedEvents[context][aggregate][aggregateId].concat(events)
 
-        var self = this
-        _.forEach(events, function (evt) {
-            self.undispatchedEvents._direct[evt.id] = evt
+        _.forEach(events, (evt) => {
+            this.undispatchedEvents._direct[evt.id] = evt
         })
 
         callback(null)
@@ -122,12 +121,12 @@ class InMemory extends Store {
             }
         }
 
-        res = _.sortBy(res, function (e) {
+        res = _.sortBy(res, (e) => {
             return e.commitStamp.getTime()
         })
 
         if (!_.isEmpty(query)) {
-            res = _.filter(res, function (e) {
+            res = _.filter(res, (e) => {
                 var keys = _.keys(query)
                 var values = _.values(query)
                 var found = false
@@ -168,11 +167,11 @@ class InMemory extends Store {
             }
         }
 
-        res = _.sortBy(res, function (e) {
+        res = _.sortBy(res, (e) => {
             return e.commitStamp.getTime()
         })
 
-        res = _.filter(res, function (e) {
+        res = _.filter(res, (e) => {
             return e.commitStamp.getTime() >= date.getTime()
         })
 
@@ -287,12 +286,12 @@ class InMemory extends Store {
             }
         }
 
-        res = _.sortBy(res, function (e) {
+        res = _.sortBy(res, (e) => {
             return e.commitStamp.getTime()
         })
 
         if (!_.isEmpty(query)) {
-            res = _.filter(res, function (e) {
+            res = _.filter(res, (e) => {
                 var keys = _.keys(query)
                 var values = _.values(query)
                 var found = false
@@ -326,12 +325,12 @@ class InMemory extends Store {
             }
         }
 
-        res = _.sortBy(res, function (e) {
+        res = _.sortBy(res, (e) => {
             return e.commitStamp.getTime()
         })
 
         if (!_.isEmpty(query)) {
-            res = _.filter(res, function (e) {
+            res = _.filter(res, (e) => {
                 var keys = _.keys(query)
                 var values = _.values(query)
                 var found = false
@@ -406,16 +405,16 @@ class InMemory extends Store {
             }
         }
 
-        //    all = _.sortBy(all, function (s) {
+        //    all = _.sortBy(all,  (s)  => {
         //      return [(-s.revision), (-s.version)].join('_');
         //    });
 
-        all = _.sortBy(all, function (s) {
+        all = _.sortBy(all, (s) => {
             return -s.commitStamp.getTime()
         })
 
         if (!_.isEmpty(query)) {
-            all = _.filter(all, function (a) {
+            all = _.filter(all, (a) => {
                 var keys = _.keys(query)
                 var values = _.values(query)
                 var found = false

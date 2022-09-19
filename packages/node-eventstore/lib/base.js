@@ -7,13 +7,13 @@ var EventEmitter = require('events').EventEmitter,
  * @param {Object} options The options can have information like host, port, etc. [optional]
  */
 
-function implementError(callback) {
+const implementError = (callback) => {
     var err = new Error('Please implement this function!')
     if (callback) callback(err)
     throw err
 }
 
-function silentWarning(callback) {
+const silentWarning = (callback) => {
     console.warn('Snapshot cleaning is not implemented for this kind of store')
     callback()
 }
