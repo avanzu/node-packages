@@ -1,5 +1,4 @@
-var util = require('util'),
-    Store = require('../base'),
+var Store = require('../base'),
     _ = require('lodash'),
     async = require('async'),
     stream = require('stream'),
@@ -11,7 +10,7 @@ var util = require('util'),
 
 const noop = () => {}
 
-function streamEventsByRevision(self, findStatement, revMin, revMax, resultStream, lastEvent) {
+const streamEventsByRevision = (self, findStatement, revMin, revMax, resultStream, lastEvent) => {
     findStatement.streamRevision = revMax === -1 ? { $gte: revMin } : { $gte: revMin, $lt: revMax }
 
     var mongoStream = self.events.find(findStatement, {
@@ -90,46 +89,57 @@ function streamEventsByRevision(self, findStatement, revMin, revMax, resultStrea
     )
 }
 
-function Mongo(options) {
-    options = options || {}
-
-    Store.call(this, options)
-
-    var defaults = {
-        host: 'localhost',
-        port: 27017,
-        dbName: 'eventstore',
-        eventsCollectionName: 'events',
-        snapshotsCollectionName: 'snapshots',
-        transactionsCollectionName: 'transactions', //,
-        // heartbeat: 60 * 1000
+const removeElements =
+    (collection, callback = noop) =>
+    (error, elements) => {
+        if (error) {
+            debug(error)
+            return callback(error)
+        }
+        async.each(
+            elements,
+            (element, callback) => {
+                try {
+                    collection.deleteOne({ _id: element._id })
+                    callback()
+                } catch (error) {
+                    callback(error)
+                }
+            },
+            (error) => {
+                callback(error, elements.length)
+            }
+        )
     }
 
-    _.defaults(options, defaults)
+class Mongo extends Store {
+    constructor(options) {
+        super(options)
+        var defaults = {
+            host: 'localhost',
+            port: 27017,
+            dbName: 'eventstore',
+            eventsCollectionName: 'events',
+            snapshotsCollectionName: 'snapshots',
+            transactionsCollectionName: 'transactions',
+            options: {},
+        }
 
-    var defaultOpt = {
-        ssl: false,
-    }
+        _.defaults(options, defaults)
 
-    options.options = options.options || {}
+        var defaultOpt = {
+            ssl: false,
+            autoReconnect: false,
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        }
 
-    if (isNew) {
-        defaultOpt.autoReconnect = false
-        defaultOpt.useNewUrlParser = true
-        defaultOpt.useUnifiedTopology = true
         _.defaults(options.options, defaultOpt)
-    } else {
-        defaultOpt.auto_reconnect = false
-        _.defaults(options.options, defaultOpt)
+
+        this.options = options
     }
 
-    this.options = options
-}
-
-util.inherits(Mongo, Store)
-
-_.extend(Mongo.prototype, {
-    connect: function (callback = noop) {
+    connect(callback = noop) {
         var self = this
 
         var options = this.options
@@ -272,16 +282,16 @@ _.extend(Mongo.prototype, {
 
             finish()
         }
-    },
+    }
 
-    stopHeartbeat: function () {
+    stopHeartbeat() {
         if (this.heartbeatInterval) {
             clearInterval(this.heartbeatInterval)
             delete this.heartbeatInterval
         }
-    },
+    }
 
-    startHeartbeat: function () {
+    startHeartbeat() {
         var self = this
 
         var gracePeriod = Math.round(this.options.heartbeat / 2)
@@ -303,9 +313,9 @@ _.extend(Mongo.prototype, {
                 }
             })
         }, this.options.heartbeat)
-    },
+    }
 
-    disconnect: function (callback = noop) {
+    disconnect(callback = noop) {
         this.stopHeartbeat()
 
         if (!this.db) {
@@ -319,9 +329,9 @@ _.extend(Mongo.prototype, {
             }
             callback(err)
         })
-    },
+    }
 
-    clear: function (callback = noop) {
+    clear(callback = noop) {
         var self = this
         async.parallel(
             [
@@ -346,13 +356,13 @@ _.extend(Mongo.prototype, {
                 callback(err)
             }
         )
-    },
+    }
 
-    getNewId: function (callback) {
+    getNewId(callback) {
         callback(null, new ObjectID().toString())
-    },
+    }
 
-    getNextPositions: function (positions, callback = noop) {
+    getNextPositions(positions, callback = noop) {
         if (!this.positions) return callback(null)
 
         this.positions.findOneAndUpdate(
@@ -367,9 +377,9 @@ _.extend(Mongo.prototype, {
                 callback(null, _.range(pos.value.position - positions, pos.value.position))
             }
         )
-    },
+    }
 
-    addEvents: function (events, callback = noop) {
+    addEvents(events, callback = noop) {
         if (events.length === 0) {
             callback(null)
 
@@ -440,10 +450,10 @@ _.extend(Mongo.prototype, {
             })
         })
         // });
-    },
+    }
 
     // streaming API
-    streamEvents: function (query, skip, limit) {
+    streamEvents(query, skip, limit) {
         var findStatement = {}
 
         if (query.aggregate) {
@@ -475,9 +485,9 @@ _.extend(Mongo.prototype, {
         }
 
         return query
-    },
+    }
 
-    streamEventsSince: function (date, skip, limit) {
+    streamEventsSince(date, skip, limit) {
         var findStatement = { commitStamp: { $gte: date } }
 
         var query = this.events.find(findStatement, {
@@ -493,9 +503,9 @@ _.extend(Mongo.prototype, {
         if (limit && limit > 0) query.limit(limit)
 
         return query
-    },
+    }
 
-    streamEventsByRevision: function (query, revMin, revMax) {
+    streamEventsByRevision(query, revMin, revMax) {
         if (!query.aggregateId) {
             var errMsg = 'aggregateId not defined!'
             debug(errMsg)
@@ -521,17 +531,17 @@ _.extend(Mongo.prototype, {
         var resultStream = new stream.PassThrough({ objectMode: true, highWaterMark: 1 })
         streamEventsByRevision(self, findStatement, revMin, revMax, resultStream)
         return resultStream
-    },
+    }
 
-    getEvents: function (query, skip, limit, callback) {
+    getEvents(query, skip, limit, callback) {
         this.streamEvents(query, skip, limit).toArray(callback)
-    },
+    }
 
-    getEventsSince: function (date, skip, limit, callback) {
+    getEventsSince(date, skip, limit, callback) {
         this.streamEventsSince(date, skip, limit).toArray(callback)
-    },
+    }
 
-    getEventsByRevision: function (query, revMin, revMax, callback = noop) {
+    getEventsByRevision(query, revMin, revMax, callback = noop) {
         if (!query.aggregateId) {
             var errMsg = 'aggregateId not defined!'
             debug(errMsg)
@@ -603,9 +613,9 @@ _.extend(Mongo.prototype, {
                     self.getEventsByRevision(query, revMin, revMax, callback)
                 })
             })
-    },
+    }
 
-    getUndispatchedEvents: function (query, callback = noop) {
+    getUndispatchedEvents(query, callback = noop) {
         var findStatement = {
             dispatched: false,
         }
@@ -631,14 +641,14 @@ _.extend(Mongo.prototype, {
                 ],
             })
             .toArray(callback)
-    },
+    }
 
-    setEventToDispatched: function (id, callback = noop) {
+    setEventToDispatched(id, callback = noop) {
         var updateCommand = { $unset: { dispatched: null } }
         this.events.updateOne({ _id: id }, updateCommand, callback)
-    },
+    }
 
-    addSnapshot: function (snap, callback) {
+    addSnapshot(snap, callback) {
         if (!snap.aggregateId) {
             var errMsg = 'aggregateId not defined!'
             debug(errMsg)
@@ -648,9 +658,9 @@ _.extend(Mongo.prototype, {
 
         snap._id = snap.id
         this.snapshots.insertOne(snap, callback)
-    },
+    }
 
-    cleanSnapshots: function (query, callback = noop) {
+    cleanSnapshots(query, callback = noop) {
         if (!query.aggregateId) {
             var errMsg = 'aggregateId not defined!'
             debug(errMsg)
@@ -680,9 +690,9 @@ _.extend(Mongo.prototype, {
             })
             .skip(this.options.maxSnapshotsCount)
             .toArray(removeElements(this.snapshots, callback))
-    },
+    }
 
-    getSnapshot: function (query, revMax, callback = noop) {
+    getSnapshot(query, revMax, callback = noop) {
         if (!query.aggregateId) {
             var errMsg = 'aggregateId not defined!'
             debug(errMsg)
@@ -717,9 +727,9 @@ _.extend(Mongo.prototype, {
             },
             callback
         )
-    },
+    }
 
-    removeTransactions: function (evt, callback = noop) {
+    removeTransactions(evt, callback = noop) {
         if (!evt.aggregateId) {
             var errMsg = 'aggregateId not defined!'
             debug(errMsg)
@@ -744,9 +754,9 @@ _.extend(Mongo.prototype, {
             }
             callback(err)
         })
-    },
+    }
 
-    getPendingTransactions: function (callback = noop) {
+    getPendingTransactions(callback = noop) {
         var self = this
         this.transactions.find({}).toArray(function (err, txs) {
             if (err) {
@@ -796,9 +806,9 @@ _.extend(Mongo.prototype, {
                 }
             )
         })
-    },
+    }
 
-    getLastEvent: function (query, callback = noop) {
+    getLastEvent(query, callback = noop) {
         if (!query.aggregateId) {
             var errMsg = 'aggregateId not defined!'
             debug(errMsg)
@@ -827,9 +837,9 @@ _.extend(Mongo.prototype, {
             },
             callback
         )
-    },
+    }
 
-    repairFailedTransaction: function (lastEvt, callback = noop) {
+    repairFailedTransaction(lastEvt, callback = noop) {
         var self = this
 
         //var findStatement = {
@@ -871,29 +881,6 @@ _.extend(Mongo.prototype, {
                 callback(null)
             })
         })
-    },
-})
-
-function removeElements(collection, callback = noop) {
-    return function (error, elements) {
-        if (error) {
-            debug(error)
-            return callback(error)
-        }
-        async.each(
-            elements,
-            function (element, callback) {
-                try {
-                    collection.deleteOne({ _id: element._id })
-                    callback()
-                } catch (error) {
-                    callback(error)
-                }
-            },
-            function (error) {
-                callback(error, elements.length)
-            }
-        )
     }
 }
 

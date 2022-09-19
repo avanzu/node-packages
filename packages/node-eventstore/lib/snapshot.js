@@ -7,40 +7,41 @@ var debug = require('debug')('eventstore:snapshot')
  * @param {Object} obj the snapshot object infos
  * @constructor
  */
-function Snapshot(id, obj) {
-    if (!id) {
-        var errIdMsg = 'id not injected!'
-        debug(errIdMsg)
-        throw new Error(errIdMsg)
-    }
+class Snapshot {
+    constructor(id, obj) {
+        if (!id) {
+            var errIdMsg = 'id not injected!'
+            debug(errIdMsg)
+            throw new Error(errIdMsg)
+        }
 
-    if (!obj) {
-        var errObjMsg = 'object not injected!'
-        debug(errObjMsg)
-        throw new Error(errObjMsg)
-    }
+        if (!obj) {
+            var errObjMsg = 'object not injected!'
+            debug(errObjMsg)
+            throw new Error(errObjMsg)
+        }
 
-    if (!obj.aggregateId) {
-        var errAggIdMsg = 'object.aggregateId not injected!'
-        debug(errAggIdMsg)
-        throw new Error(errAggIdMsg)
-    }
+        if (!obj.aggregateId) {
+            var errAggIdMsg = 'object.aggregateId not injected!'
+            debug(errAggIdMsg)
+            throw new Error(errAggIdMsg)
+        }
 
-    if (!obj.data) {
-        var errDataMsg = 'object.data not injected!'
-        debug(errDataMsg)
-        throw new Error(errDataMsg)
-    }
+        if (!obj.data) {
+            var errDataMsg = 'object.data not injected!'
+            debug(errDataMsg)
+            throw new Error(errDataMsg)
+        }
 
-    this.id = id
-    this.streamId = obj.aggregateId
-    this.aggregateId = obj.aggregateId
-    this.aggregate = obj.aggregate || null
-    this.context = obj.context || null
-    this.commitStamp = null
-    this.revision = obj.revision
-    this.version = obj.version
-    this.data = obj.data
+        this.id = id
+        this.streamId = obj.aggregateId
+        this.aggregateId = obj.aggregateId
+        this.aggregate = obj.aggregate || null
+        this.context = obj.context || null
+        this.commitStamp = null
+        this.revision = obj.revision
+        this.version = obj.version
+        this.data = obj.data
+    }
 }
-
 module.exports = Snapshot

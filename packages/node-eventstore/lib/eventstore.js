@@ -1,5 +1,4 @@
 var debug = require('debug')('eventstore'),
-    util = require('util'),
     EventEmitter = require('events').EventEmitter,
     _ = require('lodash'),
     async = require('async'),
@@ -8,30 +7,19 @@ var debug = require('debug')('eventstore'),
     EventStream = require('./eventStream'),
     Snapshot = require('./snapshot')
 
-/**
- * Eventstore constructor
- * @param {Object} options The options.
- * @param {Store}  store   The db implementation.
- * @constructor
- */
-function Eventstore(options, store) {
-    this.options = options || {}
-    this.store = store
-
-    this.eventMappings = {}
-
-    EventEmitter.call(this)
-}
-
-util.inherits(Eventstore, EventEmitter)
-
-_.extend(Eventstore.prototype, {
+class Eventstore extends EventEmitter {
+    constructor(options, store) {
+        super(options)
+        this.options = options || {}
+        this.store = store
+        this.eventMappings = {}
+    }
     /**
      * Inject function for event publishing.
      * @param {Function} fn the function to be injected
      * @returns {Eventstore}  to be able to chain...
      */
-    useEventPublisher: function (fn) {
+    useEventPublisher(fn) {
         if (fn.length === 1) {
             fn = _.wrap(fn, function (func, evt, callback) {
                 func(evt)
@@ -42,7 +30,7 @@ _.extend(Eventstore.prototype, {
         this.publisher = fn
 
         return this
-    },
+    }
 
     /**
      * Define which values should be mapped/copied to the payload event. [optional]
@@ -56,7 +44,7 @@ _.extend(Eventstore.prototype, {
      *                          }
      * @returns {Eventstore}  to be able to chain...
      */
-    defineEventMappings: function (mappings) {
+    defineEventMappings(mappings) {
         if (!mappings || !_.isObject(mappings)) {
             var err = new Error('Please pass a valid mapping values!')
             debug(err)
@@ -66,14 +54,14 @@ _.extend(Eventstore.prototype, {
         this.eventMappings = mappings
 
         return this
-    },
+    }
 
     /**
      * Call this function to initialize the eventstore.
      * If an event publisher function was injected it will additionally initialize an event dispatcher.
      * @param {Function} callback the function that will be called when this action has finished [optional]
      */
-    init: function (callback) {
+    init(callback) {
         var self = this
 
         function initDispatcher() {
@@ -111,7 +99,7 @@ _.extend(Eventstore.prototype, {
                 }
             )
         })
-    },
+    }
 
     // streaming api
 
@@ -122,7 +110,7 @@ _.extend(Eventstore.prototype, {
      * @param {Number}           limit    how many events do you want in the result? [optional]
      * @returns {Stream} a stream with the events
      */
-    streamEvents: function (query, skip, limit) {
+    streamEvents(query, skip, limit) {
         if (!this.store.streamEvents) {
             throw new Error(
                 'Streaming API is not suppoted by ' +
@@ -142,7 +130,7 @@ _.extend(Eventstore.prototype, {
         }
 
         return this.store.streamEvents(query, skip, limit)
-    },
+    }
 
     /**
      * streams all the events since passed commitStamp
@@ -151,7 +139,7 @@ _.extend(Eventstore.prototype, {
      * @param {Number}   limit       how many events do you want in the result? [optional]
      * @returns {Stream} a stream with the events
      */
-    streamEventsSince: function (commitStamp, skip, limit) {
+    streamEventsSince(commitStamp, skip, limit) {
         if (!this.store.streamEvents) {
             throw new Error(
                 'Streaming API is not suppoted by ' +
@@ -166,11 +154,10 @@ _.extend(Eventstore.prototype, {
             throw err
         }
 
-        var self = this
         commitStamp = new Date(commitStamp)
 
         return this.store.streamEventsSince(commitStamp, skip, limit)
-    },
+    }
 
     /**
      * stream events by revision
@@ -179,7 +166,7 @@ _.extend(Eventstore.prototype, {
      * @param {Number}           revMax   revision end point (hint: -1 = to end) [optional]
      * @returns {Stream} a stream with the events
      */
-    streamEventsByRevision: function (query, revMin, revMax) {
+    streamEventsByRevision(query, revMin, revMax) {
         if (typeof query === 'string') {
             query = { aggregateId: query }
         }
@@ -187,12 +174,13 @@ _.extend(Eventstore.prototype, {
         if (!query.aggregateId) {
             var err = new Error('An aggregateId should be passed!')
             debug(err)
-            if (callback) callback(err)
+            // FIXME: where is the callback supposed to come from?
+            // if (callback) callback(err)
             return
         }
 
         return this.store.streamEventsByRevision(query, revMin, revMax)
-    },
+    }
 
     /**
      * loads the events
@@ -202,7 +190,7 @@ _.extend(Eventstore.prototype, {
      * @param {Function}         callback the function that will be called when this action has finished
      *                                    `function(err, events){}`
      */
-    getEvents: function (query, skip, limit, callback) {
+    getEvents(query, skip, limit, callback) {
         if (typeof query === 'function') {
             callback = query
             skip = 0
@@ -253,7 +241,7 @@ _.extend(Eventstore.prototype, {
         }
 
         _getEvents(query, skip, limit, callback)
-    },
+    }
 
     /**
      * loads all the events since passed commitStamp
@@ -263,7 +251,7 @@ _.extend(Eventstore.prototype, {
      * @param {Function} callback    the function that will be called when this action has finished
      *                               `function(err, events){}`
      */
-    getEventsSince: function (commitStamp, skip, limit, callback) {
+    getEventsSince(commitStamp, skip, limit, callback) {
         if (!commitStamp) {
             var err = new Error('Please pass in a date object!')
             debug(err)
@@ -304,7 +292,7 @@ _.extend(Eventstore.prototype, {
         }
 
         _getEventsSince(commitStamp, skip, limit, callback)
-    },
+    }
 
     /**
      * loads the events
@@ -314,7 +302,7 @@ _.extend(Eventstore.prototype, {
      * @param {Function}         callback the function that will be called when this action has finished
      *                                    `function(err, events){}`
      */
-    getEventsByRevision: function (query, revMin, revMax, callback) {
+    getEventsByRevision(query, revMin, revMax, callback) {
         if (typeof revMin === 'function') {
             callback = revMin
             revMin = 0
@@ -336,7 +324,7 @@ _.extend(Eventstore.prototype, {
         }
 
         this.store.getEventsByRevision(query, revMin, revMax, callback)
-    },
+    }
 
     /**
      * loads the event stream
@@ -346,7 +334,7 @@ _.extend(Eventstore.prototype, {
      * @param {Function}         callback the function that will be called when this action has finished
      *                                    `function(err, eventstream){}`
      */
-    getEventStream: function (query, revMin, revMax, callback) {
+    getEventStream(query, revMin, revMax, callback) {
         if (typeof revMin === 'function') {
             callback = revMin
             revMin = 0
@@ -375,7 +363,7 @@ _.extend(Eventstore.prototype, {
             }
             callback(null, new EventStream(self, query, evts))
         })
-    },
+    }
 
     /**
      * loads the next snapshot back from given max revision
@@ -384,7 +372,7 @@ _.extend(Eventstore.prototype, {
      * @param {Function}         callback the function that will be called when this action has finished
      *                                    `function(err, snapshot, eventstream){}`
      */
-    getFromSnapshot: function (query, revMax, callback) {
+    getFromSnapshot(query, revMax, callback) {
         if (typeof revMax === 'function') {
             callback = revMax
             revMax = -1
@@ -432,14 +420,14 @@ _.extend(Eventstore.prototype, {
 
             callback
         )
-    },
+    }
 
     /**
      * stores a new snapshot
      * @param {Object}   obj      the snapshot data
      * @param {Function} callback the function that will be called when this action has finished [optional]
      */
-    createSnapshot: function (obj, callback) {
+    createSnapshot(obj, callback) {
         if (obj.streamId && !obj.aggregateId) {
             obj.aggregateId = obj.streamId
         }
@@ -493,7 +481,7 @@ _.extend(Eventstore.prototype, {
             ],
             callback
         )
-    },
+    }
 
     /**
      * commits all uncommittedEvents in the eventstream
@@ -501,7 +489,7 @@ _.extend(Eventstore.prototype, {
      * @param {Function}  callback the function that will be called when this action has finished
      *                             `function(err, eventstream){}` (hint: eventstream.eventsToDispatch)
      */
-    commit: function (eventstream, callback) {
+    commit(eventstream, callback) {
         var self = this
 
         async.waterfall(
@@ -565,7 +553,7 @@ _.extend(Eventstore.prototype, {
 
             callback
         )
-    },
+    }
 
     /**
      * loads all undispatched events
@@ -573,7 +561,7 @@ _.extend(Eventstore.prototype, {
      * @param {Function}         callback the function that will be called when this action has finished
      *                                    `function(err, events){}`
      */
-    getUndispatchedEvents: function (query, callback) {
+    getUndispatchedEvents(query, callback) {
         if (!callback) {
             callback = query
             query = null
@@ -584,7 +572,7 @@ _.extend(Eventstore.prototype, {
         }
 
         this.store.getUndispatchedEvents(query, callback)
-    },
+    }
 
     /**
      * loads the last event
@@ -592,7 +580,7 @@ _.extend(Eventstore.prototype, {
      * @param {Function}         callback the function that will be called when this action has finished
      *                                    `function(err, event){}`
      */
-    getLastEvent: function (query, callback) {
+    getLastEvent(query, callback) {
         if (!callback) {
             callback = query
             query = null
@@ -603,7 +591,7 @@ _.extend(Eventstore.prototype, {
         }
 
         this.store.getLastEvent(query, callback)
-    },
+    }
 
     /**
      * loads the last event in a stream
@@ -611,7 +599,7 @@ _.extend(Eventstore.prototype, {
      * @param {Function}         callback the function that will be called when this action has finished
      *                                    `function(err, eventstream){}`
      */
-    getLastEventAsStream: function (query, callback) {
+    getLastEventAsStream(query, callback) {
         if (!callback) {
             callback = query
             query = null
@@ -628,27 +616,27 @@ _.extend(Eventstore.prototype, {
 
             callback(null, new EventStream(self, query, evt ? [evt] : []))
         })
-    },
+    }
 
     /**
      * Sets the given event to dispatched.
      * @param {Object || String} evtOrId  the event object or its id
      * @param {Function}         callback the function that will be called when this action has finished [optional]
      */
-    setEventToDispatched: function (evtOrId, callback) {
+    setEventToDispatched(evtOrId, callback) {
         if (typeof evtOrId === 'object') {
             evtOrId = evtOrId.id
         }
         this.store.setEventToDispatched(evtOrId, callback)
-    },
+    }
 
     /**
      * loads a new id from store
      * @param {Function} callback the function that will be called when this action has finished
      */
-    getNewId: function (callback) {
+    getNewId(callback) {
         this.store.getNewId(callback)
-    },
-})
+    }
+}
 
 module.exports = Eventstore

@@ -1,30 +1,15 @@
 var debug = require('debug')('eventstore:eventdispatcher')
 
 /**
- * Eventstore constructor
- * @param {Object} options The options.
- * @param publisher the publisher that should be injected
- * @param store the store that should be injected
- * @constructor
- */
-function EventDispatcher(publisher, store) {
-    this.publisher = publisher
-    this.store = store
-    this.undispatchedEventsQueue = []
-}
-
-/**
  * Triggers to publish all events in undispatchedEventsQueue.
  */
 function trigger(dispatcher) {
     var queue = dispatcher.undispatchedEventsQueue || []
-    var event
 
     // if the last loop is still in progress leave this loop
     if (dispatcher.isRunning) return
 
     dispatcher.isRunning = true
-
     ;(function next(e) {
         // dipatch one event in queue and call the _next_ callback, which
         // will call _process_ for the next undispatched event in queue.
@@ -60,24 +45,29 @@ function trigger(dispatcher) {
     dispatcher.isRunning = false
 }
 
-EventDispatcher.prototype = {
+class EventDispatcher {
+    constructor(publisher, store) {
+        this.publisher = publisher
+        this.store = store
+        this.undispatchedEventsQueue = []
+    }
     /**
      * Queues the passed in events for dispatching.
      * @param events
      */
-    addUndispatchedEvents: function (events) {
+    addUndispatchedEvents(events) {
         var self = this
         events.forEach(function (event) {
             self.undispatchedEventsQueue.push(event)
         })
         trigger(this)
-    },
+    }
 
     /**
      * Starts the instance to publish all undispatched events.
      * @param callback the function that will be called when this action has finished
      */
-    start: function (callback) {
+    start(callback) {
         if (typeof this.publisher !== 'function') {
             var pubErrMsg = 'publisher not injected!'
             debug(pubErrMsg)
@@ -126,7 +116,7 @@ EventDispatcher.prototype = {
 
             if (callback) callback(null)
         })
-    },
+    }
 }
 
 module.exports = EventDispatcher

@@ -1,19 +1,7 @@
-var util = require('util'),
-    Store = require('../base'),
+var Store = require('../base'),
     _ = require('lodash'),
     jsondate = require('jsondate'),
     debug = require('debug')('eventstore:store:inmemory')
-
-function InMemory(options) {
-    Store.call(this, options)
-    this.store = {}
-    this.snapshots = {}
-    this.undispatchedEvents = { _direct: {} }
-    this.options = options
-    if (options.trackPosition) this.position = 0
-}
-
-util.inherits(InMemory, Store)
 
 function deepFind(obj, pattern) {
     var found
@@ -41,26 +29,34 @@ function deepFind(obj, pattern) {
     return found
 }
 
-_.extend(InMemory.prototype, {
-    connect: function (callback) {
+class InMemory extends Store {
+    constructor(options) {
+        super(options)
+        this.store = {}
+        this.snapshots = {}
+        this.undispatchedEvents = { _direct: {} }
+        this.options = options
+        if (options.trackPosition) this.position = 0
+    }
+    connect(callback) {
         this.emit('connect')
         if (callback) callback(null, this)
-    },
+    }
 
-    disconnect: function (callback) {
+    disconnect(callback) {
         this.emit('disconnect')
         if (callback) callback(null)
-    },
+    }
 
-    clear: function (callback) {
+    clear(callback) {
         this.store = {}
         this.snapshots = {}
         this.undispatchedEvents = { _direct: {} }
         this.position = 0
         if (callback) callback(null)
-    },
+    }
 
-    getNextPositions: function (positions, callback) {
+    getNextPositions(positions, callback) {
         if (!this.options.trackPosition) {
             return callback(null)
         }
@@ -70,9 +66,9 @@ _.extend(InMemory.prototype, {
             range.push(++this.position)
         }
         callback(null, range)
-    },
+    }
 
-    addEvents: function (events, callback) {
+    addEvents(events, callback) {
         if (!events || events.length === 0) {
             callback(null)
             return
@@ -114,9 +110,9 @@ _.extend(InMemory.prototype, {
         })
 
         callback(null)
-    },
+    }
 
-    getEvents: function (query, skip, limit, callback) {
+    getEvents(query, skip, limit, callback) {
         var res = []
         for (var s in this.store) {
             for (var ss in this.store[s]) {
@@ -160,9 +156,9 @@ _.extend(InMemory.prototype, {
         }
 
         callback(null, _.cloneDeep(res.slice(skip, skip + limit)))
-    },
+    }
 
-    getEventsSince: function (date, skip, limit, callback) {
+    getEventsSince(date, skip, limit, callback) {
         var res = []
         for (var s in this.store) {
             for (var ss in this.store[s]) {
@@ -189,9 +185,9 @@ _.extend(InMemory.prototype, {
         }
 
         callback(null, _.cloneDeep(res.slice(skip, skip + limit)))
-    },
+    }
 
-    getEventsByRevision: function (query, revMin, revMax, callback) {
+    getEventsByRevision(query, revMin, revMax, callback) {
         var res = []
 
         if (!query.aggregateId) {
@@ -272,9 +268,9 @@ _.extend(InMemory.prototype, {
             }
             return callback(null, _.cloneDeep(res))
         }
-    },
+    }
 
-    getLastEvent: function (query, callback) {
+    getLastEvent(query, callback) {
         if (!query.aggregateId) {
             var errMsg = 'aggregateId not defined!'
             debug(errMsg)
@@ -317,9 +313,9 @@ _.extend(InMemory.prototype, {
         }
 
         callback(null, res[res.length - 1])
-    },
+    }
 
-    getUndispatchedEvents: function (query, callback) {
+    getUndispatchedEvents(query, callback) {
         var res = []
         for (var s in this.undispatchedEvents) {
             if (s === '_direct') continue
@@ -356,9 +352,9 @@ _.extend(InMemory.prototype, {
         }
 
         callback(null, res)
-    },
+    }
 
-    setEventToDispatched: function (id, callback) {
+    setEventToDispatched(id, callback) {
         var evt = this.undispatchedEvents._direct[id]
         var aggregateId = evt.aggregateId
         var aggregate = evt.aggregate || '_general'
@@ -370,9 +366,9 @@ _.extend(InMemory.prototype, {
         )
         delete this.undispatchedEvents._direct[id]
         callback(null)
-    },
+    }
 
-    addSnapshot: function (snap, callback) {
+    addSnapshot(snap, callback) {
         var aggregateId = snap.aggregateId
         var aggregate = snap.aggregate || '_general'
         var context = snap.context || '_general'
@@ -391,9 +387,9 @@ _.extend(InMemory.prototype, {
 
         this.snapshots[context][aggregate][aggregateId].push(snap)
         callback(null)
-    },
+    }
 
-    getSnapshot: function (query, revMax, callback) {
+    getSnapshot(query, revMax, callback) {
         if (!query.aggregateId) {
             var errMsg = 'aggregateId not defined!'
             debug(errMsg)
@@ -449,9 +445,9 @@ _.extend(InMemory.prototype, {
             }
         }
         callback(null, null)
-    },
+    }
 
-    cleanSnapshots: function (query, callback) {
+    cleanSnapshots(query, callback) {
         var aggregateId = query.aggregateId
         var aggregate = query.aggregate || '_general'
         var context = query.context || '_general'
@@ -469,7 +465,7 @@ _.extend(InMemory.prototype, {
         this.snapshots[context][aggregate][aggregateId] = snapshots
 
         callback(null, length - snapshots.length)
-    },
-})
+    }
+}
 
 module.exports = InMemory

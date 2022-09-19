@@ -55,17 +55,13 @@
         "uuid": "3.3.3"
     },
     "devDependencies": {
-        "aws-sdk": ">=2.4.9",
-        "azure-storage": ">=0.10.0",
         "cradle": ">=0.7.1",
-        "elasticsearch": ">=10.0.0",
         "eslint": ">=1.0.0",
         "mongodb": "2.1.x",
-        "redis": ">=0.10.1",
-        "tingodb": ">=0.0.1"
+        "redis": ">=0.10.1"
+        
     },
     "scripts": {
-        "_test": "mocha",
         "test": "npm run lint && npm run jest",
         "lint": "eslint . ",
         "jest": "jest --forceExit --runInBand",
