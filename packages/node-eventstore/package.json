@@ -45,21 +45,20 @@
         "node": ">=0.8.0"
     },
     "dependencies": {
-        "async": "2.6.2",
-        "debug": "3.1.0",
-        "dotty": "0.0.2",
+        "async": "^3.2.4",
+        "debug": "^4.3.4",
+        "dotty": "^0.1.2",
         "jsondate": "0.0.1",
-        "lodash": "4.17.19",
+        "lodash": "^4.17.21",
         "parent-require": "1.0.0",
         "tolerance": "1.0.0",
-        "uuid": "3.3.3"
+        "uuid": "^9.0.0"
     },
     "devDependencies": {
         "cradle": ">=0.7.1",
         "eslint": ">=1.0.0",
         "mongodb": "2.1.x",
         "redis": ">=0.10.1"
-        
     },
     "scripts": {
         "test": "npm run lint && npm run jest",
