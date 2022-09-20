@@ -43,5 +43,10 @@ class Snapshot {
         this.version = obj.version
         this.data = obj.data
     }
+
+    commitNow() {
+        this.commitStamp = new Date()
+        return this
+    }
 }
 module.exports = Snapshot

@@ -110,8 +110,19 @@ class EventStream {
      * commits all uncommittedEvents
      * @param {Function} callback the function that will be called when this action has finished [optional]
      */
-    commit(callback) {
-        this.eventstore.commit(this, callback)
+    commit(callback = () => {}) {
+        return new Promise((Ok, Err) => {
+            this.eventstore
+                .commit(this)
+                .then((res) => {
+                    callback(null, res)
+                    Ok(res)
+                })
+                .catch((err) => {
+                    callback(err)
+                    Err(err)
+                })
+        })
     }
 }
 

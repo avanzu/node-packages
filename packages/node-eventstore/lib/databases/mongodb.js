@@ -2,11 +2,13 @@ var Store = require('../base'),
     _ = require('lodash'),
     async = require('async'),
     stream = require('stream'),
-    mongo = Store.use('mongodb'),
+    mongo = require('mongodb'),
     ObjectID = mongo.ObjectID,
-    debug = require('debug')('eventstore:store:mongodb')
+    debug = require('debug')('@avanzu/eventstore/database/mongodb')
 
 const noop = () => {}
+const inspect = (message) => (data) => (debug(message, data), data)
+const notice = (message) => (data) => (debug(message), data)
 
 const streamEventsByRevision = (self, findStatement, revMin, revMax, resultStream, lastEvent) => {
     findStatement.streamRevision = revMax === -1 ? { $gte: revMin } : { $gte: revMin, $lt: revMax }
@@ -65,50 +67,27 @@ const streamEventsByRevision = (self, findStatement, revMin, revMax, resultStrea
                 resultStream.end() // lastEvent was keep duplicated from this line. We should not re-write last event into the stream when ending it. thus end() rather then end(lastEvent).
             }
 
-            self.repairFailedTransaction(lastEvent, (err) => {
-                if (err) {
+            self.repairFailedTransaction(lastEvent)
+                .then(() =>
+                    streamEventsByRevision(
+                        self,
+                        findStatement,
+                        lastEvent.revMin,
+                        revMax,
+                        resultStream,
+                        lastEvent
+                    )
+                )
+                .catch((err) => {
                     if (err.message.indexOf('missing tx entry') >= 0) {
                         return resultStream.end(lastEvent) // Maybe we should check on this line too?
                     }
                     debug(err)
                     return resultStream.destroy(error)
-                }
-
-                streamEventsByRevision(
-                    self,
-                    findStatement,
-                    lastEvent.revMin,
-                    revMax,
-                    resultStream,
-                    lastEvent
-                )
-            })
+                })
         }
     )
 }
-
-const removeElements =
-    (collection, callback = noop) =>
-    (error, elements) => {
-        if (error) {
-            debug(error)
-            return callback(error)
-        }
-        async.each(
-            elements,
-            (element, callback) => {
-                try {
-                    collection.deleteOne({ _id: element._id })
-                    callback()
-                } catch (error) {
-                    callback(error)
-                }
-            },
-            (error) => {
-                callback(error, elements.length)
-            }
-        )
-    }
 
 class Mongo extends Store {
     constructor(options) {
@@ -138,148 +117,154 @@ class Mongo extends Store {
     }
 
     connect(callback = noop) {
-        //
+        return new Promise((Ok, Err) => {
+            debug('Opening connection')
+            var options = this.options
 
-        var options = this.options
+            var connectionUrl
 
-        var connectionUrl
+            if (options.url) {
+                connectionUrl = options.url
+            } else {
+                var members = options.servers
+                    ? options.servers
+                    : [{ host: options.host, port: options.port }]
 
-        if (options.url) {
-            connectionUrl = options.url
-        } else {
-            var members = options.servers
-                ? options.servers
-                : [{ host: options.host, port: options.port }]
-
-            var memberString = _(members).map((m) => {
-                return m.host + ':' + m.port
-            })
-            var authString =
-                options.username && options.password
-                    ? options.username + ':' + options.password + '@'
-                    : ''
-            var optionsString = options.authSource ? '?authSource=' + options.authSource : ''
-
-            connectionUrl =
-                'mongodb://' + authString + memberString + '/' + options.dbName + optionsString
-        }
-
-        var client
-        var ensureIndex = 'ensureIndex'
-
-        if (mongo.MongoClient.length === 2) {
-            ensureIndex = 'createIndex'
-            client = new mongo.MongoClient(connectionUrl, options.options)
-            client.connect((err, cl) => {
-                if (err) {
-                    debug(err)
-                    callback(err)
-                    return
-                }
-
-                this.db = cl.db(cl.s.options.dbName)
-                if (!this.db.close) {
-                    this.db.close = cl.close.bind(cl)
-                }
-                initDb()
-            })
-        } else {
-            client = new mongo.MongoClient()
-            client.connect(connectionUrl, options.options, (err, db) => {
-                if (err) {
-                    debug(err)
-                    callback(err)
-                    return
-                }
-
-                this.db = db
-                initDb()
-            })
-        }
-
-        const initDb = () => {
-            this.db.on('close', () => {
-                this.emit('disconnect')
-                this.stopHeartbeat()
-            })
-
-            const finish = (err) => {
-                if (err) {
-                    debug(err)
-                    callback(err)
-                    return
-                }
-
-                this.events = this.db.collection(options.eventsCollectionName)
-                this.events[ensureIndex]({ aggregateId: 1, streamRevision: 1 }, (err) => {
-                    if (err) {
-                        debug(err)
-                    }
+                var memberString = _(members).map((m) => {
+                    return m.host + ':' + m.port
                 })
-                this.events[ensureIndex]({ commitStamp: 1 }, (err) => {
-                    if (err) {
-                        debug(err)
-                    }
-                })
-                this.events[ensureIndex]({ dispatched: 1 }, { sparse: true }, (err) => {
-                    if (err) {
-                        debug(err)
-                    }
-                })
-                this.events[ensureIndex](
-                    { commitStamp: 1, streamRevision: 1, commitSequence: 1 },
-                    (err) => {
-                        if (err) {
-                            debug(err)
-                        }
-                    }
-                )
+                var authString =
+                    options.username && options.password
+                        ? options.username + ':' + options.password + '@'
+                        : ''
+                var optionsString = options.authSource ? '?authSource=' + options.authSource : ''
 
-                this.snapshots = this.db.collection(options.snapshotsCollectionName)
-                this.snapshots[ensureIndex]({ aggregateId: 1, revision: -1 }, (err) => {
-                    if (err) {
-                        debug(err)
-                    }
-                })
-
-                this.transactions = this.db.collection(options.transactionsCollectionName)
-                this.transactions[ensureIndex](
-                    { aggregateId: 1, 'events.streamRevision': 1 },
-                    (err) => {
-                        if (err) {
-                            debug(err)
-                        }
-                    }
-                )
-                this.events[ensureIndex](
-                    {
-                        aggregate: 1,
-                        aggregateId: 1,
-                        commitStamp: -1,
-                        streamRevision: -1,
-                        commitSequence: -1,
-                    },
-                    (err) => {
-                        if (err) {
-                            debug(err)
-                        }
-                    }
-                )
-
-                if (options.positionsCollectionName) {
-                    this.positions = this.db.collection(options.positionsCollectionName)
-                    this.positionsCounterId = options.eventsCollectionName
-                }
-
-                this.emit('connect')
-                if (this.options.heartbeat) {
-                    this.startHeartbeat()
-                }
-                callback(null, this)
+                connectionUrl =
+                    'mongodb://' + authString + memberString + '/' + options.dbName + optionsString
             }
 
-            finish()
-        }
+            var client
+            var ensureIndex = 'ensureIndex'
+
+            if (mongo.MongoClient.length === 2) {
+                debug('mongoClient.length === 2')
+                ensureIndex = 'createIndex'
+                new mongo.MongoClient(connectionUrl, options.options)
+                    .connect()
+                    .then((cl) => {
+                        this.db = cl.db(cl.s.options.dbName)
+                        if (!this.db.close) {
+                            this.db.close = cl.close.bind(cl)
+                        }
+                        initDb()
+                    })
+                    .then(() => Ok(this))
+                    .catch((err) => {
+                        debug(err)
+                        callback(err)
+                        Err(err)
+                    })
+            } else {
+                debug('mongoClient.length !== 2')
+                client = new mongo.MongoClient()
+                client
+                    .connect(connectionUrl, options.options)
+                    .then((db) => {
+                        this.db = db
+                        initDb()
+                    })
+                    .then(() => Ok(this))
+                    .catch((err) => {
+                        debug(err)
+                        callback(err)
+                        Err(err)
+                    })
+            }
+
+            const initDb = () => {
+                this.db.on('close', () => {
+                    this.emit('disconnect')
+                    this.stopHeartbeat()
+                })
+
+                const finish = (err) => {
+                    if (err) {
+                        debug(err)
+                        callback(err)
+                        return
+                    }
+
+                    this.events = this.db.collection(options.eventsCollectionName)
+                    this.events[ensureIndex]({ aggregateId: 1, streamRevision: 1 }, (err) => {
+                        if (err) {
+                            debug(err)
+                        }
+                    })
+                    this.events[ensureIndex]({ commitStamp: 1 }, (err) => {
+                        if (err) {
+                            debug(err)
+                        }
+                    })
+                    this.events[ensureIndex]({ dispatched: 1 }, { sparse: true }, (err) => {
+                        if (err) {
+                            debug(err)
+                        }
+                    })
+                    this.events[ensureIndex](
+                        { commitStamp: 1, streamRevision: 1, commitSequence: 1 },
+                        (err) => {
+                            if (err) {
+                                debug(err)
+                            }
+                        }
+                    )
+
+                    this.snapshots = this.db.collection(options.snapshotsCollectionName)
+                    this.snapshots[ensureIndex]({ aggregateId: 1, revision: -1 }, (err) => {
+                        if (err) {
+                            debug(err)
+                        }
+                    })
+
+                    this.transactions = this.db.collection(options.transactionsCollectionName)
+                    this.transactions[ensureIndex](
+                        { aggregateId: 1, 'events.streamRevision': 1 },
+                        (err) => {
+                            if (err) {
+                                debug(err)
+                            }
+                        }
+                    )
+                    this.events[ensureIndex](
+                        {
+                            aggregate: 1,
+                            aggregateId: 1,
+                            commitStamp: -1,
+                            streamRevision: -1,
+                            commitSequence: -1,
+                        },
+                        (err) => {
+                            if (err) {
+                                debug(err)
+                            }
+                        }
+                    )
+
+                    if (options.positionsCollectionName) {
+                        this.positions = this.db.collection(options.positionsCollectionName)
+                        this.positionsCounterId = options.eventsCollectionName
+                    }
+
+                    this.emit('connect')
+                    if (this.options.heartbeat) {
+                        this.startHeartbeat()
+                    }
+                    callback(null, this)
+                }
+
+                finish()
+            }
+        })
     }
 
     stopHeartbeat() {
@@ -314,137 +299,163 @@ class Mongo extends Store {
     }
 
     disconnect(callback = noop) {
-        this.stopHeartbeat()
+        return new Promise((Ok, Err) => {
+            debug('closing connection')
+            this.stopHeartbeat()
 
-        if (!this.db) {
-            callback(null)
-            return
-        }
-
-        this.db.close((err) => {
-            if (err) {
-                debug(err)
+            if (!this.db) {
+                callback(null)
+                Ok(this)
+                return
             }
-            callback(err)
+
+            this.db
+                .close()
+                .then(() => {
+                    callback(null)
+                    Ok(this)
+                })
+                .catch((err) => {
+                    debug(err)
+                    callback(err)
+                    Err(err)
+                })
         })
     }
 
     clear(callback = noop) {
-        async.parallel(
-            [
-                (callback) => {
-                    this.events.deleteMany({}, callback)
-                },
-                (callback) => {
-                    this.snapshots.deleteMany({}, callback)
-                },
-                (callback) => {
-                    this.transactions.deleteMany({}, callback)
-                },
-                (callback) => {
-                    if (!this.positions) return callback(null)
-                    this.positions.deleteMany({}, callback)
-                },
-            ],
-            (err) => {
-                if (err) {
-                    debug(err)
+        return new Promise((Ok, Err) => {
+            async.parallel(
+                [
+                    (callback) => {
+                        this.events.deleteMany({}, callback)
+                    },
+                    (callback) => {
+                        this.snapshots.deleteMany({}, callback)
+                    },
+                    (callback) => {
+                        this.transactions.deleteMany({}, callback)
+                    },
+                    (callback) => {
+                        if (!this.positions) return callback(null)
+                        this.positions.deleteMany({}, callback)
+                    },
+                ],
+                (err) => {
+                    if (err) debug(err)
+                    callback(err)
+                    err ? Err(err) : Ok(this)
                 }
-                callback(err)
-            }
-        )
+            )
+        })
     }
 
-    getNewId(callback) {
-        callback(null, new ObjectID().toString())
+    getNewId(callback = noop) {
+        return new Promise((Ok) => {
+            const id = new ObjectID().toString()
+            callback(null, id)
+            Ok(id)
+        })
     }
 
     getNextPositions(positions, callback = noop) {
-        if (!this.positions) return callback(null)
-
-        this.positions.findOneAndUpdate(
-            { _id: this.positionsCounterId },
-            { $inc: { position: positions } },
-            { returnOriginal: false, upsert: true },
-            (err, pos) => {
-                if (err) return callback(err)
-
-                pos.value.position += 1
-
-                callback(null, _.range(pos.value.position - positions, pos.value.position))
+        return new Promise((Ok, Err) => {
+            if (!this.positions) {
+                debug('Positions not present')
+                callback(null)
+                return Ok()
             }
-        )
+
+            this.positions
+                .findOneAndUpdate(
+                    { _id: this.positionsCounterId },
+                    { $inc: { position: positions } },
+                    { returnOriginal: false, upsert: true }
+                )
+                .then((pos) => {
+                    pos.value.position += 1
+                    const range = _.range(pos.value.position - positions, pos.value.position)
+                    callback(null, range)
+                    Ok(range)
+                })
+                .catch((err) => {
+                    callback(err)
+                    Err(err)
+                })
+        })
     }
 
     addEvents(events, callback = noop) {
-        if (events.length === 0) {
-            callback(null)
-
-            return
-        }
-
-        var commitId = events[0].commitId
-
-        var noAggregateId = false,
-            invalidCommitId = false
-
-        _.forEach(events, (evt) => {
-            if (!evt.aggregateId) {
-                noAggregateId = true
-            }
-
-            if (!evt.commitId || evt.commitId !== commitId) {
-                invalidCommitId = true
-            }
-
-            evt._id = evt.id
-            evt.dispatched = false
-        })
-
-        if (noAggregateId) {
-            var errMsg = 'aggregateId not defined!'
-            debug(errMsg)
-            callback(new Error(errMsg))
-            return
-        }
-
-        if (invalidCommitId) {
-            var errMsg = 'commitId not defined or different!'
-            debug(errMsg)
-            callback(new Error(errMsg))
-            return
-        }
-
-        if (events.length === 1) {
-            return this.events.insertOne(events[0], callback)
-        }
-
-        var tx = {
-            _id: commitId,
-            events: events,
-            aggregateId: events[0].aggregateId,
-            aggregate: events[0].aggregate,
-            context: events[0].context,
-        }
-
-        this.transactions.insertOne(tx, (err) => {
-            if (err) {
-                debug(err)
-                callback(err)
+        return new Promise((Ok, Err) => {
+            if (events.length === 0) {
+                callback(null)
+                Ok(this)
                 return
             }
 
-            this.events.insertMany(events, (err) => {
-                if (err) {
-                    debug(err)
-                    callback(err)
-                    return
+            var commitId = events[0].commitId
+
+            var noAggregateId = false,
+                invalidCommitId = false
+
+            _.forEach(events, (evt) => {
+                if (!evt.aggregateId) {
+                    noAggregateId = true
                 }
 
-                this.removeTransactions(events[events.length - 1], callback)
+                if (!evt.commitId || evt.commitId !== commitId) {
+                    invalidCommitId = true
+                }
+
+                evt._id = evt.id
+                evt.dispatched = false
             })
+
+            if (noAggregateId) {
+                var errMsg = 'aggregateId not defined!'
+                debug(errMsg)
+                callback(new Error(errMsg))
+                return Err(new Error(errMsg))
+            }
+
+            if (invalidCommitId) {
+                var errMsg = 'commitId not defined or different!'
+                debug(errMsg)
+                callback(new Error(errMsg))
+                return Err(new Error(errMsg))
+            }
+
+            if (events.length === 1) {
+                return this.events
+                    .insertOne(events[0])
+                    .then((result) => {
+                        Ok(this), callback(null, result)
+                    })
+                    .catch((err) => {
+                        Err(err)
+                        callback(err)
+                    })
+            }
+
+            var tx = {
+                _id: commitId,
+                events: events,
+                aggregateId: events[0].aggregateId,
+                aggregate: events[0].aggregate,
+                context: events[0].context,
+            }
+
+            Promise.resolve(tx)
+                .then(inspect('Inserting transaction %o'))
+                .then((tx) => this.transactions.insertOne(tx))
+                .then(notice('Inserting events'))
+                .then(() => this.events.insertMany(events))
+                .then(notice('removing transation'))
+                .then(() => this.removeTransactions(events[events.length - 1]))
+                .then(notice('Resolving'))
+                .then(() => (callback(), Ok(this)))
+                .catch((err) => (debug(err), callback(err), Err(err)))
         })
-        // });
     }
 
     // streaming API
@@ -526,58 +537,73 @@ class Mongo extends Store {
         return resultStream
     }
 
-    getEvents(query, skip, limit, callback) {
-        this.streamEvents(query, skip, limit).toArray(callback)
+    getEvents(query, skip, limit, callback = noop) {
+        return new Promise((Ok, Err) => {
+            this.streamEvents(query, skip, limit)
+                .toArray()
+                .then((data) => {
+                    callback(null, data)
+                    Ok(data)
+                })
+                .catch((err) => {
+                    callback(err)
+                    Err(err)
+                })
+        })
     }
 
-    getEventsSince(date, skip, limit, callback) {
-        this.streamEventsSince(date, skip, limit).toArray(callback)
+    getEventsSince(date, skip, limit, callback = noop) {
+        return new Promise((Ok, Err) => {
+            this.streamEventsSince(date, skip, limit)
+                .toArray()
+                .then((data) => {
+                    callback(null, data)
+                    Ok(data)
+                })
+                .catch((err) => {
+                    callback(err)
+                    Err(err)
+                })
+        })
     }
 
     getEventsByRevision(query, revMin, revMax, callback = noop) {
-        if (!query.aggregateId) {
-            var errMsg = 'aggregateId not defined!'
-            debug(errMsg)
-            callback(new Error(errMsg))
-            return
-        }
+        return new Promise((Ok, Err) => {
+            debug('getEventsByRevision(%s, %s, %s, %s)', query, revMin, revMax, callback)
+            if (!query.aggregateId) {
+                var errMsg = 'aggregateId not defined!'
+                debug(errMsg)
+                callback(new Error(errMsg))
+                return Err(new Error(errMsg))
+            }
 
-        var streamRevOptions = { $gte: revMin, $lt: revMax }
-        if (revMax === -1) {
-            streamRevOptions = { $gte: revMin }
-        }
+            var streamRevOptions = { $gte: revMin, $lt: revMax }
+            if (revMax === -1) {
+                streamRevOptions = { $gte: revMin }
+            }
 
-        var findStatement = {
-            aggregateId: query.aggregateId,
-            streamRevision: streamRevOptions,
-        }
+            var findStatement = {
+                aggregateId: query.aggregateId,
+                streamRevision: streamRevOptions,
+            }
 
-        if (query.aggregate) {
-            findStatement.aggregate = query.aggregate
-        }
+            if (query.aggregate) {
+                findStatement.aggregate = query.aggregate
+            }
 
-        if (query.context) {
-            findStatement.context = query.context
-        }
+            if (query.context) {
+                findStatement.context = query.context
+            }
 
-        this.events
-            .find(findStatement, {
-                sort: [
-                    ['commitStamp', 'asc'],
-                    ['streamRevision', 'asc'],
-                    ['commitSequence', 'asc'],
-                ],
-            })
-            .toArray((err, res) => {
-                if (err) {
-                    debug(err)
-                    return callback(err)
-                }
+            const removeAndResolve = (lastEvt, res) =>
+                this.removeTransactions(lastEvt).then(() => Ok(res))
 
-                if (!res || res.length === 0) {
-                    return callback(null, [])
-                }
+            const repairAndRetry = (lastEvt) =>
+                this.repairFailedTransaction(lastEvt).then(() =>
+                    this.getEventsByRevision(query, revMin, revMax)
+                )
 
+            const evaluatTransaction = (res) => {
                 var lastEvt = res[res.length - 1]
 
                 var txOk =
@@ -585,278 +611,314 @@ class Mongo extends Store {
                     (revMax !== -1 &&
                         (lastEvt.streamRevision === revMax - 1 || !lastEvt.restInCommitStream))
 
-                if (txOk) {
-                    // the following is usually unnecessary
-                    this.removeTransactions(lastEvt)
+                return txOk ? removeAndResolve(lastEvt, res) : repairAndRetry(lastEvt)
+            }
 
-                    return callback(null, res)
-                }
-
-                this.repairFailedTransaction(lastEvt, (err) => {
-                    if (err) {
-                        if (err.message.indexOf('missing tx entry') >= 0) {
-                            return callback(null, res)
-                        }
-                        debug(err)
-                        return callback(err)
-                    }
-
-                    this.getEventsByRevision(query, revMin, revMax, callback)
+            this.events
+                .find(findStatement, {
+                    sort: [
+                        ['commitStamp', 'asc'],
+                        ['streamRevision', 'asc'],
+                        ['commitSequence', 'asc'],
+                    ],
                 })
-            })
+                .toArray()
+                .then((res) => {
+                    return !res || res.length === 0 ? [] : evaluatTransaction(res)
+                })
+                .then((result) => (callback(null, result), Ok(result)))
+                .catch((err) => {
+                    debug(err)
+                    callback(err)
+                    Err(err)
+                })
+        })
     }
 
     getUndispatchedEvents(query, callback = noop) {
-        var findStatement = {
-            dispatched: false,
-        }
+        return new Promise((Ok, Err) => {
+            var findStatement = {
+                dispatched: false,
+            }
 
-        if (query && query.aggregate) {
-            findStatement.aggregate = query.aggregate
-        }
+            if (query && query.aggregate) {
+                findStatement.aggregate = query.aggregate
+            }
 
-        if (query && query.context) {
-            findStatement.context = query.context
-        }
+            if (query && query.context) {
+                findStatement.context = query.context
+            }
 
-        if (query && query.aggregateId) {
-            findStatement.aggregateId = query.aggregateId
-        }
+            if (query && query.aggregateId) {
+                findStatement.aggregateId = query.aggregateId
+            }
 
-        this.events
-            .find(findStatement, {
-                sort: [
-                    ['commitStamp', 'asc'],
-                    ['streamRevision', 'asc'],
-                    ['commitSequence', 'asc'],
-                ],
-            })
-            .toArray(callback)
+            this.events
+                .find(findStatement, {
+                    sort: [
+                        ['commitStamp', 'asc'],
+                        ['streamRevision', 'asc'],
+                        ['commitSequence', 'asc'],
+                    ],
+                })
+                .toArray()
+                .then((res) => (callback(null, res), Ok(res)))
+                .catch((err) => (callback(err), Err(err)))
+        })
     }
 
     setEventToDispatched(id, callback = noop) {
-        var updateCommand = { $unset: { dispatched: null } }
-        this.events.updateOne({ _id: id }, updateCommand, callback)
+        return new Promise((Ok, Err) => {
+            var updateCommand = { $unset: { dispatched: null } }
+            this.events
+                .updateOne({ _id: id }, updateCommand)
+                .then((res) => (callback(null, res), Ok(res.result)))
+                .catch((err) => (callback(err), Err(err)))
+        })
     }
 
-    addSnapshot(snap, callback) {
-        if (!snap.aggregateId) {
-            var errMsg = 'aggregateId not defined!'
-            debug(errMsg)
-            callback(new Error(errMsg))
-            return
-        }
+    addSnapshot(snap, callback = noop) {
+        return new Promise((Ok, Err) => {
+            if (!snap.aggregateId) {
+                var errMsg = 'aggregateId not defined!'
+                debug(errMsg)
+                callback(new Error(errMsg))
+                Err(new Error(errMsg))
+                return
+            }
 
-        snap._id = snap.id
-        this.snapshots.insertOne(snap, callback)
+            snap._id = snap.id
+            this.snapshots
+                .insertOne(snap)
+                .then((res) => (callback(null, res), Ok(res.result)))
+                .catch((err) => (callback(err), Err(err)))
+        })
     }
 
     cleanSnapshots(query, callback = noop) {
-        if (!query.aggregateId) {
-            var errMsg = 'aggregateId not defined!'
-            debug(errMsg)
-            callback(new Error(errMsg))
-            return
-        }
+        return new Promise((Ok, Err) => {
+            if (!query.aggregateId) {
+                var errMsg = 'aggregateId not defined!'
+                debug(errMsg)
+                callback(new Error(errMsg))
+                return Err(new Error(errMsg))
+            }
 
-        var findStatement = {
-            aggregateId: query.aggregateId,
-        }
+            var findStatement = {
+                aggregateId: query.aggregateId,
+            }
 
-        if (query.aggregate) {
-            findStatement.aggregate = query.aggregate
-        }
+            if (query.aggregate) {
+                findStatement.aggregate = query.aggregate
+            }
 
-        if (query.context) {
-            findStatement.context = query.context
-        }
+            if (query.context) {
+                findStatement.context = query.context
+            }
 
-        this.snapshots
-            .find(findStatement, {
-                sort: [
-                    ['revision', 'desc'],
-                    ['version', 'desc'],
-                    ['commitStamp', 'desc'],
-                ],
-            })
-            .skip(this.options.maxSnapshotsCount)
-            .toArray(removeElements(this.snapshots, callback))
+            const remove = (elements) =>
+                Promise.all(elements.map(({ _id }) => this.snapshots.deleteOne({ _id })))
+
+            const countRemaining = () => this.snapshots.count(findStatement)
+
+            this.snapshots
+                .find(findStatement, {
+                    sort: [
+                        ['revision', 'desc'],
+                        ['version', 'desc'],
+                        ['commitStamp', 'desc'],
+                    ],
+                })
+                .skip(this.options.maxSnapshotsCount | 0)
+                .toArray()
+                .then(remove)
+                .then(countRemaining)
+                .then((count) => (callback(null, count), Ok(count)))
+                .catch((err) => (callback(err), Err(err)))
+            // .toArray(removeElements(this.snapshots, callback))
+        })
     }
 
     getSnapshot(query, revMax, callback = noop) {
-        if (!query.aggregateId) {
-            var errMsg = 'aggregateId not defined!'
-            debug(errMsg)
-            callback(new Error(errMsg))
-            return
-        }
+        return new Promise((Ok, Err) => {
+            if (!query.aggregateId) {
+                var errMsg = 'aggregateId not defined!'
+                debug(errMsg)
+                callback(new Error(errMsg))
+                return Err(new Error(errMsg))
+            }
 
-        var findStatement = {
-            aggregateId: query.aggregateId,
-        }
+            var findStatement = {
+                aggregateId: query.aggregateId,
+            }
 
-        if (query.aggregate) {
-            findStatement.aggregate = query.aggregate
-        }
+            if (query.aggregate) {
+                findStatement.aggregate = query.aggregate
+            }
 
-        if (query.context) {
-            findStatement.context = query.context
-        }
+            if (query.context) {
+                findStatement.context = query.context
+            }
 
-        if (revMax > -1) {
-            findStatement.revision = { $lte: revMax }
-        }
+            if (revMax > -1) {
+                findStatement.revision = { $lte: revMax }
+            }
 
-        this.snapshots.findOne(
-            findStatement,
-            {
-                sort: [
-                    ['revision', 'desc'],
-                    ['version', 'desc'],
-                    ['commitStamp', 'desc'],
-                ],
-            },
-            callback
-        )
+            this.snapshots
+                .findOne(findStatement, {
+                    sort: [
+                        ['revision', 'desc'],
+                        ['version', 'desc'],
+                        ['commitStamp', 'desc'],
+                    ],
+                })
+                .then((res) => (callback(null, res), Ok(res)))
+                .catch((err) => (callback(err), Err(err)))
+        })
     }
 
     removeTransactions(evt, callback = noop) {
-        if (!evt.aggregateId) {
-            var errMsg = 'aggregateId not defined!'
-            debug(errMsg)
-            callback(new Error(errMsg))
-            return
-        }
-
-        var findStatement = { aggregateId: evt.aggregateId }
-
-        if (evt.aggregate) {
-            findStatement.aggregate = evt.aggregate
-        }
-
-        if (evt.context) {
-            findStatement.context = evt.context
-        }
-
-        // the following is usually unnecessary
-        this.transactions.deleteMany(findStatement, (err) => {
-            if (err) {
-                debug(err)
+        return new Promise((Ok, Err) => {
+            if (!evt.aggregateId) {
+                var errMsg = 'aggregateId not defined!'
+                debug(errMsg)
+                callback(new Error(errMsg))
+                Err(new Error(errMsg))
+                return
             }
-            callback(err)
+
+            var findStatement = { aggregateId: evt.aggregateId }
+
+            if (evt.aggregate) {
+                findStatement.aggregate = evt.aggregate
+            }
+
+            if (evt.context) {
+                findStatement.context = evt.context
+            }
+
+            // the following is usually unnecessary
+            this.transactions
+                .deleteMany(findStatement)
+                .then(() => {
+                    callback()
+                    Ok(this)
+                })
+                .catch((err) => {
+                    debug(err)
+                    callback(err)
+                    Err(err)
+                })
         })
     }
 
     getPendingTransactions(callback = noop) {
-        //
-        this.transactions.find({}).toArray((err, txs) => {
-            if (err) {
-                debug(err)
-                return callback(err)
-            }
-
-            if (txs.length === 0) {
-                return callback(null, txs)
-            }
-
-            var goodTxs = []
-
-            async.map(
-                txs,
-                (tx, clb) => {
-                    var findStatement = { commitId: tx._id, aggregateId: tx.aggregateId }
-
-                    if (tx.aggregate) {
-                        findStatement.aggregate = tx.aggregate
-                    }
-
-                    if (tx.context) {
-                        findStatement.context = tx.context
-                    }
-
-                    this.events.findOne(findStatement, (err, evt) => {
-                        if (err) {
-                            return clb(err)
-                        }
-
-                        if (evt) {
-                            goodTxs.push(evt)
-                            return clb(null)
-                        }
-
-                        this.transactions.deleteOne({ _id: tx._id }, clb)
-                    })
-                },
-                (err) => {
-                    if (err) {
-                        debug(err)
-                        return callback(err)
-                    }
-
-                    callback(null, goodTxs)
-                }
-            )
-        })
-    }
-
-    getLastEvent(query, callback = noop) {
-        if (!query.aggregateId) {
-            var errMsg = 'aggregateId not defined!'
-            debug(errMsg)
-            callback(new Error(errMsg))
-            return
-        }
-
-        var findStatement = { aggregateId: query.aggregateId }
-
-        if (query.aggregate) {
-            findStatement.aggregate = query.aggregate
-        }
-
-        if (query.context) {
-            findStatement.context = query.context
-        }
-
-        this.events.findOne(
-            findStatement,
-            {
-                sort: [
-                    ['commitStamp', 'desc'],
-                    ['streamRevision', 'desc'],
-                    ['commitSequence', 'desc'],
-                ],
-            },
-            callback
-        )
-    }
-
-    repairFailedTransaction(lastEvt, callback = noop) {
-        //
-
-        this.transactions.findOne({ _id: lastEvt.commitId }, (err, tx) => {
-            if (err) {
-                debug(err)
-                return callback(err)
-            }
-
-            if (!tx) {
-                var err = new Error('missing tx entry for aggregate ' + lastEvt.aggregateId)
-                debug(err)
-                return callback(err)
-            }
-
-            var missingEvts = tx.events.slice(tx.events.length - lastEvt.restInCommitStream)
-
-            this.events.insertMany(missingEvts, (err) => {
+        return new Promise((Ok, Err) => {
+            this.transactions.find({}).toArray((err, txs) => {
                 if (err) {
                     debug(err)
                     return callback(err)
                 }
 
-                this.removeTransactions(lastEvt)
+                if (txs.length === 0) {
+                    return callback(null, txs)
+                }
 
-                callback(null)
+                var goodTxs = []
+
+                async.map(
+                    txs,
+                    (tx, clb) => {
+                        var findStatement = { commitId: tx._id, aggregateId: tx.aggregateId }
+
+                        if (tx.aggregate) {
+                            findStatement.aggregate = tx.aggregate
+                        }
+
+                        if (tx.context) {
+                            findStatement.context = tx.context
+                        }
+
+                        this.events.findOne(findStatement, (err, evt) => {
+                            if (err) {
+                                return clb(err)
+                            }
+
+                            if (evt) {
+                                goodTxs.push(evt)
+                                return clb(null)
+                            }
+
+                            this.transactions.deleteOne({ _id: tx._id }, clb)
+                        })
+                    },
+                    (err) => {
+                        if (err) {
+                            debug(err)
+                            return callback(err), Err(err)
+                        }
+
+                        callback(null, goodTxs), Ok(goodTxs)
+                    }
+                )
             })
+        })
+    }
+
+    getLastEvent(query, callback = noop) {
+        return new Promise((Ok, Err) => {
+            if (!query.aggregateId) {
+                var errMsg = 'aggregateId not defined!'
+                debug(errMsg)
+                callback(new Error(errMsg))
+                return Err(new Error(errMsg))
+            }
+
+            var findStatement = { aggregateId: query.aggregateId }
+
+            if (query.aggregate) {
+                findStatement.aggregate = query.aggregate
+            }
+
+            if (query.context) {
+                findStatement.context = query.context
+            }
+
+            this.events
+                .findOne(findStatement, {
+                    sort: [
+                        ['commitStamp', 'desc'],
+                        ['streamRevision', 'desc'],
+                        ['commitSequence', 'desc'],
+                    ],
+                })
+                .then((result) => (callback(null, result), Ok(result)))
+                .catch((err) => (callback(err), Err(err)))
+        })
+    }
+
+    repairFailedTransaction(lastEvt, callback = noop) {
+        return new Promise((Ok, Err) => {
+            debug('repairFailedTransaction with %o', lastEvt)
+            this.transactions
+                .findOne({ _id: lastEvt.commitId })
+                .then((tx) => {
+                    if (!tx) {
+                        throw new Error('missing tx entry for aggregate ' + lastEvt.aggregateId)
+                    }
+
+                    return tx.events.slice(tx.events.length - lastEvt.restInCommitStream)
+                })
+                .then((missingEvts) => {
+                    return this.events.insertMany(missingEvts)
+                })
+                .then(() => this.removeTransactions(lastEvt))
+                .then(() => (callback(null), Ok(this)))
+                .catch((err) => {
+                    debug(err)
+                    callback(err)
+                    Err(err)
+                })
         })
     }
 }

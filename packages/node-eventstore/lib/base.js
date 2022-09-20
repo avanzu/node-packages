@@ -46,8 +46,11 @@ class Store extends EventEmitter {
      *                             `function(err, id){}` id is of type String.
      */
     getNewId(callback) {
-        var id = uuid().toString()
-        if (callback) callback(null, id)
+        return new Promise((Ok) => {
+            var id = uuid().toString()
+            if (callback) callback(null, id)
+            Ok(id)
+        })
     }
 
     /**
