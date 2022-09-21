@@ -695,25 +695,6 @@ describe('eventstore', () => {
                 })
             })
 
-            describe('calling init with callback', () => {
-                afterEach(async () => {
-                    await es.store.disconnect()
-                    await idle(150)
-                })
-
-                beforeEach(() => {
-                    es = eventstore(options)
-                })
-
-                it('it should callback successfully', async () => {
-                    debug('it should callback successfully')
-
-                    const callback = jest.fn()
-                    await es.init(callback)
-                    expect(callback).toHaveBeenCalled()
-                })
-            })
-
             describe('having initialized (connected)', () => {
                 describe('calling disconnect on store', () => {
                     beforeEach(async () => {
@@ -725,11 +706,9 @@ describe('eventstore', () => {
                         debug('it should callback successfully')
 
                         const disconnect = jest.fn()
-                        const callback = jest.fn()
                         es.once('disconnect', disconnect)
-                        await es.store.disconnect(callback)
+                        await es.store.disconnect()
 
-                        expect(callback).toHaveBeenCalled()
                         expect(disconnect).toHaveBeenCalled()
                     })
                 })

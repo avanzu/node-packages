@@ -3,8 +3,6 @@ var Store = require('../base'),
     jsondate = require('jsondate'),
     debug = require('debug')('eventstore:store:inmemory')
 
-const noop = () => {}
-
 function deepFind(obj, pattern) {
     var found
 
@@ -40,52 +38,48 @@ class InMemory extends Store {
         this.options = options
         if (options.trackPosition) this.position = 0
     }
-    connect(callback = noop) {
+    connect() {
         return new Promise((Ok) => {
             this.emit('connect')
-            if (callback) callback(null, this)
             Ok(this)
         })
     }
 
-    disconnect(callback = noop) {
+    disconnect() {
         return new Promise((Ok) => {
             this.emit('disconnect')
-            if (callback) callback(null)
             Ok(this)
         })
     }
 
-    clear(callback = noop) {
+    clear() {
         return new Promise((Ok) => {
             this.store = {}
             this.snapshots = {}
             this.undispatchedEvents = { _direct: {} }
             this.position = 0
-            if (callback) callback(null)
             Ok(this)
         })
     }
 
-    getNextPositions(positions, callback = noop) {
+    getNextPositions(positions) {
         return new Promise((Ok) => {
             if (!this.options.trackPosition) {
-                return callback(null), Ok(null)
+                return Ok(null)
             }
 
             var range = []
             for (var i = 0; i < positions; i++) {
                 range.push(++this.position)
             }
-            callback(null, range), Ok(range)
+            Ok(range)
         })
     }
 
-    addEvents(events, callback = noop) {
+    addEvents(events) {
         return new Promise((Ok, Err) => {
             if (!events || events.length === 0) {
-                callback(null), Ok(this)
-                return
+                return Ok(this)
             }
 
             var found = _.find(events, (evt) => {
@@ -95,9 +89,7 @@ class InMemory extends Store {
             if (found) {
                 var errMsg = 'aggregateId not defined!'
                 debug(errMsg)
-                if (callback) callback(new Error(errMsg))
-                Err(new Error(errMsg))
-                return
+                return Err(new Error(errMsg))
             }
 
             var aggregateId = events[0].aggregateId
@@ -123,11 +115,11 @@ class InMemory extends Store {
                 this.undispatchedEvents._direct[evt.id] = evt
             })
 
-            callback(null), Ok(this)
+            Ok(this)
         })
     }
 
-    getEvents(query, skip, limit, callback = noop) {
+    getEvents(query, skip, limit) {
         return new Promise((Ok) => {
             var res = []
             for (var s in this.store) {
@@ -165,19 +157,18 @@ class InMemory extends Store {
 
             if (limit === -1) {
                 var res = _.cloneDeep(res.slice(skip))
-                return callback(null, res), Ok(res)
+                return Ok(res)
             }
 
             if (res.length <= skip) {
-                return callback(null, []), Ok([])
+                return Ok([])
             }
 
-            var sliced = _.cloneDeep(res.slice(skip, skip + limit))
-            callback(null, sliced), Ok(sliced)
+            Ok(_.cloneDeep(res.slice(skip, skip + limit)))
         })
     }
 
-    getEventsSince(date, skip, limit, callback = noop) {
+    getEventsSince(date, skip, limit) {
         return new Promise((Ok) => {
             var res = []
             for (var s in this.store) {
@@ -198,33 +189,29 @@ class InMemory extends Store {
 
             if (limit === -1) {
                 var all = _.cloneDeep(res.slice(skip))
-                return callback(null, all), Ok(all)
+                return Ok(all)
             }
 
             if (res.length <= skip) {
-                return callback(null, []), Ok([])
+                return Ok([])
             }
 
-            var slice = _.cloneDeep(res.slice(skip, skip + limit))
-            callback(null, slice), Ok(slice)
+            Ok(_.cloneDeep(res.slice(skip, skip + limit)))
         })
     }
 
-    getEventsByRevision(query, revMin, revMax, callback = noop) {
+    getEventsByRevision(query, revMin, revMax) {
         return new Promise((Ok, Err) => {
             var res = []
 
             const resolveOk = (res) => {
-                var res1 = _.cloneDeep(res)
-                return callback(null, res1), Ok(res1)
+                return Ok(_.cloneDeep(res))
             }
 
             if (!query.aggregateId) {
                 var errMsg = 'aggregateId not defined!'
                 debug(errMsg)
-                if (callback) callback(new Error(errMsg))
-                Err(new Error(errMsg))
-                return
+                return Err(new Error(errMsg))
             }
 
             if (query.context && query.aggregate) {
@@ -303,14 +290,12 @@ class InMemory extends Store {
         })
     }
 
-    getLastEvent(query, callback = noop) {
+    getLastEvent(query) {
         return new Promise((Ok, Err) => {
             if (!query.aggregateId) {
                 var errMsg = 'aggregateId not defined!'
                 debug(errMsg)
-                if (callback) callback(new Error(errMsg))
-                Err(new Error(errMsg))
-                return
+                return Err(new Error(errMsg))
             }
 
             var res = []
@@ -347,12 +332,11 @@ class InMemory extends Store {
                 })
             }
 
-            callback(null, res[res.length - 1])
             Ok(res[res.length - 1])
         })
     }
 
-    getUndispatchedEvents(query, callback = noop) {
+    getUndispatchedEvents(query) {
         return new Promise((Ok) => {
             var res = []
             for (var s in this.undispatchedEvents) {
@@ -389,11 +373,11 @@ class InMemory extends Store {
                 })
             }
 
-            callback(null, res), Ok(res)
+            Ok(res)
         })
     }
 
-    setEventToDispatched(id, callback = noop) {
+    setEventToDispatched(id) {
         return new Promise((Ok) => {
             var evt = this.undispatchedEvents._direct[id]
             var aggregateId = evt.aggregateId
@@ -405,11 +389,11 @@ class InMemory extends Store {
                 evt
             )
             delete this.undispatchedEvents._direct[id]
-            callback(null), Ok({ ok: 1 })
+            Ok({ ok: 1 })
         })
     }
 
-    addSnapshot(snap, callback = noop) {
+    addSnapshot(snap) {
         return new Promise((Ok, Err) => {
             var aggregateId = snap.aggregateId
             var aggregate = snap.aggregate || '_general'
@@ -418,7 +402,6 @@ class InMemory extends Store {
             if (!snap.aggregateId) {
                 var errMsg = 'aggregateId not defined!'
                 debug(errMsg)
-                if (callback) callback(new Error(errMsg))
                 Err(new Error(errMsg))
                 return
             }
@@ -429,18 +412,15 @@ class InMemory extends Store {
                 this.snapshots[context][aggregate][aggregateId] || []
 
             this.snapshots[context][aggregate][aggregateId].push(snap)
-            callback(null), Ok({ ok: 1 })
+            Ok({ ok: 1 })
         })
     }
 
-    getSnapshot(query, revMax, callback = noop) {
+    getSnapshot(query, revMax) {
         return new Promise((Ok, Err) => {
-            const resolveOk = (result) => (callback(null, result), Ok(result))
-
             if (!query.aggregateId) {
                 var errMsg = 'aggregateId not defined!'
                 debug(errMsg)
-                if (callback) callback(new Error(errMsg))
                 Err(new Error(errMsg))
                 return
             }
@@ -484,19 +464,19 @@ class InMemory extends Store {
             }
 
             if (revMax === -1) {
-                return resolveOk(all[0] ? jsondate.parse(JSON.stringify(all[0])) : null)
+                return Ok(all[0] ? jsondate.parse(JSON.stringify(all[0])) : null)
             } else {
                 for (var i = all.length - 1; i >= 0; i--) {
                     if (all[i].revision <= revMax) {
-                        return resolveOk(jsondate.parse(JSON.stringify(all[i])))
+                        return Ok(jsondate.parse(JSON.stringify(all[i])))
                     }
                 }
             }
-            resolveOk(null)
+            Ok(null)
         })
     }
 
-    cleanSnapshots(query, callback = noop) {
+    cleanSnapshots(query) {
         return new Promise((Ok, Err) => {
             var aggregateId = query.aggregateId
             var aggregate = query.aggregate || '_general'
@@ -505,17 +485,13 @@ class InMemory extends Store {
             if (!aggregateId) {
                 var errMsg = 'aggregateId not defined!'
                 debug(errMsg)
-                if (callback) callback(new Error(errMsg))
-                Err(new Error(errMsg))
-                return
+                return Err(new Error(errMsg))
             }
 
             var snapshots = this.snapshots[context][aggregate][aggregateId] || []
-            var length = snapshots.length
             snapshots = snapshots.slice((-1 * this.options.maxSnapshotsCount) | 0)
             this.snapshots[context][aggregate][aggregateId] = snapshots
 
-            callback(null, length - snapshots.length)
             Ok(snapshots.length)
         })
     }

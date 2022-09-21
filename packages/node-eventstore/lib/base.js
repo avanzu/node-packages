@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 var EventEmitter = require('events').EventEmitter,
     prequire = require('parent-require'),
     uuid = require('uuid').v4
@@ -7,15 +8,14 @@ var EventEmitter = require('events').EventEmitter,
  * @param {Object} options The options can have information like host, port, etc. [optional]
  */
 
-const implementError = (callback) => {
+const implementError = () => {
     var err = new Error('Please implement this function!')
-    if (callback) callback(err)
-    throw err
+    return Promise.reject(err)
 }
 
-const silentWarning = (callback) => {
+const silentWarning = () => {
     console.warn('Snapshot cleaning is not implemented for this kind of store')
-    callback()
+    return Promise.resolve()
 }
 
 class Store extends EventEmitter {
@@ -24,43 +24,35 @@ class Store extends EventEmitter {
     }
     /**
      * Initiate communication with the queue.
-     * @param  {Function} callback The function, that will be called when the this action is completed. [optional]
-     *                             `function(err, queue){}`
+     * @return {Promise<Store>}
      */
-    connect(callback) {
-        implementError(callback)
+    connect() {
+        return implementError()
     }
 
     /**
      * Terminate communication with the queue.
-     * @param  {Function} callback The function, that will be called when the this action is completed. [optional]
-     *                             `function(err){}`
+     * @return {Promise<Store>}
      */
-    disconnect(callback) {
-        implementError(callback)
+    disconnect() {
+        return implementError()
     }
 
     /**
      * Use this function to obtain a new id.
-     * @param  {Function} callback The function, that will be called when the this action is completed.
-     *                             `function(err, id){}` id is of type String.
+     * @return {Promise<string>}
      */
-    getNewId(callback) {
-        return new Promise((Ok) => {
-            var id = uuid().toString()
-            if (callback) callback(null, id)
-            Ok(id)
-        })
+    getNewId() {
+        return Promise.resolve(uuid().toString())
     }
 
     /**
      * Use this function to an array containing the next position numbers
      * @param  {number} positins Number of positions to provide.
-     * @param  {Function} callback The function, that will be called when the this action is completed.
-     *                             `function(err, positions){}` positions is either undefined if option is not enabled/supported or array with positions
+     * @return {Promise<number[]>}
      */
-    getNextPositions(positions, callback) {
-        callback(null)
+    getNextPositions(positions) {
+        return Promise.resolve(null)
     }
 
     /**
@@ -68,11 +60,10 @@ class Store extends EventEmitter {
      * @param {Object}   query    the query object
      * @param {Number}   skip     how many events should be skipped?
      * @param {Number}   limit    how many events do you want in the result?
-     * @param {Function} callback the function that will be called when this action has finished
-     *                            `function(err, events){}`
+     * @return {Promise<events[]>}
      */
-    getEvents(query, skip, limit, callback) {
-        implementError(callback)
+    getEvents(query, skip, limit) {
+        return implementError()
     }
 
     /**
@@ -80,11 +71,10 @@ class Store extends EventEmitter {
      * @param {Date}     commitStamp the date object
      * @param {Number}   skip        how many events should be skipped? [optional]
      * @param {Number}   limit       how many events do you want in the result? [optional]
-     * @param {Function} callback    the function that will be called when this action has finished
-     *                               `function(err, events){}`
+     * @return {Promise<events[]>}
      */
-    getEventsSince(commitStamp, skip, limit, callback) {
-        implementError(callback)
+    getEventsSince(commitStamp, skip, limit) {
+        return implementError()
     }
 
     /**
@@ -92,98 +82,89 @@ class Store extends EventEmitter {
      * @param {Object}   query    the query object
      * @param {Number}   revMin   revision start point
      * @param {Number}   revMax   revision end point (hint: -1 = to end)
-     * @param {Function} callback the function that will be called when this action has finished
-     *                            `function(err, events){}`
+     * @return {Promise<events[]>}
      */
-    getEventsByRevision(query, revMin, revMax, callback) {
-        implementError(callback)
+    getEventsByRevision(query, revMin, revMax) {
+        return implementError()
     }
 
     /**
      * loads the next snapshot back from given max revision
      * @param {Object}   query    the query object
      * @param {Number}   revMax   revision end point (hint: -1 = to end)
-     * @param {Function} callback the function that will be called when this action has finished
-     *                            `function(err, snapshot){}`
+     * @return {Promise<Snapshot>}
      */
-    getSnapshot(query, revMax, callback) {
-        implementError(callback)
+    getSnapshot(query, revMax) {
+        return implementError()
     }
 
     /**
      * stores a new snapshot
      * @param {Object}   snap     the snapshot data
-     * @param {Function} callback the function that will be called when this action has finished [optional]
+     * @return {Promise}
      */
-    addSnapshot(snap, callback) {
-        implementError(callback)
+    addSnapshot(snap) {
+        return implementError()
     }
 
     /**
      * stores a new snapshot
      * @param {Object}   query    the query object
-     * @param {Function} callback the function that will be called when this action has finished [optional]
+     * @return {Promise}
      */
-    cleanSnapshots(query, callback) {
-        silentWarning(callback)
+    cleanSnapshots(query) {
+        return silentWarning()
     }
 
     /**
      * stores the passed events
      * @param {Array}    evts     the events
+     * @return {Promise}
      * @param {Function} callback the function that will be called when this action has finished [optional]
      */
-    addEvents(evts, callback) {
-        implementError(callback)
+    addEvents(evts) {
+        return implementError()
     }
 
     /**
      * loads the last event
      * @param {Object}   query    the query object [optional]
-     * @param {Function} callback the function that will be called when this action has finished
-     *                            `function(err, event){}`
+     * @return {Promise<event>}
      */
-    getLastEvent(query, callback) {
-        implementError(callback)
+    getLastEvent(query) {
+        return implementError()
     }
 
     /**
      * loads all undispatched events
      * @param {Object}   query    the query object [optional]
-     * @param {Function} callback the function that will be called when this action has finished
-     *                            `function(err, events){}`
+     * @return {Promise<events[]>}
      */
-    getUndispatchedEvents(query, callback) {
-        implementError(callback)
+    getUndispatchedEvents(query) {
+        return implementError()
     }
 
     /**
      * Sets the given event to dispatched.
      * @param {String}   id       the event id
-     * @param {Function} callback the function that will be called when this action has finished [optional]
+     * @return {Promise}
      */
-    setEventToDispatched(id, callback) {
-        implementError(callback)
+    setEventToDispatched(id) {
+        return implementError()
     }
 
     /**
      * NEVER USE THIS FUNCTION!!! ONLY FOR TESTS!
      * clears the complete store...
+     * @return {Promise}
      * @param {Function} callback the function that will be called when this action has finished [optional]
      */
-    clear(callback) {
-        implementError(callback)
+    clear() {
+        return implementError()
     }
 
     static use(toRequire) {
-        var required
-        try {
-            required = require(toRequire)
-        } catch (e) {
-            // workaround when `npm link`'ed for development
-            required = prequire(toRequire)
-        }
-        return required
+        return require(toRequire)
     }
 }
 

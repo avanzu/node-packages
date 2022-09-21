@@ -15,24 +15,20 @@ describe('The mongodb backend', () => {
 
         it('should open a connection', async () => {
             const onConnect = jest.fn()
-            const callback = jest.fn()
             store.once('connect', onConnect)
-            await store.connect(callback)
+            await store.connect()
 
             expect(onConnect).toHaveBeenCalled()
-            expect(callback).toHaveBeenCalled()
         })
 
         it('should close a connection', async () => {
             const onClose = jest.fn()
-            const callback = jest.fn()
             store.once('disconnect', onClose)
             await store.connect()
             await idle(100)
-            await store.disconnect(callback)
+            await store.disconnect()
 
             expect(onClose).toHaveBeenCalled()
-            expect(callback).toHaveBeenCalled()
         })
     })
 
@@ -42,23 +38,18 @@ describe('The mongodb backend', () => {
         afterAll(() => store.disconnect())
 
         it('should clear all tables', async () => {
-            const callback = jest.fn()
-            const promise = store.clear(callback)
+            const promise = store.clear()
             await expect(promise).resolves.toEqual(store)
         })
 
         it('should produce new ids', async () => {
-            const callback = jest.fn()
-            const promise = store.getNewId(callback)
+            const promise = store.getNewId()
             await expect(promise).resolves.toMatch(/.+/)
-            expect(callback).toHaveBeenCalled()
         })
 
         it('should provide next positions', async () => {
-            const callback = jest.fn()
-            const promise = store.getNextPositions(2, callback)
+            const promise = store.getNextPositions(2)
             await expect(promise).resolves.toEqual([1, 2])
-            expect(callback).toHaveBeenCalled()
         })
 
         it('should add one event', async () => {
@@ -75,11 +66,9 @@ describe('The mongodb backend', () => {
                 applyMappings: () => {},
             }
 
-            const callback = jest.fn()
-            const promise = store.addEvents([event], callback)
+            const promise = store.addEvents([event])
 
             await expect(promise).resolves.toBe(store)
-            expect(callback).toHaveBeenCalled()
         })
 
         it('should add multiple event', async () => {
@@ -96,58 +85,42 @@ describe('The mongodb backend', () => {
                 applyMappings: () => {},
             }
 
-            const callback = jest.fn()
-            const promise = store.addEvents(
-                [
-                    { ...event, id: '222', commitId: '112' },
-                    { ...event, id: '223', commitId: '112' },
-                ],
-                callback
-            )
+            const promise = store.addEvents([
+                { ...event, id: '222', commitId: '112' },
+                { ...event, id: '223', commitId: '112' },
+            ])
 
             await expect(promise).resolves.toBe(store)
-            expect(callback).toHaveBeenCalled()
         })
 
         it('should provide stored events', async () => {
-            const callback = jest.fn()
-            const promise = store.getEvents({ aggregateId: 'id1' }, 0, -1, callback)
+            const promise = store.getEvents({ aggregateId: 'id1' }, 0, -1)
 
             await expect(promise).resolves.toHaveLength(3)
-            expect(callback).toHaveBeenCalled()
         })
 
         it('should provide stored events since ', async () => {
-            const callback = jest.fn()
-            const promise = store.getEvents(Date.now(), 0, -1, callback)
+            const promise = store.getEvents(Date.now(), 0, -1)
 
             await expect(promise).resolves.toHaveLength(3)
-            expect(callback).toHaveBeenCalled()
         })
 
         it('should provide events by revision', async () => {
-            const callback = jest.fn()
-            const promise = store.getEventsByRevision({ aggregateId: 'id1' }, 0, -1, callback)
+            const promise = store.getEventsByRevision({ aggregateId: 'id1' }, 0, -1)
             await expect(promise).resolves.toHaveLength(3)
-            expect(callback).toHaveBeenCalled()
         })
 
         it('should provide undispatched events', async () => {
-            const callback = jest.fn()
-            const promise = store.getUndispatchedEvents({}, callback)
+            const promise = store.getUndispatchedEvents({})
             await expect(promise).resolves.toHaveLength(3)
-            expect(callback).toHaveBeenCalled()
         })
 
         it('should mark a single event as undispatched', async () => {
-            const callback = jest.fn()
             const promise = store
                 .getLastEvent({ aggregateId: 'id1' })
-                .then(({ _id }) => store.setEventToDispatched(_id, callback))
+                .then(({ _id }) => store.setEventToDispatched(_id))
 
             await expect(promise).resolves.toMatchObject({ ok: 1 })
-
-            expect(callback).toHaveBeenCalled()
         })
 
         it('should add snapshots', async () => {
@@ -163,39 +136,29 @@ describe('The mongodb backend', () => {
                     mySnappi: 'data',
                 },
             }
-            const callback = jest.fn()
-            const promise = store.addSnapshot(snap1, callback)
+            const promise = store.addSnapshot(snap1)
             await expect(promise).resolves.toMatchObject({ ok: 1 })
-            expect(callback).toHaveBeenCalled()
         })
 
         it('should retrieve snapshots', async () => {
-            const callback = jest.fn()
             const promise = store.getSnapshot(
                 {
                     aggregateId: '920193847',
                     aggregate: 'myCoolAggregate',
                     context: 'myCoolContext',
                 },
-                -1,
-                callback
+                -1
             )
             await expect(promise).resolves.toMatchObject({ id: 'rev3', aggregateId: '920193847' })
-            expect(callback).toHaveBeenCalled()
         })
 
         it('should clean snaphsots', async () => {
-            const callback = jest.fn()
-            const promise = store.cleanSnapshots(
-                {
-                    aggregateId: '920193847',
-                    aggregate: 'myCoolAggregate',
-                    context: 'myCoolContext',
-                },
-                callback
-            )
+            const promise = store.cleanSnapshots({
+                aggregateId: '920193847',
+                aggregate: 'myCoolAggregate',
+                context: 'myCoolContext',
+            })
             await expect(promise).resolves.toEqual(0)
-            expect(callback).toHaveBeenCalled()
         })
 
         it('should repair failed transactions', async () => {

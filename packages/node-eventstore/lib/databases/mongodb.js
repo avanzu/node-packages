@@ -6,9 +6,10 @@ var Store = require('../base'),
     ObjectID = mongo.ObjectID,
     debug = require('debug')('@avanzu/eventstore/database/mongodb')
 
-const noop = () => {}
 const inspect = (message) => (data) => (debug(message, data), data)
 const notice = (message) => (data) => (debug(message), data)
+const filterEmpty = (obj) =>
+    Object.fromEntries(Object.entries(obj).filter(([, value]) => Boolean(value)))
 
 const streamEventsByRevision = (self, findStatement, revMin, revMax, resultStream, lastEvent) => {
     findStatement.streamRevision = revMax === -1 ? { $gte: revMin } : { $gte: revMin, $lt: revMax }
@@ -116,7 +117,7 @@ class Mongo extends Store {
         this.options = options
     }
 
-    connect(callback = noop) {
+    connect() {
         return new Promise((Ok, Err) => {
             debug('Opening connection')
             var options = this.options
@@ -161,7 +162,6 @@ class Mongo extends Store {
                     .then(() => Ok(this))
                     .catch((err) => {
                         debug(err)
-                        callback(err)
                         Err(err)
                     })
             } else {
@@ -176,7 +176,6 @@ class Mongo extends Store {
                     .then(() => Ok(this))
                     .catch((err) => {
                         debug(err)
-                        callback(err)
                         Err(err)
                     })
             }
@@ -190,7 +189,6 @@ class Mongo extends Store {
                 const finish = (err) => {
                     if (err) {
                         debug(err)
-                        callback(err)
                         return
                     }
 
@@ -259,7 +257,6 @@ class Mongo extends Store {
                     if (this.options.heartbeat) {
                         this.startHeartbeat()
                     }
-                    callback(null, this)
                 }
 
                 finish()
@@ -298,72 +295,46 @@ class Mongo extends Store {
         }, this.options.heartbeat)
     }
 
-    disconnect(callback = noop) {
+    disconnect() {
         return new Promise((Ok, Err) => {
             debug('closing connection')
             this.stopHeartbeat()
 
             if (!this.db) {
-                callback(null)
                 Ok(this)
                 return
             }
 
             this.db
                 .close()
-                .then(() => {
-                    callback(null)
-                    Ok(this)
-                })
-                .catch((err) => {
-                    debug(err)
-                    callback(err)
-                    Err(err)
-                })
+                .then(() => Ok(this))
+                .catch((err) => (debug(err), Err(err)))
         })
     }
 
-    clear(callback = noop) {
+    clear() {
+        const clearPositions = () =>
+            this.positions ? this.positions.deleteMany({}) : Promise.resolve()
+        const clearEvents = () => this.events.deleteMany({})
+        const clearSnapshots = () => this.snapshots.deleteMany({})
+        const clearTransactions = () => this.transactions.deleteMany({})
+
         return new Promise((Ok, Err) => {
-            async.parallel(
-                [
-                    (callback) => {
-                        this.events.deleteMany({}, callback)
-                    },
-                    (callback) => {
-                        this.snapshots.deleteMany({}, callback)
-                    },
-                    (callback) => {
-                        this.transactions.deleteMany({}, callback)
-                    },
-                    (callback) => {
-                        if (!this.positions) return callback(null)
-                        this.positions.deleteMany({}, callback)
-                    },
-                ],
-                (err) => {
-                    if (err) debug(err)
-                    callback(err)
-                    err ? Err(err) : Ok(this)
-                }
-            )
+            Promise.all([clearEvents(), clearSnapshots(), clearTransactions(), clearPositions()])
+                .then(() => Ok(this))
+                .catch((err) => (debug(err), Err(err)))
         })
     }
 
-    getNewId(callback = noop) {
-        return new Promise((Ok) => {
-            const id = new ObjectID().toString()
-            callback(null, id)
-            Ok(id)
-        })
+    getNewId() {
+        return Promise.resolve(new ObjectID().toString())
     }
 
-    getNextPositions(positions, callback = noop) {
+    getNextPositions(positions) {
         return new Promise((Ok, Err) => {
             if (!this.positions) {
                 debug('Positions not present')
-                callback(null)
-                return Ok()
+                return Ok(null)
             }
 
             this.positions
@@ -372,25 +343,16 @@ class Mongo extends Store {
                     { $inc: { position: positions } },
                     { returnOriginal: false, upsert: true }
                 )
-                .then((pos) => {
-                    pos.value.position += 1
-                    const range = _.range(pos.value.position - positions, pos.value.position)
-                    callback(null, range)
-                    Ok(range)
-                })
-                .catch((err) => {
-                    callback(err)
-                    Err(err)
-                })
+                .then(({ value }) => (value.position += 1))
+                .then((position) => _.range(position - positions, position))
+                .then(Ok, Err)
         })
     }
 
-    addEvents(events, callback = noop) {
+    addEvents(events) {
         return new Promise((Ok, Err) => {
             if (events.length === 0) {
-                callback(null)
-                Ok(this)
-                return
+                return Ok(this)
             }
 
             var commitId = events[0].commitId
@@ -414,27 +376,20 @@ class Mongo extends Store {
             if (noAggregateId) {
                 var errMsg = 'aggregateId not defined!'
                 debug(errMsg)
-                callback(new Error(errMsg))
                 return Err(new Error(errMsg))
             }
 
             if (invalidCommitId) {
                 var errMsg = 'commitId not defined or different!'
                 debug(errMsg)
-                callback(new Error(errMsg))
                 return Err(new Error(errMsg))
             }
 
             if (events.length === 1) {
                 return this.events
                     .insertOne(events[0])
-                    .then((result) => {
-                        Ok(this), callback(null, result)
-                    })
-                    .catch((err) => {
-                        Err(err)
-                        callback(err)
-                    })
+                    .then(() => this)
+                    .then(Ok, Err)
             }
 
             var tx = {
@@ -453,8 +408,8 @@ class Mongo extends Store {
                 .then(notice('removing transation'))
                 .then(() => this.removeTransactions(events[events.length - 1]))
                 .then(notice('Resolving'))
-                .then(() => (callback(), Ok(this)))
-                .catch((err) => (debug(err), callback(err), Err(err)))
+                .then(() => this)
+                .then(Ok, Err)
         })
     }
 
@@ -537,43 +492,42 @@ class Mongo extends Store {
         return resultStream
     }
 
-    getEvents(query, skip, limit, callback = noop) {
+    getEvents(query, skip, limit) {
         return new Promise((Ok, Err) => {
-            this.streamEvents(query, skip, limit)
-                .toArray()
-                .then((data) => {
-                    callback(null, data)
-                    Ok(data)
-                })
-                .catch((err) => {
-                    callback(err)
-                    Err(err)
-                })
+            this.streamEvents(query, skip, limit).toArray().then(Ok, Err)
         })
     }
 
-    getEventsSince(date, skip, limit, callback = noop) {
+    getEventsSince(date, skip, limit) {
         return new Promise((Ok, Err) => {
-            this.streamEventsSince(date, skip, limit)
-                .toArray()
-                .then((data) => {
-                    callback(null, data)
-                    Ok(data)
-                })
-                .catch((err) => {
-                    callback(err)
-                    Err(err)
-                })
+            this.streamEventsSince(date, skip, limit).toArray().then(Ok, Err)
         })
     }
 
-    getEventsByRevision(query, revMin, revMax, callback = noop) {
+    getEventsByRevision(query, revMin, revMax) {
+        const removeAndResolve = (lastEvt, res) => this.removeTransactions(lastEvt).then(() => res)
+
+        const repairAndRetry = (lastEvt) =>
+            this.repairFailedTransaction(lastEvt).then(() =>
+                this.getEventsByRevision(query, revMin, revMax)
+            )
+
+        const evaluatTransaction = (res) => {
+            const lastEvt = res[res.length - 1]
+
+            const txOk =
+                (revMax === -1 && !lastEvt.restInCommitStream) ||
+                (revMax !== -1 &&
+                    (lastEvt.streamRevision === revMax - 1 || !lastEvt.restInCommitStream))
+
+            return txOk ? removeAndResolve(lastEvt, res) : repairAndRetry(lastEvt)
+        }
+
         return new Promise((Ok, Err) => {
-            debug('getEventsByRevision(%s, %s, %s, %s)', query, revMin, revMax, callback)
+            debug('getEventsByRevision(%s, %s, %s)', query, revMin, revMax)
             if (!query.aggregateId) {
                 var errMsg = 'aggregateId not defined!'
                 debug(errMsg)
-                callback(new Error(errMsg))
                 return Err(new Error(errMsg))
             }
 
@@ -595,25 +549,6 @@ class Mongo extends Store {
                 findStatement.context = query.context
             }
 
-            const removeAndResolve = (lastEvt, res) =>
-                this.removeTransactions(lastEvt).then(() => Ok(res))
-
-            const repairAndRetry = (lastEvt) =>
-                this.repairFailedTransaction(lastEvt).then(() =>
-                    this.getEventsByRevision(query, revMin, revMax)
-                )
-
-            const evaluatTransaction = (res) => {
-                var lastEvt = res[res.length - 1]
-
-                var txOk =
-                    (revMax === -1 && !lastEvt.restInCommitStream) ||
-                    (revMax !== -1 &&
-                        (lastEvt.streamRevision === revMax - 1 || !lastEvt.restInCommitStream))
-
-                return txOk ? removeAndResolve(lastEvt, res) : repairAndRetry(lastEvt)
-            }
-
             this.events
                 .find(findStatement, {
                     sort: [
@@ -623,19 +558,12 @@ class Mongo extends Store {
                     ],
                 })
                 .toArray()
-                .then((res) => {
-                    return !res || res.length === 0 ? [] : evaluatTransaction(res)
-                })
-                .then((result) => (callback(null, result), Ok(result)))
-                .catch((err) => {
-                    debug(err)
-                    callback(err)
-                    Err(err)
-                })
+                .then((res) => (!res || res.length === 0 ? [] : evaluatTransaction(res)))
+                .then(Ok, Err)
         })
     }
 
-    getUndispatchedEvents(query, callback = noop) {
+    getUndispatchedEvents(query) {
         return new Promise((Ok, Err) => {
             var findStatement = {
                 dispatched: false,
@@ -662,45 +590,41 @@ class Mongo extends Store {
                     ],
                 })
                 .toArray()
-                .then((res) => (callback(null, res), Ok(res)))
-                .catch((err) => (callback(err), Err(err)))
+                .then(Ok, Err)
         })
     }
 
-    setEventToDispatched(id, callback = noop) {
+    setEventToDispatched(id) {
         return new Promise((Ok, Err) => {
             var updateCommand = { $unset: { dispatched: null } }
             this.events
                 .updateOne({ _id: id }, updateCommand)
-                .then((res) => (callback(null, res), Ok(res.result)))
-                .catch((err) => (callback(err), Err(err)))
+                .then(({ result }) => result)
+                .then(Ok, Err)
         })
     }
 
-    addSnapshot(snap, callback = noop) {
+    addSnapshot(snap) {
         return new Promise((Ok, Err) => {
             if (!snap.aggregateId) {
                 var errMsg = 'aggregateId not defined!'
                 debug(errMsg)
-                callback(new Error(errMsg))
-                Err(new Error(errMsg))
-                return
+                return Err(new Error(errMsg))
             }
 
             snap._id = snap.id
             this.snapshots
                 .insertOne(snap)
-                .then((res) => (callback(null, res), Ok(res.result)))
-                .catch((err) => (callback(err), Err(err)))
+                .then(({ result }) => result)
+                .then(Ok, Err)
         })
     }
 
-    cleanSnapshots(query, callback = noop) {
+    cleanSnapshots(query) {
         return new Promise((Ok, Err) => {
             if (!query.aggregateId) {
                 var errMsg = 'aggregateId not defined!'
                 debug(errMsg)
-                callback(new Error(errMsg))
                 return Err(new Error(errMsg))
             }
 
@@ -733,18 +657,15 @@ class Mongo extends Store {
                 .toArray()
                 .then(remove)
                 .then(countRemaining)
-                .then((count) => (callback(null, count), Ok(count)))
-                .catch((err) => (callback(err), Err(err)))
-            // .toArray(removeElements(this.snapshots, callback))
+                .then(Ok, Err)
         })
     }
 
-    getSnapshot(query, revMax, callback = noop) {
+    getSnapshot(query, revMax) {
         return new Promise((Ok, Err) => {
             if (!query.aggregateId) {
                 var errMsg = 'aggregateId not defined!'
                 debug(errMsg)
-                callback(new Error(errMsg))
                 return Err(new Error(errMsg))
             }
 
@@ -772,19 +693,16 @@ class Mongo extends Store {
                         ['commitStamp', 'desc'],
                     ],
                 })
-                .then((res) => (callback(null, res), Ok(res)))
-                .catch((err) => (callback(err), Err(err)))
+                .then(Ok, Err)
         })
     }
 
-    removeTransactions(evt, callback = noop) {
+    removeTransactions(evt) {
         return new Promise((Ok, Err) => {
             if (!evt.aggregateId) {
                 var errMsg = 'aggregateId not defined!'
                 debug(errMsg)
-                callback(new Error(errMsg))
-                Err(new Error(errMsg))
-                return
+                return Err(new Error(errMsg))
             }
 
             var findStatement = { aggregateId: evt.aggregateId }
@@ -800,28 +718,57 @@ class Mongo extends Store {
             // the following is usually unnecessary
             this.transactions
                 .deleteMany(findStatement)
-                .then(() => {
-                    callback()
-                    Ok(this)
-                })
-                .catch((err) => {
-                    debug(err)
-                    callback(err)
-                    Err(err)
-                })
+                .then(() => this)
+                .then(Ok, Err)
         })
     }
 
-    getPendingTransactions(callback = noop) {
+    getPendingTransactions() {
+        const isFulfilled = ({ status }) => status === 'fulfilled'
+        const eventNotPresent = ({ event }) => !Boolean(event)
+        const eventPresent = ({ event }) => Boolean(event)
+        const takeValue = ({ value }) => value
+        const takeFulfilledValues = (results) => results.filter(isFulfilled).map(takeValue)
+
+        const findEvent = ({ _id, aggregateId, aggregate, context }) =>
+            Promise.resolve({ commitId: _id, aggregateId, aggregate, context })
+                .then(filterEmpty)
+                .then(inspect('Searching for event with %o'))
+                .then((query) => this.events.findOne(query))
+                .then((event) => ({ event, transaction: _id }))
+
+        const findEvents = (transactions) =>
+            Promise.allSettled(transactions.map(findEvent))
+                .then(inspect('events of transactions %o'))
+                .then(takeFulfilledValues)
+
+        const removeTransaction = ({ transaction }) =>
+            this.transactions.deleteOne({ _id: transaction })
+
+        const removeTransactionsWithoutEvent = (xs) =>
+            Promise.all(xs.filter(eventNotPresent).map(removeTransaction))
+
+        const removeEmptyTransactions = (xs) =>
+            removeTransactionsWithoutEvent(xs).then(() => xs.filter(eventPresent))
+
         return new Promise((Ok, Err) => {
+            this.transactions
+                .find({})
+                .toArray()
+                .then((transactions) => findEvents(transactions))
+                .then(removeEmptyTransactions)
+                .then((xs) => xs.map(({ event }) => event))
+                .then(inspect('pending events %o'))
+                .then(Ok, Err)
+            /*
             this.transactions.find({}).toArray((err, txs) => {
                 if (err) {
                     debug(err)
-                    return callback(err)
+                    return Err(err)
                 }
 
                 if (txs.length === 0) {
-                    return callback(null, txs)
+                    return Ok(txs)
                 }
 
                 var goodTxs = []
@@ -862,15 +809,15 @@ class Mongo extends Store {
                     }
                 )
             })
+            */
         })
     }
 
-    getLastEvent(query, callback = noop) {
+    getLastEvent(query) {
         return new Promise((Ok, Err) => {
             if (!query.aggregateId) {
                 var errMsg = 'aggregateId not defined!'
                 debug(errMsg)
-                callback(new Error(errMsg))
                 return Err(new Error(errMsg))
             }
 
@@ -892,12 +839,11 @@ class Mongo extends Store {
                         ['commitSequence', 'desc'],
                     ],
                 })
-                .then((result) => (callback(null, result), Ok(result)))
-                .catch((err) => (callback(err), Err(err)))
+                .then(Ok, Err)
         })
     }
 
-    repairFailedTransaction(lastEvt, callback = noop) {
+    repairFailedTransaction(lastEvt) {
         return new Promise((Ok, Err) => {
             debug('repairFailedTransaction with %o', lastEvt)
             this.transactions
@@ -913,12 +859,8 @@ class Mongo extends Store {
                     return this.events.insertMany(missingEvts)
                 })
                 .then(() => this.removeTransactions(lastEvt))
-                .then(() => (callback(null), Ok(this)))
-                .catch((err) => {
-                    debug(err)
-                    callback(err)
-                    Err(err)
-                })
+                .then(() => this)
+                .then(Ok, Err)
         })
     }
 }

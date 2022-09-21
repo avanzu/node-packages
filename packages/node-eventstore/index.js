@@ -1,8 +1,7 @@
 var Eventstore = require('./lib/eventstore'),
     Base = require('./lib/base'),
     _ = require('lodash'),
-    debug = require('debug')('eventstore'),
-    StoreEventEmitter = require('./lib/storeEventEmitter')
+    debug = require('debug')('@avanzu/eventstore')
 
 function exists(toCheck) {
     var _exists = require('fs').existsSync || require('path').existsSync
@@ -77,14 +76,7 @@ module.exports = function (options) {
         throw err
     }
 
-    var eventstore = new Eventstore(options, new Store(options))
-
-    if (options.emitStoreEvents) {
-        var storeEventEmitter = new StoreEventEmitter(eventstore)
-        storeEventEmitter.addEventEmitter()
-    }
-
-    return eventstore
+    return new Eventstore(options, new Store(options))
 }
 
 module.exports.Store = Base

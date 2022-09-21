@@ -211,7 +211,7 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                 })
 
                 if (type === 'mongodb' || type === 'tingodb') {
-                    it('failing to save all eventsit should successfully handle the transaction', async () => {
+                    it('failing to save all events it should successfully handle the transaction', async () => {
                         var event1 = {
                             aggregateId: 'id2_tx',
                             streamRevision: 0,
@@ -238,9 +238,7 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                             },
                         }
 
-                        await store.addEvents([event1, event2], function (err) {
-                            expect(err).not.toBeTruthy()
-                        })
+                        await store.addEvents([event1, event2])
                         await store.transactions.insert({
                             _id: event1.commitId,
                             events: [event1, event2],
@@ -249,51 +247,36 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                             context: event1.context,
                         })
                         await store.events.remove({ _id: event2.id })
-                        const txs = await store.getPendingTransactions(function (err, txs) {
-                            expect(err).not.toBeTruthy()
+                        const txs = await store.getPendingTransactions()
+                        expect(txs).toBeInstanceOf(Array)
+                        expect(txs).toHaveLength(1)
 
-                            expect(txs).toBeInstanceOf(Array)
-                            expect(txs).toHaveLength(1)
+                        const lastEvt = await store.getLastEvent({
+                            aggregateId: txs[0].aggregateId,
                         })
-                        await store.getLastEvent(
-                            {
-                                aggregateId: txs[0].aggregateId,
-                            },
-                            function (err, lastEvt) {
-                                expect(err).not.toBeTruthy()
 
-                                expect(lastEvt.commitStamp.getTime()).toEqual(
-                                    event1.commitStamp.getTime()
-                                )
-                                expect(lastEvt.aggregateId).toEqual(event1.aggregateId)
-                                expect(lastEvt.commitId).toEqual(event1.commitId)
-                                expect(lastEvt.payload.event).toEqual(event1.payload.event)
-                            }
-                        )
-                        await store.getEventsByRevision(
+                        expect(lastEvt.commitStamp.getTime()).toEqual(event1.commitStamp.getTime())
+                        expect(lastEvt.aggregateId).toEqual(event1.aggregateId)
+                        expect(lastEvt.commitId).toEqual(event1.commitId)
+                        expect(lastEvt.payload.event).toEqual(event1.payload.event)
+
+                        const evts = await store.getEventsByRevision(
                             {
                                 aggregateId: event2.aggregateId,
                             },
                             0,
-                            -1,
-                            function (err, evts) {
-                                expect(err).not.toBeTruthy()
-                                expect(evts).toBeInstanceOf(Array)
-                                expect(evts).toHaveLength(2)
-                                expect(evts[0].commitStamp.getTime()).toEqual(
-                                    event1.commitStamp.getTime()
-                                )
-                                expect(evts[0].aggregateId).toEqual(event1.aggregateId)
-                                expect(evts[0].commitId).toEqual(event1.commitId)
-                                expect(evts[0].payload.event).toEqual(event1.payload.event)
-                                expect(evts[1].commitStamp.getTime()).toEqual(
-                                    event2.commitStamp.getTime()
-                                )
-                                expect(evts[1].aggregateId).toEqual(event2.aggregateId)
-                                expect(evts[1].commitId).toEqual(event2.commitId)
-                                expect(evts[1].payload.event).toEqual(event2.payload.event)
-                            }
+                            -1
                         )
+                        expect(evts).toBeInstanceOf(Array)
+                        expect(evts).toHaveLength(2)
+                        expect(evts[0].commitStamp.getTime()).toEqual(event1.commitStamp.getTime())
+                        expect(evts[0].aggregateId).toEqual(event1.aggregateId)
+                        expect(evts[0].commitId).toEqual(event1.commitId)
+                        expect(evts[0].payload.event).toEqual(event1.payload.event)
+                        expect(evts[1].commitStamp.getTime()).toEqual(event2.commitStamp.getTime())
+                        expect(evts[1].aggregateId).toEqual(event2.aggregateId)
+                        expect(evts[1].commitId).toEqual(event2.commitId)
+                        expect(evts[1].payload.event).toEqual(event2.payload.event)
                     })
 
                     it('having no event saved but only the transaction it should ignore the transaction', async () => {
@@ -336,9 +319,7 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                             },
                         }
 
-                        await store.addEvents([event1, event2, event3], function (err) {
-                            expect(err).not.toBeTruthy()
-                        })
+                        await store.addEvents([event1, event2, event3])
                         await store.transactions.insert({
                             _id: event1.commitId,
                             events: [event1, event2, event3],
@@ -349,15 +330,12 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                         await store.events.remove({
                             $or: [{ _id: event1.id }, { _id: event2.id }, { _id: event3.id }],
                         })
-                        await store.getLastEvent(
-                            {
-                                aggregateId: event1.aggregateId,
-                            },
-                            function (err, lastEvt) {
-                                expect(err).not.toBeTruthy()
-                                expect(lastEvt).not.toBeTruthy()
-                            }
-                        )
+
+                        const lastEvt = await store.getLastEvent({
+                            aggregateId: event1.aggregateId,
+                        })
+                        expect(lastEvt).not.toBeTruthy()
+
                         await store.transactions
                             .find({})
                             .toArray()
@@ -366,18 +344,14 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                                 expect(txs[0]._id).toEqual(event1.commitId)
                             })
 
-                        await store.getEventsByRevision(
-                            {
-                                aggregateId: event1.aggregateId,
-                            },
+                        const evts = await store.getEventsByRevision(
+                            { aggregateId: event1.aggregateId },
                             0,
-                            -1,
-                            function (err, evts) {
-                                expect(err).not.toBeTruthy()
-                                expect(evts).toBeInstanceOf(Array)
-                                expect(evts).toHaveLength(0)
-                            }
+                            -1
                         )
+                        expect(evts).toBeInstanceOf(Array)
+                        expect(evts).toHaveLength(0)
+
                         await store.transactions
                             .find({})
                             .toArray()
@@ -386,9 +360,7 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                                 expect(txs[0]._id).toEqual(event1.commitId)
                             })
 
-                        await store.getPendingTransactions(function (err, txs) {
-                            expect(err).not.toBeTruthy()
-
+                        await store.getPendingTransactions().then((txs) => {
                             expect(txs).toBeInstanceOf(Array)
                             expect(txs).toHaveLength(0)
                         })
@@ -440,9 +412,7 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                             },
                         }
 
-                        await store.addEvents([event1, event2, event3], function (err) {
-                            expect(err).not.toBeTruthy()
-                        })
+                        await store.addEvents([event1, event2, event3])
                         await store.transactions.insert({
                             _id: event1.commitId,
                             events: [event1, event2, event3],
@@ -453,66 +423,46 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                         await store.events.remove({
                             $or: [{ _id: event2.id }, { _id: event3.id }],
                         })
-                        const txs = await store.getPendingTransactions(function (err, txs) {
-                            expect(err).not.toBeTruthy()
+                        const txs = await store.getPendingTransactions()
 
-                            expect(txs).toBeInstanceOf(Array)
-                            expect(txs).toHaveLength(1)
+                        expect(txs).toBeInstanceOf(Array)
+                        expect(txs).toHaveLength(1)
+
+                        const lastEvt = await store.getLastEvent({
+                            aggregateId: txs[0].aggregateId,
                         })
-                        await store.getLastEvent(
-                            {
-                                aggregateId: txs[0].aggregateId,
-                            },
-                            function (err, lastEvt) {
-                                expect(err).not.toBeTruthy()
+                        expect(lastEvt.commitStamp.getTime()).toEqual(event1.commitStamp.getTime())
+                        expect(lastEvt.aggregateId).toEqual(event1.aggregateId)
+                        expect(lastEvt.commitId).toEqual(event1.commitId)
+                        expect(lastEvt.payload.event).toEqual(event1.payload.event)
 
-                                expect(lastEvt.commitStamp.getTime()).toEqual(
-                                    event1.commitStamp.getTime()
-                                )
-                                expect(lastEvt.aggregateId).toEqual(event1.aggregateId)
-                                expect(lastEvt.commitId).toEqual(event1.commitId)
-                                expect(lastEvt.payload.event).toEqual(event1.payload.event)
-                            }
-                        )
-                        await store.getEventsByRevision(
-                            {
-                                aggregateId: event2.aggregateId,
-                            },
+                        const evts = await store.getEventsByRevision(
+                            { aggregateId: event2.aggregateId },
                             0,
-                            5,
-                            function (err, evts) {
-                                expect(err).not.toBeTruthy()
-                                expect(evts).toBeInstanceOf(Array)
-                                expect(evts).toHaveLength(2)
-                                expect(evts[0].commitStamp.getTime()).toEqual(
-                                    event1.commitStamp.getTime()
-                                )
-                                expect(evts[0].aggregateId).toEqual(event1.aggregateId)
-                                expect(evts[0].commitId).toEqual(event1.commitId)
-                                expect(evts[0].payload.event).toEqual(event1.payload.event)
-                                expect(evts[1].commitStamp.getTime()).toEqual(
-                                    event2.commitStamp.getTime()
-                                )
-                                expect(evts[1].aggregateId).toEqual(event2.aggregateId)
-                                expect(evts[1].commitId).toEqual(event2.commitId)
-                                expect(evts[1].payload.event).toEqual(event2.payload.event)
-                            }
+                            5
                         )
-                        await store.getLastEvent(
-                            {
+                        expect(evts).toBeInstanceOf(Array)
+                        expect(evts).toHaveLength(2)
+                        expect(evts[0].commitStamp.getTime()).toEqual(event1.commitStamp.getTime())
+                        expect(evts[0].aggregateId).toEqual(event1.aggregateId)
+                        expect(evts[0].commitId).toEqual(event1.commitId)
+                        expect(evts[0].payload.event).toEqual(event1.payload.event)
+                        expect(evts[1].commitStamp.getTime()).toEqual(event2.commitStamp.getTime())
+                        expect(evts[1].aggregateId).toEqual(event2.aggregateId)
+                        expect(evts[1].commitId).toEqual(event2.commitId)
+                        expect(evts[1].payload.event).toEqual(event2.payload.event)
+                        await store
+                            .getLastEvent({
                                 aggregateId: event2.aggregateId,
-                            },
-                            function (err, lastEvt) {
-                                expect(err).not.toBeTruthy()
-
+                            })
+                            .then((lastEvt) => {
                                 expect(lastEvt.commitStamp.getTime()).toEqual(
                                     event3.commitStamp.getTime()
                                 )
                                 expect(lastEvt.aggregateId).toEqual(event3.aggregateId)
                                 expect(lastEvt.commitId).toEqual(event3.commitId)
                                 expect(lastEvt.payload.event).toEqual(event3.payload.event)
-                            }
-                        )
+                            })
                     })
 
                     it('calling getEventsByRevision with a too big maxRev value it should successfully handle the transaction', async () => {
@@ -555,9 +505,7 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                             },
                         }
 
-                        await store.addEvents([event1, event2, event3], function (err) {
-                            expect(err).not.toBeTruthy()
-                        })
+                        await store.addEvents([event1, event2, event3])
                         await store.transactions.insert({
                             _id: event1.commitId,
                             events: [event1, event2, event3],
@@ -568,72 +516,51 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                         await store.events.remove({
                             $or: [{ _id: event2.id }, { _id: event3.id }],
                         })
-                        const txs = await store.getPendingTransactions(function (err, txs) {
-                            expect(err).not.toBeTruthy()
-
-                            expect(txs).toBeInstanceOf(Array)
-                            expect(txs).toHaveLength(1)
+                        const txs = await store.getPendingTransactions()
+                        expect(txs).toBeInstanceOf(Array)
+                        expect(txs).toHaveLength(1)
+                        const lastEvt = await store.getLastEvent({
+                            aggregateId: txs[0].aggregateId,
                         })
-                        await store.getLastEvent(
-                            {
-                                aggregateId: txs[0].aggregateId,
-                            },
-                            function (err, lastEvt) {
-                                expect(err).not.toBeTruthy()
+                        expect(lastEvt.commitStamp.getTime()).toEqual(event1.commitStamp.getTime())
+                        expect(lastEvt.aggregateId).toEqual(event1.aggregateId)
+                        expect(lastEvt.commitId).toEqual(event1.commitId)
+                        expect(lastEvt.payload.event).toEqual(event1.payload.event)
 
-                                expect(lastEvt.commitStamp.getTime()).toEqual(
-                                    event1.commitStamp.getTime()
-                                )
-                                expect(lastEvt.aggregateId).toEqual(event1.aggregateId)
-                                expect(lastEvt.commitId).toEqual(event1.commitId)
-                                expect(lastEvt.payload.event).toEqual(event1.payload.event)
-                            }
-                        )
-                        await store.getEventsByRevision(
+                        const evts = await store.getEventsByRevision(
                             {
                                 aggregateId: event2.aggregateId,
                             },
                             0,
-                            10,
-                            function (err, evts) {
-                                expect(err).not.toBeTruthy()
-                                expect(evts).toBeInstanceOf(Array)
-                                expect(evts).toHaveLength(3)
-                                expect(evts[0].commitStamp.getTime()).toEqual(
-                                    event1.commitStamp.getTime()
-                                )
-                                expect(evts[0].aggregateId).toEqual(event1.aggregateId)
-                                expect(evts[0].commitId).toEqual(event1.commitId)
-                                expect(evts[0].payload.event).toEqual(event1.payload.event)
-                                expect(evts[1].commitStamp.getTime()).toEqual(
-                                    event2.commitStamp.getTime()
-                                )
-                                expect(evts[1].aggregateId).toEqual(event2.aggregateId)
-                                expect(evts[1].commitId).toEqual(event2.commitId)
-                                expect(evts[1].payload.event).toEqual(event2.payload.event)
-                                expect(evts[2].commitStamp.getTime()).toEqual(
-                                    event3.commitStamp.getTime()
-                                )
-                                expect(evts[2].aggregateId).toEqual(event3.aggregateId)
-                                expect(evts[2].commitId).toEqual(event3.commitId)
-                                expect(evts[2].payload.event).toEqual(event3.payload.event)
-                            }
+                            10
                         )
-                        await store.getLastEvent(
-                            {
-                                aggregateId: event3.aggregateId,
-                            },
-                            function (err, lastEvt) {
-                                expect(err).not.toBeTruthy()
+                        expect(evts).toBeInstanceOf(Array)
+                        expect(evts).toHaveLength(3)
+                        expect(evts[0].commitStamp.getTime()).toEqual(event1.commitStamp.getTime())
+                        expect(evts[0].aggregateId).toEqual(event1.aggregateId)
+                        expect(evts[0].commitId).toEqual(event1.commitId)
+                        expect(evts[0].payload.event).toEqual(event1.payload.event)
+                        expect(evts[1].commitStamp.getTime()).toEqual(event2.commitStamp.getTime())
+                        expect(evts[1].aggregateId).toEqual(event2.aggregateId)
+                        expect(evts[1].commitId).toEqual(event2.commitId)
+                        expect(evts[1].payload.event).toEqual(event2.payload.event)
+                        expect(evts[2].commitStamp.getTime()).toEqual(event3.commitStamp.getTime())
+                        expect(evts[2].aggregateId).toEqual(event3.aggregateId)
+                        expect(evts[2].commitId).toEqual(event3.commitId)
+                        expect(evts[2].payload.event).toEqual(event3.payload.event)
 
+                        await store
+                            .getLastEvent({
+                                aggregateId: event3.aggregateId,
+                            })
+                            .then((lastEvt) => {
                                 expect(lastEvt.commitStamp.getTime()).toEqual(
                                     event3.commitStamp.getTime()
                                 )
                                 expect(lastEvt.aggregateId).toEqual(event3.aggregateId)
                                 expect(lastEvt.commitId).toEqual(event3.commitId)
                                 expect(lastEvt.payload.event).toEqual(event3.payload.event)
-                            }
-                        )
+                            })
                     })
 
                     it('and not calling getEventsByRevision the transaction can successfully be handled from outside', async () => {
@@ -663,9 +590,7 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                             },
                         }
 
-                        await store.addEvents([event1, event2], function (err) {
-                            expect(err).not.toBeTruthy()
-                        })
+                        await store.addEvents([event1, event2])
                         await store.transactions.insert({
                             _id: event1.commitId,
                             events: [event1, event2],
@@ -674,47 +599,32 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                             context: event1.context,
                         })
                         await store.events.remove({ _id: event2.id })
-                        const txs = await store.getPendingTransactions(function (err, txs) {
-                            expect(err).not.toBeTruthy()
+                        const txs = await store.getPendingTransactions()
+                        expect(txs).toBeInstanceOf(Array)
+                        expect(txs).toHaveLength(1)
 
-                            expect(txs).toBeInstanceOf(Array)
-                            expect(txs).toHaveLength(1)
+                        const lastEvt = await store.getLastEvent({
+                            aggregateId: txs[0].aggregateId,
                         })
-                        const lastEvt = await store.getLastEvent(
-                            {
-                                aggregateId: txs[0].aggregateId,
-                            },
-                            function (err, lastEvt) {
-                                expect(err).not.toBeTruthy()
+                        expect(lastEvt.commitStamp.getTime()).toEqual(event1.commitStamp.getTime())
+                        expect(lastEvt.aggregateId).toEqual(event1.aggregateId)
+                        expect(lastEvt.commitId).toEqual(event1.commitId)
+                        expect(lastEvt.payload.event).toEqual(event1.payload.event)
 
-                                expect(lastEvt.commitStamp.getTime()).toEqual(
-                                    event1.commitStamp.getTime()
-                                )
-                                expect(lastEvt.aggregateId).toEqual(event1.aggregateId)
-                                expect(lastEvt.commitId).toEqual(event1.commitId)
-                                expect(lastEvt.payload.event).toEqual(event1.payload.event)
-                            }
-                        )
-                        await store.repairFailedTransaction(lastEvt, function (err) {
-                            expect(err).not.toBeTruthy()
-                        })
-                        await store.getEvents({}, 0, -1, function (err, evts) {
-                            expect(err).not.toBeTruthy()
-                            expect(evts).toBeInstanceOf(Array)
-                            expect(evts).toHaveLength(2)
-                            expect(evts[0].commitStamp.getTime()).toEqual(
-                                event1.commitStamp.getTime()
-                            )
-                            expect(evts[0].aggregateId).toEqual(event1.aggregateId)
-                            expect(evts[0].commitId).toEqual(event1.commitId)
-                            expect(evts[0].payload.event).toEqual(event1.payload.event)
-                            expect(evts[1].commitStamp.getTime()).toEqual(
-                                event2.commitStamp.getTime()
-                            )
-                            expect(evts[1].aggregateId).toEqual(event2.aggregateId)
-                            expect(evts[1].commitId).toEqual(event2.commitId)
-                            expect(evts[1].payload.event).toEqual(event2.payload.event)
-                        })
+                        await store.repairFailedTransaction(lastEvt)
+
+                        const evts = await store.getEvents({}, 0, -1)
+
+                        expect(evts).toBeInstanceOf(Array)
+                        expect(evts).toHaveLength(2)
+                        expect(evts[0].commitStamp.getTime()).toEqual(event1.commitStamp.getTime())
+                        expect(evts[0].aggregateId).toEqual(event1.aggregateId)
+                        expect(evts[0].commitId).toEqual(event1.commitId)
+                        expect(evts[0].payload.event).toEqual(event1.payload.event)
+                        expect(evts[1].commitStamp.getTime()).toEqual(event2.commitStamp.getTime())
+                        expect(evts[1].aggregateId).toEqual(event2.aggregateId)
+                        expect(evts[1].commitId).toEqual(event2.commitId)
+                        expect(evts[1].payload.event).toEqual(event2.payload.event)
                     })
                 }
 
@@ -755,15 +665,13 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                         expect(err).not.toBeTruthy()
                     })
 
-                    await store.getEvents({}, 0, -1, function (err, evts) {
-                        expect(err).not.toBeTruthy()
-                        expect(evts).toBeInstanceOf(Array)
-                        expect(evts).toHaveLength(1)
-                        expect(evts[0].commitStamp.getTime()).toEqual(event.commitStamp.getTime())
-                        expect(evts[0].aggregateId).toEqual(event.aggregateId)
-                        expect(evts[0].commitId).toEqual(event.commitId)
-                        expect(evts[0].payload.event).toEqual(event.payload.event)
-                    })
+                    const evts = await store.getEvents({}, 0, -1)
+                    expect(evts).toBeInstanceOf(Array)
+                    expect(evts).toHaveLength(1)
+                    expect(evts[0].commitStamp.getTime()).toEqual(event.commitStamp.getTime())
+                    expect(evts[0].aggregateId).toEqual(event.aggregateId)
+                    expect(evts[0].commitId).toEqual(event.commitId)
+                    expect(evts[0].payload.event).toEqual(event.payload.event)
                 })
 
                 it('with aggregateId and aggregate it should save the event correctly', async () => {
@@ -781,19 +689,16 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                         applyMappings: () => {},
                     }
 
-                    await store.addEvents([event], function (err) {
-                        expect(err).not.toBeTruthy()
-                    })
-                    await store.getEvents({}, 0, -1, function (err, evts) {
-                        expect(err).not.toBeTruthy()
-                        expect(evts).toBeInstanceOf(Array)
-                        expect(evts).toHaveLength(1)
-                        expect(evts[0].commitStamp.getTime()).toEqual(event.commitStamp.getTime())
-                        expect(evts[0].aggregateId).toEqual(event.aggregateId)
-                        expect(evts[0].aggregate).toEqual(event.aggregate)
-                        expect(evts[0].commitId).toEqual(event.commitId)
-                        expect(evts[0].payload.event).toEqual(event.payload.event)
-                    })
+                    await store.addEvents([event])
+
+                    const evts = await store.getEvents({}, 0, -1)
+                    expect(evts).toBeInstanceOf(Array)
+                    expect(evts).toHaveLength(1)
+                    expect(evts[0].commitStamp.getTime()).toEqual(event.commitStamp.getTime())
+                    expect(evts[0].aggregateId).toEqual(event.aggregateId)
+                    expect(evts[0].aggregate).toEqual(event.aggregate)
+                    expect(evts[0].commitId).toEqual(event.commitId)
+                    expect(evts[0].payload.event).toEqual(event.payload.event)
                 })
 
                 it('with aggregateId and aggregate and context it should save the event correctly', async () => {
@@ -812,20 +717,16 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                         applyMappings: () => {},
                     }
 
-                    await store.addEvents([event], function (err) {
-                        expect(err).not.toBeTruthy()
-                    })
-                    await store.getEvents({}, 0, -1, function (err, evts) {
-                        expect(err).not.toBeTruthy()
-                        expect(evts).toBeInstanceOf(Array)
-                        expect(evts).toHaveLength(1)
-                        expect(evts[0].commitStamp.getTime()).toEqual(event.commitStamp.getTime())
-                        expect(evts[0].aggregateId).toEqual(event.aggregateId)
-                        expect(evts[0].aggregate).toEqual(event.aggregate)
-                        expect(evts[0].context).toEqual(event.context)
-                        expect(evts[0].commitId).toEqual(event.commitId)
-                        expect(evts[0].payload.event).toEqual(event.payload.event)
-                    })
+                    await store.addEvents([event])
+                    const evts = await store.getEvents({}, 0, -1)
+                    expect(evts).toBeInstanceOf(Array)
+                    expect(evts).toHaveLength(1)
+                    expect(evts[0].commitStamp.getTime()).toEqual(event.commitStamp.getTime())
+                    expect(evts[0].aggregateId).toEqual(event.aggregateId)
+                    expect(evts[0].aggregate).toEqual(event.aggregate)
+                    expect(evts[0].context).toEqual(event.context)
+                    expect(evts[0].commitId).toEqual(event.commitId)
+                    expect(evts[0].payload.event).toEqual(event.payload.event)
                 })
 
                 it('with aggregateId and context it should save the event correctly', async () => {
@@ -843,19 +744,15 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                         applyMappings: () => {},
                     }
 
-                    await store.addEvents([event], function (err) {
-                        expect(err).not.toBeTruthy()
-                    })
-                    await store.getEvents({}, 0, -1, function (err, evts) {
-                        expect(err).not.toBeTruthy()
-                        expect(evts).toBeInstanceOf(Array)
-                        expect(evts).toHaveLength(1)
-                        expect(evts[0].commitStamp.getTime()).toEqual(event.commitStamp.getTime())
-                        expect(evts[0].aggregateId).toEqual(event.aggregateId)
-                        expect(evts[0].context).toEqual(event.context)
-                        expect(evts[0].commitId).toEqual(event.commitId)
-                        expect(evts[0].payload.event).toEqual(event.payload.event)
-                    })
+                    await store.addEvents([event])
+                    const evts = await store.getEvents({}, 0, -1)
+                    expect(evts).toBeInstanceOf(Array)
+                    expect(evts).toHaveLength(1)
+                    expect(evts[0].commitStamp.getTime()).toEqual(event.commitStamp.getTime())
+                    expect(evts[0].aggregateId).toEqual(event.aggregateId)
+                    expect(evts[0].context).toEqual(event.context)
+                    expect(evts[0].commitId).toEqual(event.commitId)
+                    expect(evts[0].payload.event).toEqual(event.payload.event)
                 })
             })
 
@@ -1142,125 +1039,479 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                     it('with a skip value it should return the correct values', async () => {
                         var expectedEvts = allEvents.slice(7)
 
-                        await store.getEventsSince(dateSince, 3, -1, function (err, evts) {
-                            expect(err).not.toBeTruthy()
-                            expect(evts.length).toEqual(expectedEvts.length)
+                        const evts = await store.getEventsSince(dateSince, 3, -1)
+                        expect(evts.length).toEqual(expectedEvts.length)
 
-                            var lastCommitStamp = 0
-                            var lastCommitId = 0
-                            var lastId = 0
-                            _.each(evts, function (evt) {
-                                expect(evt.id | 0).toBeGreaterThan(lastId)
-                                expect(evt.commitId >= lastCommitId).toEqual(true)
-                                expect(evt.commitStamp.getTime() >= lastCommitStamp).toEqual(true)
-                                lastId = evt.id | 0
-                                lastCommitId = evt.commitId
-                                lastCommitStamp = evt.commitStamp.getTime()
-                            })
+                        var lastCommitStamp = 0
+                        var lastCommitId = 0
+                        var lastId = 0
+                        _.each(evts, function (evt) {
+                            expect(evt.id | 0).toBeGreaterThan(lastId)
+                            expect(evt.commitId >= lastCommitId).toEqual(true)
+                            expect(evt.commitStamp.getTime() >= lastCommitStamp).toEqual(true)
+                            lastId = evt.id | 0
+                            lastCommitId = evt.commitId
+                            lastCommitStamp = evt.commitStamp.getTime()
                         })
                     })
 
                     it('with a limit value it should return the correct values', async () => {
                         var expectedEvts = allEvents.slice(4, 9)
 
-                        await store.getEventsSince(dateSince, 0, 5, function (err, evts) {
-                            expect(err).not.toBeTruthy()
-                            expect(evts.length).toEqual(expectedEvts.length)
+                        const evts = await store.getEventsSince(dateSince, 0, 5)
+                        expect(evts.length).toEqual(expectedEvts.length)
 
-                            var lastCommitStamp = 0
-                            var lastCommitId = 0
-                            var lastId = 0
-                            _.each(evts, function (evt) {
-                                expect(evt.id | 0).toBeGreaterThan(lastId)
-                                expect(evt.commitId >= lastCommitId).toEqual(true)
-                                expect(evt.commitStamp.getTime() >= lastCommitStamp).toEqual(true)
-                                lastId = evt.id | 0
-                                lastCommitId = evt.commitId
-                                lastCommitStamp = evt.commitStamp.getTime()
-                            })
+                        var lastCommitStamp = 0
+                        var lastCommitId = 0
+                        var lastId = 0
+                        _.each(evts, function (evt) {
+                            expect(evt.id | 0).toBeGreaterThan(lastId)
+                            expect(evt.commitId >= lastCommitId).toEqual(true)
+                            expect(evt.commitStamp.getTime() >= lastCommitStamp).toEqual(true)
+                            lastId = evt.id | 0
+                            lastCommitId = evt.commitId
+                            lastCommitStamp = evt.commitStamp.getTime()
                         })
                     })
 
                     it('with a skip and a limit value it should return the correct values', async () => {
                         var expectedEvts = allEvents.slice(7, 9)
 
-                        await store.getEventsSince(dateSince, 4, 2, function (err, evts) {
-                            expect(err).not.toBeTruthy()
-                            expect(evts.length).toEqual(expectedEvts.length)
+                        const evts = await store.getEventsSince(dateSince, 4, 2)
+                        expect(evts.length).toEqual(expectedEvts.length)
 
-                            var lastCommitStamp = 0
-                            var lastCommitId = 0
-                            var lastId = 0
-                            _.each(evts, function (evt) {
-                                expect(evt.id | 0).toBeGreaterThan(lastId)
-                                expect(evt.commitId >= lastCommitId).toEqual(true)
-                                expect(evt.commitStamp.getTime() >= lastCommitStamp).toEqual(true)
-                                lastId = evt.id | 0
-                                lastCommitId = evt.commitId
-                                lastCommitStamp = evt.commitStamp.getTime()
-                            })
+                        var lastCommitStamp = 0
+                        var lastCommitId = 0
+                        var lastId = 0
+                        _.each(evts, function (evt) {
+                            expect(evt.id | 0).toBeGreaterThan(lastId)
+                            expect(evt.commitId >= lastCommitId).toEqual(true)
+                            expect(evt.commitStamp.getTime() >= lastCommitStamp).toEqual(true)
+                            lastId = evt.id | 0
+                            lastCommitId = evt.commitId
+                            lastCommitStamp = evt.commitStamp.getTime()
                         })
                     })
                 })
 
                 describe('with an aggregateId being used only in one context and aggregate', () => {
                     it('it should return the correct events', async () => {
-                        await store.getEvents(
-                            { aggregateId: 'idWithAgg' },
-                            0,
-                            -1,
-                            function (err, evts) {
-                                expect(err).not.toBeTruthy()
-                                expect(evts.length).toEqual(2)
-                                expect(evts[0].id).toEqual(stream2[0].id)
-                                expect(evts[0].aggregateId).toEqual(stream2[0].aggregateId)
-                                expect(evts[0].commitStamp.getTime()).toEqual(
-                                    stream2[0].commitStamp.getTime()
-                                )
-                                expect(evts[0].commitSequence).toEqual(stream2[0].commitSequence)
-                                expect(evts[0].streamRevision).toEqual(stream2[0].streamRevision)
-                                expect(evts[1].id).toEqual(stream2[1].id)
-                                expect(evts[1].aggregateId).toEqual(stream2[1].aggregateId)
-                                expect(evts[1].commitStamp.getTime()).toEqual(
-                                    stream2[1].commitStamp.getTime()
-                                )
-                                expect(evts[1].commitSequence).toEqual(stream2[1].commitSequence)
-                                expect(evts[1].streamRevision).toEqual(stream2[1].streamRevision)
-                            }
+                        const evts = await store.getEvents({ aggregateId: 'idWithAgg' }, 0, -1)
+                        expect(evts.length).toEqual(2)
+                        expect(evts[0].id).toEqual(stream2[0].id)
+                        expect(evts[0].aggregateId).toEqual(stream2[0].aggregateId)
+                        expect(evts[0].commitStamp.getTime()).toEqual(
+                            stream2[0].commitStamp.getTime()
                         )
+                        expect(evts[0].commitSequence).toEqual(stream2[0].commitSequence)
+                        expect(evts[0].streamRevision).toEqual(stream2[0].streamRevision)
+                        expect(evts[1].id).toEqual(stream2[1].id)
+                        expect(evts[1].aggregateId).toEqual(stream2[1].aggregateId)
+                        expect(evts[1].commitStamp.getTime()).toEqual(
+                            stream2[1].commitStamp.getTime()
+                        )
+                        expect(evts[1].commitSequence).toEqual(stream2[1].commitSequence)
+                        expect(evts[1].streamRevision).toEqual(stream2[1].streamRevision)
                     })
 
                     it('and limit it with skip and limit it should return the correct events', async () => {
-                        await store.getEvents(
-                            { aggregateId: 'idWithAgg' },
-                            1,
-                            2,
-                            function (err, evts) {
-                                expect(err).not.toBeTruthy()
-                                expect(evts.length).toEqual(1)
-                                expect(evts[0].aggregateId).toEqual(stream2[1].aggregateId)
-                                expect(evts[0].commitStamp.getTime()).toEqual(
-                                    stream2[1].commitStamp.getTime()
-                                )
-                                expect(evts[0].streamRevision).toEqual(stream2[1].streamRevision)
-                            }
+                        const evts = await store.getEvents({ aggregateId: 'idWithAgg' }, 1, 2)
+                        expect(evts.length).toEqual(1)
+                        expect(evts[0].aggregateId).toEqual(stream2[1].aggregateId)
+                        expect(evts[0].commitStamp.getTime()).toEqual(
+                            stream2[1].commitStamp.getTime()
                         )
-                        await store.getLastEvent({ aggregateId: 'idWithAgg' }, function (err, evt) {
-                            expect(err).not.toBeTruthy()
+                        expect(evts[0].streamRevision).toEqual(stream2[1].streamRevision)
 
-                            expect(evt.aggregateId).toEqual(stream2[1].aggregateId)
-                            expect(evt.commitStamp.getTime()).toEqual(
-                                stream2[1].commitStamp.getTime()
-                            )
-                            expect(evt.streamRevision).toEqual(stream2[1].streamRevision)
-                        })
+                        const evt = await store.getLastEvent({ aggregateId: 'idWithAgg' })
+                        expect(evt.aggregateId).toEqual(stream2[1].aggregateId)
+                        expect(evt.commitStamp.getTime()).toEqual(stream2[1].commitStamp.getTime())
+                        expect(evt.streamRevision).toEqual(stream2[1].streamRevision)
                     })
                 })
 
                 describe('with an aggregateId being used in an other context or aggregate', () => {
                     it('it should return the correct events', async () => {
-                        await store.getEvents({ aggregateId: 'id' }, 0, -1, function (err, evts) {
-                            expect(err).not.toBeTruthy()
+                        const evts = await store.getEvents({ aggregateId: 'id' }, 0, -1)
+                        expect(evts.length).toEqual(5)
+                        expect(evts[0].aggregateId).toEqual(stream1[0].aggregateId)
+                        expect(evts[0].commitStamp.getTime()).toEqual(
+                            stream1[0].commitStamp.getTime()
+                        )
+                        expect(evts[0].streamRevision).toEqual(stream1[0].streamRevision)
+                        expect(evts[1].aggregateId).toEqual(stream1[1].aggregateId)
+                        expect(evts[1].commitStamp.getTime()).toEqual(
+                            stream1[1].commitStamp.getTime()
+                        )
+                        expect(evts[1].streamRevision).toEqual(stream1[1].streamRevision)
+                        expect(evts[2].aggregateId).toEqual(stream3[0].aggregateId)
+                        expect(evts[2].commitStamp.getTime()).toEqual(
+                            stream3[0].commitStamp.getTime()
+                        )
+                        expect(evts[2].streamRevision).toEqual(stream3[0].streamRevision)
+                        expect(evts[3].aggregateId).toEqual(stream5[0].aggregateId)
+                        expect(evts[3].commitStamp.getTime()).toEqual(
+                            stream5[0].commitStamp.getTime()
+                        )
+                        expect(evts[3].streamRevision).toEqual(stream5[0].streamRevision)
+                        expect(evts[4].aggregateId).toEqual(stream10[0].aggregateId)
+                        expect(evts[4].commitStamp.getTime()).toEqual(
+                            stream10[0].commitStamp.getTime()
+                        )
+                        expect(evts[4].streamRevision).toEqual(stream10[0].streamRevision)
+                    })
+
+                    it('and limit it with revMin and revMax it should return the correct events', async () => {
+                        const evts = await store.getEvents({ aggregateId: 'id' }, 1, 2)
+                        expect(evts.length).toEqual(2)
+                        expect(evts[0].aggregateId).toEqual(stream1[1].aggregateId)
+                        expect(evts[0].commitStamp.getTime()).toEqual(
+                            stream1[1].commitStamp.getTime()
+                        )
+                        expect(evts[0].streamRevision).toEqual(stream1[1].streamRevision)
+                    })
+                })
+
+                describe('without an aggregateId but with an aggregate', () => {
+                    it('it should return the correct events', async () => {
+                        const evts = await store.getEvents({ aggregate: 'myAggrrr2' }, 0, -1)
+                        expect(evts.length).toEqual(3)
+                        expect(evts[0].aggregateId).toEqual(stream7[0].aggregateId)
+                        expect(evts[0].commitStamp.getTime()).toEqual(
+                            stream7[0].commitStamp.getTime()
+                        )
+                        expect(evts[0].streamRevision).toEqual(stream7[0].streamRevision)
+                        expect(evts[1].aggregateId).toEqual(stream7[1].aggregateId)
+                        expect(evts[1].commitStamp.getTime()).toEqual(
+                            stream7[1].commitStamp.getTime()
+                        )
+                        expect(evts[1].streamRevision).toEqual(stream7[1].streamRevision)
+                        expect(evts[2].aggregateId).toEqual(stream9[0].aggregateId)
+                        expect(evts[2].commitStamp.getTime()).toEqual(
+                            stream9[0].commitStamp.getTime()
+                        )
+                        expect(evts[2].streamRevision).toEqual(stream9[0].streamRevision)
+                    })
+
+                    it('and limit it with skip and limit it should return the correct events', async () => {
+                        const evts = await store.getEvents({ aggregate: 'myAggrrr2' }, 1, 2)
+                        expect(evts.length).toEqual(2)
+                        expect(evts[0].aggregateId).toEqual(stream7[1].aggregateId)
+                        expect(evts[0].commitStamp.getTime()).toEqual(
+                            stream7[1].commitStamp.getTime()
+                        )
+                        expect(evts[0].streamRevision).toEqual(stream7[1].streamRevision)
+                        expect(evts[1].aggregateId).toEqual(stream9[0].aggregateId)
+                        expect(evts[1].commitStamp.getTime()).toEqual(
+                            stream9[0].commitStamp.getTime()
+                        )
+                        expect(evts[1].streamRevision).toEqual(stream9[0].streamRevision)
+                    })
+                })
+
+                describe('with an aggregateId and with an aggregate', () => {
+                    it('it should return the correct events', async () => {
+                        const evts = await store.getEvents(
+                            {
+                                aggregate: 'myAggrrr2',
+                                aggregateId: 'idWithAggrAndCont',
+                            },
+                            0,
+                            -1
+                        )
+                        expect(evts.length).toEqual(1)
+                        expect(evts[0].aggregateId).toEqual(stream9[0].aggregateId)
+                        expect(evts[0].commitStamp.getTime()).toEqual(
+                            stream9[0].commitStamp.getTime()
+                        )
+                        expect(evts[0].streamRevision).toEqual(stream9[0].streamRevision)
+                    })
+
+                    it('and limit it with skip and limit it should return the correct events', async () => {
+                        const evts = await store.getEvents(
+                            {
+                                aggregate: 'myAggrrr2',
+                                aggregateId: 'idWithAggrAndCont',
+                            },
+                            1,
+                            2
+                        )
+                        expect(evts.length).toEqual(0)
+                    })
+                })
+
+                describe('with an aggregateId and without an aggregate but with a context', () => {
+                    it('it should return the correct events', async () => {
+                        const evts = await store.getEvents(
+                            { aggregateId: 'idWithAggrAndCont', context: 'myConttttt' },
+                            0,
+                            -1
+                        )
+                        expect(evts.length).toEqual(3)
+                        expect(evts[0].aggregateId).toEqual(stream6[0].aggregateId)
+                        expect(evts[0].commitStamp.getTime()).toEqual(
+                            stream6[0].commitStamp.getTime()
+                        )
+                        expect(evts[0].streamRevision).toEqual(stream6[0].streamRevision)
+                        expect(evts[1].aggregateId).toEqual(stream6[1].aggregateId)
+                        expect(evts[1].commitStamp.getTime()).toEqual(
+                            stream6[1].commitStamp.getTime()
+                        )
+                        expect(evts[1].streamRevision).toEqual(stream6[1].streamRevision)
+                        expect(evts[2].aggregateId).toEqual(stream9[0].aggregateId)
+                        expect(evts[2].commitStamp.getTime()).toEqual(
+                            stream9[0].commitStamp.getTime()
+                        )
+                        expect(evts[2].streamRevision).toEqual(stream9[0].streamRevision)
+                    })
+
+                    it('and limit it with skip and limit it should return the correct events', async () => {
+                        const evts = await store.getEvents(
+                            {
+                                aggregateId: 'idWithAggrAndCont',
+                                context: 'myConttttt',
+                            },
+                            1,
+                            2
+                        )
+                        expect(evts.length).toEqual(2)
+                        expect(evts[0].aggregateId).toEqual(stream6[1].aggregateId)
+                        expect(evts[0].commitStamp.getTime()).toEqual(
+                            stream6[1].commitStamp.getTime()
+                        )
+                        expect(evts[0].streamRevision).toEqual(stream6[1].streamRevision)
+                        expect(evts[1].aggregateId).toEqual(stream9[0].aggregateId)
+                        expect(evts[1].commitStamp.getTime()).toEqual(
+                            stream9[0].commitStamp.getTime()
+                        )
+                        expect(evts[1].streamRevision).toEqual(stream9[0].streamRevision)
+                    })
+                })
+
+                describe('with an aggregateId and with an aggregate and with a context', () => {
+                    it('it should return the correct events', async () => {
+                        const evts = await store.getEvents(
+                            {
+                                aggregateId: 'id',
+                                aggregate: 'wowAgg',
+                                context: 'wowCont',
+                            },
+                            0,
+                            -1
+                        )
+                        expect(evts.length).toEqual(1)
+                        expect(evts[0].aggregateId).toEqual(stream10[0].aggregateId)
+                        expect(evts[0].commitStamp.getTime()).toEqual(
+                            stream10[0].commitStamp.getTime()
+                        )
+                        expect(evts[0].streamRevision).toEqual(stream10[0].streamRevision)
+                    })
+
+                    it('and limit it with skip and limit it should return the correct events', async () => {
+                        const evts = await store.getEvents(
+                            {
+                                aggregateId: 'id',
+                                aggregate: 'wowAgg',
+                                context: 'wowCont',
+                            },
+                            1,
+                            2
+                        )
+                        expect(evts.length).toEqual(0)
+                    })
+                })
+
+                describe('without an aggregateId and without an aggregate but with a context', () => {
+                    it('it should return the correct events', async () => {
+                        const evts = await store.getEvents({ context: 'myCont' }, 0, -1)
+                        expect(evts.length).toEqual(3)
+                        expect(evts[0].aggregateId).toEqual(stream4[0].aggregateId)
+                        expect(evts[0].commitStamp.getTime()).toEqual(
+                            stream4[0].commitStamp.getTime()
+                        )
+                        expect(evts[0].streamRevision).toEqual(stream4[0].streamRevision)
+                        expect(evts[1].aggregateId).toEqual(stream4[1].aggregateId)
+                        expect(evts[1].commitStamp.getTime()).toEqual(
+                            stream4[1].commitStamp.getTime()
+                        )
+                        expect(evts[1].streamRevision).toEqual(stream4[1].streamRevision)
+                        expect(evts[2].aggregateId).toEqual(stream5[0].aggregateId)
+                        expect(evts[2].commitStamp.getTime()).toEqual(
+                            stream5[0].commitStamp.getTime()
+                        )
+                        expect(evts[2].streamRevision).toEqual(stream5[0].streamRevision)
+                    })
+
+                    it('and limit it with skip and limit it should return the correct events', async () => {
+                        const evts = await store.getEvents({ context: 'myCont' }, 1, 2)
+                        expect(evts.length).toEqual(2)
+                        expect(evts[0].aggregateId).toEqual(stream4[1].aggregateId)
+                        expect(evts[0].commitStamp.getTime()).toEqual(
+                            stream4[1].commitStamp.getTime()
+                        )
+                        expect(evts[0].streamRevision).toEqual(stream4[1].streamRevision)
+                        expect(evts[1].aggregateId).toEqual(stream5[0].aggregateId)
+                        expect(evts[1].commitStamp.getTime()).toEqual(
+                            stream5[0].commitStamp.getTime()
+                        )
+                        expect(evts[1].streamRevision).toEqual(stream5[0].streamRevision)
+                    })
+                })
+
+                describe('without an aggregateId but with an aggregate and with a context', () => {
+                    it('it should return the correct events', async () => {
+                        const evts = await store.getEvents(
+                            { context: 'myConttttt', aggregate: 'myAggrrr' },
+                            0,
+                            -1
+                        )
+                        expect(evts.length).toEqual(3)
+                        expect(evts[0].aggregateId).toEqual(stream6[0].aggregateId)
+                        expect(evts[0].commitStamp.getTime()).toEqual(
+                            stream6[0].commitStamp.getTime()
+                        )
+                        expect(evts[0].streamRevision).toEqual(stream6[0].streamRevision)
+                        expect(evts[1].aggregateId).toEqual(stream6[1].aggregateId)
+                        expect(evts[1].commitStamp.getTime()).toEqual(
+                            stream6[1].commitStamp.getTime()
+                        )
+                        expect(evts[1].streamRevision).toEqual(stream6[1].streamRevision)
+                        expect(evts[2].aggregateId).toEqual(stream8[0].aggregateId)
+                        expect(evts[2].commitStamp.getTime()).toEqual(
+                            stream8[0].commitStamp.getTime()
+                        )
+                        expect(evts[2].streamRevision).toEqual(stream8[0].streamRevision)
+                    })
+
+                    it('and limit it with skip and limit it should return the correct events', async () => {
+                        const evts = await store.getEvents(
+                            { context: 'myConttttt', aggregate: 'myAggrrr' },
+                            1,
+                            2
+                        )
+                        expect(evts.length).toEqual(2)
+                        expect(evts[0].aggregateId).toEqual(stream6[1].aggregateId)
+                        expect(evts[0].commitStamp.getTime()).toEqual(
+                            stream6[1].commitStamp.getTime()
+                        )
+                        expect(evts[0].streamRevision).toEqual(stream6[1].streamRevision)
+                        expect(evts[1].aggregateId).toEqual(stream8[0].aggregateId)
+                        expect(evts[1].commitStamp.getTime()).toEqual(
+                            stream8[0].commitStamp.getTime()
+                        )
+                        expect(evts[1].streamRevision).toEqual(stream8[0].streamRevision)
+                    })
+                })
+
+                describe('calling getEvents', () => {
+                    it('to get all events it should return the correct values', async () => {
+                        const evts = await store.getEvents({}, 0, -1)
+                        expect(evts.length).toEqual(allEvents.length)
+
+                        var lastCommitStamp = 0
+                        var lastCommitId = 0
+                        var lastId = 0
+                        _.each(evts, function (evt) {
+                            expect(evt.id | 0).toBeGreaterThan(lastId)
+                            expect(evt.commitId >= lastCommitId).toEqual(true)
+                            expect(evt.commitStamp.getTime() >= lastCommitStamp).toEqual(true)
+                            lastId = evt.id | 0
+                            lastCommitId = evt.commitId
+                            lastCommitStamp = evt.commitStamp.getTime()
+                        })
+                    })
+
+                    it('with a skip value it should return the correct values', async () => {
+                        var expectedEvts = allEvents.slice(3)
+
+                        const evts = await store.getEvents({}, 3, -1)
+                        expect(evts.length).toEqual(expectedEvts.length)
+
+                        var lastCommitStamp = 0
+                        var lastCommitId = 0
+                        var lastId = 0
+                        _.each(evts, function (evt) {
+                            expect(evt.id | 0).toBeGreaterThan(lastId)
+                            expect(evt.commitId >= lastCommitId).toEqual(true)
+                            expect(evt.commitStamp.getTime() >= lastCommitStamp).toEqual(true)
+                            lastId = evt.id | 0
+                            lastCommitId = evt.commitId
+                            lastCommitStamp = evt.commitStamp.getTime()
+                        })
+                    })
+
+                    it('with a limit value it should return the correct values', async () => {
+                        var expectedEvts = allEvents.slice(0, 5)
+
+                        const evts = await store.getEvents({}, 0, 5)
+                        expect(evts.length).toEqual(expectedEvts.length)
+
+                        var lastCommitStamp = 0
+                        var lastCommitId = 0
+                        var lastId = 0
+                        _.each(evts, function (evt) {
+                            expect(evt.id | 0).toBeGreaterThan(lastId)
+                            expect(evt.commitId >= lastCommitId).toEqual(true)
+                            expect(evt.commitStamp.getTime() >= lastCommitStamp).toEqual(true)
+                            lastId = evt.id | 0
+                            lastCommitId = evt.commitId
+                            lastCommitStamp = evt.commitStamp.getTime()
+                        })
+                    })
+
+                    it('with a skip and a limit value it should return the correct values', async () => {
+                        var expectedEvts = allEvents.slice(3, 5)
+
+                        const evts = await store.getEvents({}, 3, 2)
+                        expect(evts.length).toEqual(expectedEvts.length)
+
+                        var lastCommitStamp = 0
+                        var lastCommitId = 0
+                        var lastId = 0
+                        _.each(evts, function (evt) {
+                            expect(evt.id | 0).toBeGreaterThan(lastId)
+                            expect(evt.commitId >= lastCommitId).toEqual(true)
+                            expect(evt.commitStamp.getTime() >= lastCommitStamp).toEqual(true)
+                            lastId = evt.id | 0
+                            lastCommitId = evt.commitId
+                            lastCommitStamp = evt.commitStamp.getTime()
+                        })
+                    })
+
+                    describe('with an aggregateId being used only in one context and aggregate', () => {
+                        it('it should return the correct events', async () => {
+                            const evts = await store.getEvents({ aggregateId: 'idWithAgg' }, 0, -1)
+                            expect(evts.length).toEqual(2)
+                            expect(evts[0].id).toEqual(stream2[0].id)
+                            expect(evts[0].aggregateId).toEqual(stream2[0].aggregateId)
+                            expect(evts[0].commitStamp.getTime()).toEqual(
+                                stream2[0].commitStamp.getTime()
+                            )
+                            expect(evts[0].commitSequence).toEqual(stream2[0].commitSequence)
+                            expect(evts[0].streamRevision).toEqual(stream2[0].streamRevision)
+                            expect(evts[1].id).toEqual(stream2[1].id)
+                            expect(evts[1].aggregateId).toEqual(stream2[1].aggregateId)
+                            expect(evts[1].commitStamp.getTime()).toEqual(
+                                stream2[1].commitStamp.getTime()
+                            )
+                            expect(evts[1].commitSequence).toEqual(stream2[1].commitSequence)
+                            expect(evts[1].streamRevision).toEqual(stream2[1].streamRevision)
+                        })
+
+                        it('and limit it with skip and limit it should return the correct events', async () => {
+                            const evts = await store.getEvents({ aggregateId: 'idWithAgg' }, 1, 2)
+                            expect(evts.length).toEqual(1)
+                            expect(evts[0].aggregateId).toEqual(stream2[1].aggregateId)
+                            expect(evts[0].commitStamp.getTime()).toEqual(
+                                stream2[1].commitStamp.getTime()
+                            )
+                            expect(evts[0].streamRevision).toEqual(stream2[1].streamRevision)
+                        })
+                    })
+
+                    describe('with an aggregateId being used in an other context or aggregate', () => {
+                        it('it should return the correct events', async () => {
+                            const evts = await store.getEvents({ aggregateId: 'id' }, 0, -1)
                             expect(evts.length).toEqual(5)
                             expect(evts[0].aggregateId).toEqual(stream1[0].aggregateId)
                             expect(evts[0].commitStamp.getTime()).toEqual(
@@ -1288,11 +1539,9 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                             )
                             expect(evts[4].streamRevision).toEqual(stream10[0].streamRevision)
                         })
-                    })
 
-                    it('and limit it with revMin and revMax it should return the correct events', async () => {
-                        await store.getEvents({ aggregateId: 'id' }, 1, 2, function (err, evts) {
-                            expect(err).not.toBeTruthy()
+                        it('and limit it with revMin and revMax it should return the correct events', async () => {
+                            const evts = await store.getEvents({ aggregateId: 'id' }, 1, 2)
                             expect(evts.length).toEqual(2)
                             expect(evts[0].aggregateId).toEqual(stream1[1].aggregateId)
                             expect(evts[0].commitStamp.getTime()).toEqual(
@@ -1301,193 +1550,159 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                             expect(evts[0].streamRevision).toEqual(stream1[1].streamRevision)
                         })
                     })
-                })
 
-                describe('without an aggregateId but with an aggregate', () => {
-                    it('it should return the correct events', async () => {
-                        await store.getEvents(
-                            { aggregate: 'myAggrrr2' },
-                            0,
-                            -1,
-                            function (err, evts) {
-                                expect(err).not.toBeTruthy()
-                                expect(evts.length).toEqual(3)
-                                expect(evts[0].aggregateId).toEqual(stream7[0].aggregateId)
-                                expect(evts[0].commitStamp.getTime()).toEqual(
-                                    stream7[0].commitStamp.getTime()
-                                )
-                                expect(evts[0].streamRevision).toEqual(stream7[0].streamRevision)
-                                expect(evts[1].aggregateId).toEqual(stream7[1].aggregateId)
-                                expect(evts[1].commitStamp.getTime()).toEqual(
-                                    stream7[1].commitStamp.getTime()
-                                )
-                                expect(evts[1].streamRevision).toEqual(stream7[1].streamRevision)
-                                expect(evts[2].aggregateId).toEqual(stream9[0].aggregateId)
-                                expect(evts[2].commitStamp.getTime()).toEqual(
-                                    stream9[0].commitStamp.getTime()
-                                )
-                                expect(evts[2].streamRevision).toEqual(stream9[0].streamRevision)
-                            }
-                        )
+                    describe('without an aggregateId but with an aggregate', () => {
+                        it('it should return the correct events', async () => {
+                            const evts = await store.getEvents({ aggregate: 'myAggrrr2' }, 0, -1)
+                            expect(evts.length).toEqual(3)
+                            expect(evts[0].aggregateId).toEqual(stream7[0].aggregateId)
+                            expect(evts[0].commitStamp.getTime()).toEqual(
+                                stream7[0].commitStamp.getTime()
+                            )
+                            expect(evts[0].streamRevision).toEqual(stream7[0].streamRevision)
+                            expect(evts[1].aggregateId).toEqual(stream7[1].aggregateId)
+                            expect(evts[1].commitStamp.getTime()).toEqual(
+                                stream7[1].commitStamp.getTime()
+                            )
+                            expect(evts[1].streamRevision).toEqual(stream7[1].streamRevision)
+                            expect(evts[2].aggregateId).toEqual(stream9[0].aggregateId)
+                            expect(evts[2].commitStamp.getTime()).toEqual(
+                                stream9[0].commitStamp.getTime()
+                            )
+                            expect(evts[2].streamRevision).toEqual(stream9[0].streamRevision)
+                        })
+
+                        it('and limit it with skip and limit it should return the correct events', async () => {
+                            const evts = await store.getEvents({ aggregate: 'myAggrrr2' }, 1, 2)
+                            expect(evts.length).toEqual(2)
+                            expect(evts[0].aggregateId).toEqual(stream7[1].aggregateId)
+                            expect(evts[0].commitStamp.getTime()).toEqual(
+                                stream7[1].commitStamp.getTime()
+                            )
+                            expect(evts[0].streamRevision).toEqual(stream7[1].streamRevision)
+                            expect(evts[1].aggregateId).toEqual(stream9[0].aggregateId)
+                            expect(evts[1].commitStamp.getTime()).toEqual(
+                                stream9[0].commitStamp.getTime()
+                            )
+                            expect(evts[1].streamRevision).toEqual(stream9[0].streamRevision)
+                        })
                     })
 
-                    it('and limit it with skip and limit it should return the correct events', async () => {
-                        await store.getEvents(
-                            { aggregate: 'myAggrrr2' },
-                            1,
-                            2,
-                            function (err, evts) {
-                                expect(err).not.toBeTruthy()
-                                expect(evts.length).toEqual(2)
-                                expect(evts[0].aggregateId).toEqual(stream7[1].aggregateId)
-                                expect(evts[0].commitStamp.getTime()).toEqual(
-                                    stream7[1].commitStamp.getTime()
-                                )
-                                expect(evts[0].streamRevision).toEqual(stream7[1].streamRevision)
-                                expect(evts[1].aggregateId).toEqual(stream9[0].aggregateId)
-                                expect(evts[1].commitStamp.getTime()).toEqual(
-                                    stream9[0].commitStamp.getTime()
-                                )
-                                expect(evts[1].streamRevision).toEqual(stream9[0].streamRevision)
-                            }
-                        )
-                    })
-                })
+                    describe('with an aggregateId and with an aggregate', () => {
+                        it('it should return the correct events', async () => {
+                            const evts = await store.getEvents(
+                                {
+                                    aggregate: 'myAggrrr2',
+                                    aggregateId: 'idWithAggrAndCont',
+                                },
+                                0,
+                                -1
+                            )
+                            expect(evts.length).toEqual(1)
+                            expect(evts[0].aggregateId).toEqual(stream9[0].aggregateId)
+                            expect(evts[0].commitStamp.getTime()).toEqual(
+                                stream9[0].commitStamp.getTime()
+                            )
+                            expect(evts[0].streamRevision).toEqual(stream9[0].streamRevision)
+                        })
 
-                describe('with an aggregateId and with an aggregate', () => {
-                    it('it should return the correct events', async () => {
-                        await store.getEvents(
-                            {
-                                aggregate: 'myAggrrr2',
-                                aggregateId: 'idWithAggrAndCont',
-                            },
-                            0,
-                            -1,
-                            function (err, evts) {
-                                expect(err).not.toBeTruthy()
-                                expect(evts.length).toEqual(1)
-                                expect(evts[0].aggregateId).toEqual(stream9[0].aggregateId)
-                                expect(evts[0].commitStamp.getTime()).toEqual(
-                                    stream9[0].commitStamp.getTime()
-                                )
-                                expect(evts[0].streamRevision).toEqual(stream9[0].streamRevision)
-                            }
-                        )
+                        it('and limit it with skip and limit it should return the correct events', async () => {
+                            const evts = await store.getEvents(
+                                {
+                                    aggregate: 'myAggrrr2',
+                                    aggregateId: 'idWithAggrAndCont',
+                                },
+                                1,
+                                2
+                            )
+                            expect(evts.length).toEqual(0)
+                        })
                     })
 
-                    it('and limit it with skip and limit it should return the correct events', async () => {
-                        await store.getEvents(
-                            {
-                                aggregate: 'myAggrrr2',
-                                aggregateId: 'idWithAggrAndCont',
-                            },
-                            1,
-                            2,
-                            function (err, evts) {
-                                expect(err).not.toBeTruthy()
-                                expect(evts.length).toEqual(0)
-                            }
-                        )
-                    })
-                })
+                    describe('with an aggregateId and without an aggregate but with a context', () => {
+                        it('it should return the correct events', async () => {
+                            const evts = await store.getEvents(
+                                { aggregateId: 'idWithAggrAndCont', context: 'myConttttt' },
+                                0,
+                                -1
+                            )
+                            expect(evts.length).toEqual(3)
+                            expect(evts[0].aggregateId).toEqual(stream6[0].aggregateId)
+                            expect(evts[0].commitStamp.getTime()).toEqual(
+                                stream6[0].commitStamp.getTime()
+                            )
+                            expect(evts[0].streamRevision).toEqual(stream6[0].streamRevision)
+                            expect(evts[1].aggregateId).toEqual(stream6[1].aggregateId)
+                            expect(evts[1].commitStamp.getTime()).toEqual(
+                                stream6[1].commitStamp.getTime()
+                            )
+                            expect(evts[1].streamRevision).toEqual(stream6[1].streamRevision)
+                            expect(evts[2].aggregateId).toEqual(stream9[0].aggregateId)
+                            expect(evts[2].commitStamp.getTime()).toEqual(
+                                stream9[0].commitStamp.getTime()
+                            )
+                            expect(evts[2].streamRevision).toEqual(stream9[0].streamRevision)
+                        })
 
-                describe('with an aggregateId and without an aggregate but with a context', () => {
-                    it('it should return the correct events', async () => {
-                        await store.getEvents(
-                            { aggregateId: 'idWithAggrAndCont', context: 'myConttttt' },
-                            0,
-                            -1,
-                            function (err, evts) {
-                                expect(err).not.toBeTruthy()
-                                expect(evts.length).toEqual(3)
-                                expect(evts[0].aggregateId).toEqual(stream6[0].aggregateId)
-                                expect(evts[0].commitStamp.getTime()).toEqual(
-                                    stream6[0].commitStamp.getTime()
-                                )
-                                expect(evts[0].streamRevision).toEqual(stream6[0].streamRevision)
-                                expect(evts[1].aggregateId).toEqual(stream6[1].aggregateId)
-                                expect(evts[1].commitStamp.getTime()).toEqual(
-                                    stream6[1].commitStamp.getTime()
-                                )
-                                expect(evts[1].streamRevision).toEqual(stream6[1].streamRevision)
-                                expect(evts[2].aggregateId).toEqual(stream9[0].aggregateId)
-                                expect(evts[2].commitStamp.getTime()).toEqual(
-                                    stream9[0].commitStamp.getTime()
-                                )
-                                expect(evts[2].streamRevision).toEqual(stream9[0].streamRevision)
-                            }
-                        )
-                    })
-
-                    it('and limit it with skip and limit it should return the correct events', async () => {
-                        await store.getEvents(
-                            {
-                                aggregateId: 'idWithAggrAndCont',
-                                context: 'myConttttt',
-                            },
-                            1,
-                            2,
-                            function (err, evts) {
-                                expect(err).not.toBeTruthy()
-                                expect(evts.length).toEqual(2)
-                                expect(evts[0].aggregateId).toEqual(stream6[1].aggregateId)
-                                expect(evts[0].commitStamp.getTime()).toEqual(
-                                    stream6[1].commitStamp.getTime()
-                                )
-                                expect(evts[0].streamRevision).toEqual(stream6[1].streamRevision)
-                                expect(evts[1].aggregateId).toEqual(stream9[0].aggregateId)
-                                expect(evts[1].commitStamp.getTime()).toEqual(
-                                    stream9[0].commitStamp.getTime()
-                                )
-                                expect(evts[1].streamRevision).toEqual(stream9[0].streamRevision)
-                            }
-                        )
-                    })
-                })
-
-                describe('with an aggregateId and with an aggregate and with a context', () => {
-                    it('it should return the correct events', async () => {
-                        await store.getEvents(
-                            {
-                                aggregateId: 'id',
-                                aggregate: 'wowAgg',
-                                context: 'wowCont',
-                            },
-                            0,
-                            -1,
-                            function (err, evts) {
-                                expect(err).not.toBeTruthy()
-                                expect(evts.length).toEqual(1)
-                                expect(evts[0].aggregateId).toEqual(stream10[0].aggregateId)
-                                expect(evts[0].commitStamp.getTime()).toEqual(
-                                    stream10[0].commitStamp.getTime()
-                                )
-                                expect(evts[0].streamRevision).toEqual(stream10[0].streamRevision)
-                            }
-                        )
+                        it('and limit it with skip and limit it should return the correct events', async () => {
+                            const evts = await store.getEvents(
+                                {
+                                    aggregateId: 'idWithAggrAndCont',
+                                    context: 'myConttttt',
+                                },
+                                1,
+                                2
+                            )
+                            expect(evts.length).toEqual(2)
+                            expect(evts[0].aggregateId).toEqual(stream6[1].aggregateId)
+                            expect(evts[0].commitStamp.getTime()).toEqual(
+                                stream6[1].commitStamp.getTime()
+                            )
+                            expect(evts[0].streamRevision).toEqual(stream6[1].streamRevision)
+                            expect(evts[1].aggregateId).toEqual(stream9[0].aggregateId)
+                            expect(evts[1].commitStamp.getTime()).toEqual(
+                                stream9[0].commitStamp.getTime()
+                            )
+                            expect(evts[1].streamRevision).toEqual(stream9[0].streamRevision)
+                        })
                     })
 
-                    it('and limit it with skip and limit it should return the correct events', async () => {
-                        await store.getEvents(
-                            {
-                                aggregateId: 'id',
-                                aggregate: 'wowAgg',
-                                context: 'wowCont',
-                            },
-                            1,
-                            2,
-                            function (err, evts) {
-                                expect(err).not.toBeTruthy()
-                                expect(evts.length).toEqual(0)
-                            }
-                        )
-                    })
-                })
+                    describe('with an aggregateId and with an aggregate and with a context', () => {
+                        it('it should return the correct events', async () => {
+                            const evts = await store.getEvents(
+                                {
+                                    aggregateId: 'id',
+                                    aggregate: 'wowAgg',
+                                    context: 'wowCont',
+                                },
+                                0,
+                                -1
+                            )
+                            expect(evts.length).toEqual(1)
+                            expect(evts[0].aggregateId).toEqual(stream10[0].aggregateId)
+                            expect(evts[0].commitStamp.getTime()).toEqual(
+                                stream10[0].commitStamp.getTime()
+                            )
+                            expect(evts[0].streamRevision).toEqual(stream10[0].streamRevision)
+                        })
 
-                describe('without an aggregateId and without an aggregate but with a context', () => {
-                    it('it should return the correct events', async () => {
-                        await store.getEvents({ context: 'myCont' }, 0, -1, function (err, evts) {
-                            expect(err).not.toBeTruthy()
+                        it('and limit it with skip and limit it should return the correct events', async () => {
+                            const evts = await store.getEvents(
+                                {
+                                    aggregateId: 'id',
+                                    aggregate: 'wowAgg',
+                                    context: 'wowCont',
+                                },
+                                1,
+                                2
+                            )
+                            expect(evts.length).toEqual(0)
+                        })
+                    })
+
+                    describe('without an aggregateId and without an aggregate but with a context', () => {
+                        it('it should return the correct events', async () => {
+                            const evts = await store.getEvents({ context: 'myCont' }, 0, -1)
                             expect(evts.length).toEqual(3)
                             expect(evts[0].aggregateId).toEqual(stream4[0].aggregateId)
                             expect(evts[0].commitStamp.getTime()).toEqual(
@@ -1505,11 +1720,9 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                             )
                             expect(evts[2].streamRevision).toEqual(stream5[0].streamRevision)
                         })
-                    })
 
-                    it('and limit it with skip and limit it should return the correct events', async () => {
-                        await store.getEvents({ context: 'myCont' }, 1, 2, function (err, evts) {
-                            expect(err).not.toBeTruthy()
+                        it('and limit it with skip and limit it should return the correct events', async () => {
+                            const evts = await store.getEvents({ context: 'myCont' }, 1, 2)
                             expect(evts.length).toEqual(2)
                             expect(evts[0].aggregateId).toEqual(stream4[1].aggregateId)
                             expect(evts[0].commitStamp.getTime()).toEqual(
@@ -1523,589 +1736,49 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                             expect(evts[1].streamRevision).toEqual(stream5[0].streamRevision)
                         })
                     })
-                })
-
-                describe('without an aggregateId but with an aggregate and with a context', () => {
-                    it('it should return the correct events', async () => {
-                        await store.getEvents(
-                            { context: 'myConttttt', aggregate: 'myAggrrr' },
-                            0,
-                            -1,
-                            function (err, evts) {
-                                expect(err).not.toBeTruthy()
-                                expect(evts.length).toEqual(3)
-                                expect(evts[0].aggregateId).toEqual(stream6[0].aggregateId)
-                                expect(evts[0].commitStamp.getTime()).toEqual(
-                                    stream6[0].commitStamp.getTime()
-                                )
-                                expect(evts[0].streamRevision).toEqual(stream6[0].streamRevision)
-                                expect(evts[1].aggregateId).toEqual(stream6[1].aggregateId)
-                                expect(evts[1].commitStamp.getTime()).toEqual(
-                                    stream6[1].commitStamp.getTime()
-                                )
-                                expect(evts[1].streamRevision).toEqual(stream6[1].streamRevision)
-                                expect(evts[2].aggregateId).toEqual(stream8[0].aggregateId)
-                                expect(evts[2].commitStamp.getTime()).toEqual(
-                                    stream8[0].commitStamp.getTime()
-                                )
-                                expect(evts[2].streamRevision).toEqual(stream8[0].streamRevision)
-                            }
-                        )
-                    })
-
-                    it('and limit it with skip and limit it should return the correct events', async () => {
-                        await store.getEvents(
-                            { context: 'myConttttt', aggregate: 'myAggrrr' },
-                            1,
-                            2,
-                            function (err, evts) {
-                                expect(err).not.toBeTruthy()
-                                expect(evts.length).toEqual(2)
-                                expect(evts[0].aggregateId).toEqual(stream6[1].aggregateId)
-                                expect(evts[0].commitStamp.getTime()).toEqual(
-                                    stream6[1].commitStamp.getTime()
-                                )
-                                expect(evts[0].streamRevision).toEqual(stream6[1].streamRevision)
-                                expect(evts[1].aggregateId).toEqual(stream8[0].aggregateId)
-                                expect(evts[1].commitStamp.getTime()).toEqual(
-                                    stream8[0].commitStamp.getTime()
-                                )
-                                expect(evts[1].streamRevision).toEqual(stream8[0].streamRevision)
-                            }
-                        )
-                    })
-                })
-
-                describe('calling getEvents', () => {
-                    it('to get all events it should return the correct values', async () => {
-                        await store.getEvents({}, 0, -1, function (err, evts) {
-                            expect(err).not.toBeTruthy()
-                            expect(evts.length).toEqual(allEvents.length)
-
-                            var lastCommitStamp = 0
-                            var lastCommitId = 0
-                            var lastId = 0
-                            _.each(evts, function (evt) {
-                                expect(evt.id | 0).toBeGreaterThan(lastId)
-                                expect(evt.commitId >= lastCommitId).toEqual(true)
-                                expect(evt.commitStamp.getTime() >= lastCommitStamp).toEqual(true)
-                                lastId = evt.id | 0
-                                lastCommitId = evt.commitId
-                                lastCommitStamp = evt.commitStamp.getTime()
-                            })
-                        })
-                    })
-
-                    it('with a skip value it should return the correct values', async () => {
-                        var expectedEvts = allEvents.slice(3)
-
-                        await store.getEvents({}, 3, -1, function (err, evts) {
-                            expect(err).not.toBeTruthy()
-                            expect(evts.length).toEqual(expectedEvts.length)
-
-                            var lastCommitStamp = 0
-                            var lastCommitId = 0
-                            var lastId = 0
-                            _.each(evts, function (evt) {
-                                expect(evt.id | 0).toBeGreaterThan(lastId)
-                                expect(evt.commitId >= lastCommitId).toEqual(true)
-                                expect(evt.commitStamp.getTime() >= lastCommitStamp).toEqual(true)
-                                lastId = evt.id | 0
-                                lastCommitId = evt.commitId
-                                lastCommitStamp = evt.commitStamp.getTime()
-                            })
-                        })
-                    })
-
-                    it('with a limit value it should return the correct values', async () => {
-                        var expectedEvts = allEvents.slice(0, 5)
-
-                        await store.getEvents({}, 0, 5, function (err, evts) {
-                            expect(err).not.toBeTruthy()
-                            expect(evts.length).toEqual(expectedEvts.length)
-
-                            var lastCommitStamp = 0
-                            var lastCommitId = 0
-                            var lastId = 0
-                            _.each(evts, function (evt) {
-                                expect(evt.id | 0).toBeGreaterThan(lastId)
-                                expect(evt.commitId >= lastCommitId).toEqual(true)
-                                expect(evt.commitStamp.getTime() >= lastCommitStamp).toEqual(true)
-                                lastId = evt.id | 0
-                                lastCommitId = evt.commitId
-                                lastCommitStamp = evt.commitStamp.getTime()
-                            })
-                        })
-                    })
-
-                    it('with a skip and a limit value it should return the correct values', async () => {
-                        var expectedEvts = allEvents.slice(3, 5)
-
-                        await store.getEvents({}, 3, 2, function (err, evts) {
-                            expect(err).not.toBeTruthy()
-                            expect(evts.length).toEqual(expectedEvts.length)
-
-                            var lastCommitStamp = 0
-                            var lastCommitId = 0
-                            var lastId = 0
-                            _.each(evts, function (evt) {
-                                expect(evt.id | 0).toBeGreaterThan(lastId)
-                                expect(evt.commitId >= lastCommitId).toEqual(true)
-                                expect(evt.commitStamp.getTime() >= lastCommitStamp).toEqual(true)
-                                lastId = evt.id | 0
-                                lastCommitId = evt.commitId
-                                lastCommitStamp = evt.commitStamp.getTime()
-                            })
-                        })
-                    })
-
-                    describe('with an aggregateId being used only in one context and aggregate', () => {
-                        it('it should return the correct events', async () => {
-                            await store.getEvents(
-                                { aggregateId: 'idWithAgg' },
-                                0,
-                                -1,
-                                function (err, evts) {
-                                    expect(err).not.toBeTruthy()
-                                    expect(evts.length).toEqual(2)
-                                    expect(evts[0].id).toEqual(stream2[0].id)
-                                    expect(evts[0].aggregateId).toEqual(stream2[0].aggregateId)
-                                    expect(evts[0].commitStamp.getTime()).toEqual(
-                                        stream2[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[0].commitSequence).toEqual(
-                                        stream2[0].commitSequence
-                                    )
-                                    expect(evts[0].streamRevision).toEqual(
-                                        stream2[0].streamRevision
-                                    )
-                                    expect(evts[1].id).toEqual(stream2[1].id)
-                                    expect(evts[1].aggregateId).toEqual(stream2[1].aggregateId)
-                                    expect(evts[1].commitStamp.getTime()).toEqual(
-                                        stream2[1].commitStamp.getTime()
-                                    )
-                                    expect(evts[1].commitSequence).toEqual(
-                                        stream2[1].commitSequence
-                                    )
-                                    expect(evts[1].streamRevision).toEqual(
-                                        stream2[1].streamRevision
-                                    )
-                                }
-                            )
-                        })
-
-                        it('and limit it with skip and limit it should return the correct events', async () => {
-                            await store.getEvents(
-                                { aggregateId: 'idWithAgg' },
-                                1,
-                                2,
-                                function (err, evts) {
-                                    expect(err).not.toBeTruthy()
-                                    expect(evts.length).toEqual(1)
-                                    expect(evts[0].aggregateId).toEqual(stream2[1].aggregateId)
-                                    expect(evts[0].commitStamp.getTime()).toEqual(
-                                        stream2[1].commitStamp.getTime()
-                                    )
-                                    expect(evts[0].streamRevision).toEqual(
-                                        stream2[1].streamRevision
-                                    )
-                                }
-                            )
-                        })
-                    })
-
-                    describe('with an aggregateId being used in an other context or aggregate', () => {
-                        it('it should return the correct events', async () => {
-                            await store.getEvents(
-                                { aggregateId: 'id' },
-                                0,
-                                -1,
-                                function (err, evts) {
-                                    expect(err).not.toBeTruthy()
-                                    expect(evts.length).toEqual(5)
-                                    expect(evts[0].aggregateId).toEqual(stream1[0].aggregateId)
-                                    expect(evts[0].commitStamp.getTime()).toEqual(
-                                        stream1[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[0].streamRevision).toEqual(
-                                        stream1[0].streamRevision
-                                    )
-                                    expect(evts[1].aggregateId).toEqual(stream1[1].aggregateId)
-                                    expect(evts[1].commitStamp.getTime()).toEqual(
-                                        stream1[1].commitStamp.getTime()
-                                    )
-                                    expect(evts[1].streamRevision).toEqual(
-                                        stream1[1].streamRevision
-                                    )
-                                    expect(evts[2].aggregateId).toEqual(stream3[0].aggregateId)
-                                    expect(evts[2].commitStamp.getTime()).toEqual(
-                                        stream3[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[2].streamRevision).toEqual(
-                                        stream3[0].streamRevision
-                                    )
-                                    expect(evts[3].aggregateId).toEqual(stream5[0].aggregateId)
-                                    expect(evts[3].commitStamp.getTime()).toEqual(
-                                        stream5[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[3].streamRevision).toEqual(
-                                        stream5[0].streamRevision
-                                    )
-                                    expect(evts[4].aggregateId).toEqual(stream10[0].aggregateId)
-                                    expect(evts[4].commitStamp.getTime()).toEqual(
-                                        stream10[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[4].streamRevision).toEqual(
-                                        stream10[0].streamRevision
-                                    )
-                                }
-                            )
-                        })
-
-                        it('and limit it with revMin and revMax it should return the correct events', async () => {
-                            await store.getEvents(
-                                { aggregateId: 'id' },
-                                1,
-                                2,
-                                function (err, evts) {
-                                    expect(err).not.toBeTruthy()
-                                    expect(evts.length).toEqual(2)
-                                    expect(evts[0].aggregateId).toEqual(stream1[1].aggregateId)
-                                    expect(evts[0].commitStamp.getTime()).toEqual(
-                                        stream1[1].commitStamp.getTime()
-                                    )
-                                    expect(evts[0].streamRevision).toEqual(
-                                        stream1[1].streamRevision
-                                    )
-                                }
-                            )
-                        })
-                    })
-
-                    describe('without an aggregateId but with an aggregate', () => {
-                        it('it should return the correct events', async () => {
-                            await store.getEvents(
-                                { aggregate: 'myAggrrr2' },
-                                0,
-                                -1,
-                                function (err, evts) {
-                                    expect(err).not.toBeTruthy()
-                                    expect(evts.length).toEqual(3)
-                                    expect(evts[0].aggregateId).toEqual(stream7[0].aggregateId)
-                                    expect(evts[0].commitStamp.getTime()).toEqual(
-                                        stream7[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[0].streamRevision).toEqual(
-                                        stream7[0].streamRevision
-                                    )
-                                    expect(evts[1].aggregateId).toEqual(stream7[1].aggregateId)
-                                    expect(evts[1].commitStamp.getTime()).toEqual(
-                                        stream7[1].commitStamp.getTime()
-                                    )
-                                    expect(evts[1].streamRevision).toEqual(
-                                        stream7[1].streamRevision
-                                    )
-                                    expect(evts[2].aggregateId).toEqual(stream9[0].aggregateId)
-                                    expect(evts[2].commitStamp.getTime()).toEqual(
-                                        stream9[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[2].streamRevision).toEqual(
-                                        stream9[0].streamRevision
-                                    )
-                                }
-                            )
-                        })
-
-                        it('and limit it with skip and limit it should return the correct events', async () => {
-                            await store.getEvents(
-                                { aggregate: 'myAggrrr2' },
-                                1,
-                                2,
-                                function (err, evts) {
-                                    expect(err).not.toBeTruthy()
-                                    expect(evts.length).toEqual(2)
-                                    expect(evts[0].aggregateId).toEqual(stream7[1].aggregateId)
-                                    expect(evts[0].commitStamp.getTime()).toEqual(
-                                        stream7[1].commitStamp.getTime()
-                                    )
-                                    expect(evts[0].streamRevision).toEqual(
-                                        stream7[1].streamRevision
-                                    )
-                                    expect(evts[1].aggregateId).toEqual(stream9[0].aggregateId)
-                                    expect(evts[1].commitStamp.getTime()).toEqual(
-                                        stream9[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[1].streamRevision).toEqual(
-                                        stream9[0].streamRevision
-                                    )
-                                }
-                            )
-                        })
-                    })
-
-                    describe('with an aggregateId and with an aggregate', () => {
-                        it('it should return the correct events', async () => {
-                            await store.getEvents(
-                                {
-                                    aggregate: 'myAggrrr2',
-                                    aggregateId: 'idWithAggrAndCont',
-                                },
-                                0,
-                                -1,
-                                function (err, evts) {
-                                    expect(err).not.toBeTruthy()
-                                    expect(evts.length).toEqual(1)
-                                    expect(evts[0].aggregateId).toEqual(stream9[0].aggregateId)
-                                    expect(evts[0].commitStamp.getTime()).toEqual(
-                                        stream9[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[0].streamRevision).toEqual(
-                                        stream9[0].streamRevision
-                                    )
-                                }
-                            )
-                        })
-
-                        it('and limit it with skip and limit it should return the correct events', async () => {
-                            await store.getEvents(
-                                {
-                                    aggregate: 'myAggrrr2',
-                                    aggregateId: 'idWithAggrAndCont',
-                                },
-                                1,
-                                2,
-                                function (err, evts) {
-                                    expect(err).not.toBeTruthy()
-                                    expect(evts.length).toEqual(0)
-                                }
-                            )
-                        })
-                    })
-
-                    describe('with an aggregateId and without an aggregate but with a context', () => {
-                        it('it should return the correct events', async () => {
-                            await store.getEvents(
-                                { aggregateId: 'idWithAggrAndCont', context: 'myConttttt' },
-                                0,
-                                -1,
-                                function (err, evts) {
-                                    expect(err).not.toBeTruthy()
-                                    expect(evts.length).toEqual(3)
-                                    expect(evts[0].aggregateId).toEqual(stream6[0].aggregateId)
-                                    expect(evts[0].commitStamp.getTime()).toEqual(
-                                        stream6[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[0].streamRevision).toEqual(
-                                        stream6[0].streamRevision
-                                    )
-                                    expect(evts[1].aggregateId).toEqual(stream6[1].aggregateId)
-                                    expect(evts[1].commitStamp.getTime()).toEqual(
-                                        stream6[1].commitStamp.getTime()
-                                    )
-                                    expect(evts[1].streamRevision).toEqual(
-                                        stream6[1].streamRevision
-                                    )
-                                    expect(evts[2].aggregateId).toEqual(stream9[0].aggregateId)
-                                    expect(evts[2].commitStamp.getTime()).toEqual(
-                                        stream9[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[2].streamRevision).toEqual(
-                                        stream9[0].streamRevision
-                                    )
-                                }
-                            )
-                        })
-
-                        it('and limit it with skip and limit it should return the correct events', async () => {
-                            await store.getEvents(
-                                {
-                                    aggregateId: 'idWithAggrAndCont',
-                                    context: 'myConttttt',
-                                },
-                                1,
-                                2,
-                                function (err, evts) {
-                                    expect(err).not.toBeTruthy()
-                                    expect(evts.length).toEqual(2)
-                                    expect(evts[0].aggregateId).toEqual(stream6[1].aggregateId)
-                                    expect(evts[0].commitStamp.getTime()).toEqual(
-                                        stream6[1].commitStamp.getTime()
-                                    )
-                                    expect(evts[0].streamRevision).toEqual(
-                                        stream6[1].streamRevision
-                                    )
-                                    expect(evts[1].aggregateId).toEqual(stream9[0].aggregateId)
-                                    expect(evts[1].commitStamp.getTime()).toEqual(
-                                        stream9[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[1].streamRevision).toEqual(
-                                        stream9[0].streamRevision
-                                    )
-                                }
-                            )
-                        })
-                    })
-
-                    describe('with an aggregateId and with an aggregate and with a context', () => {
-                        it('it should return the correct events', async () => {
-                            await store.getEvents(
-                                {
-                                    aggregateId: 'id',
-                                    aggregate: 'wowAgg',
-                                    context: 'wowCont',
-                                },
-                                0,
-                                -1,
-                                function (err, evts) {
-                                    expect(err).not.toBeTruthy()
-                                    expect(evts.length).toEqual(1)
-                                    expect(evts[0].aggregateId).toEqual(stream10[0].aggregateId)
-                                    expect(evts[0].commitStamp.getTime()).toEqual(
-                                        stream10[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[0].streamRevision).toEqual(
-                                        stream10[0].streamRevision
-                                    )
-                                }
-                            )
-                        })
-
-                        it('and limit it with skip and limit it should return the correct events', async () => {
-                            await store.getEvents(
-                                {
-                                    aggregateId: 'id',
-                                    aggregate: 'wowAgg',
-                                    context: 'wowCont',
-                                },
-                                1,
-                                2,
-                                function (err, evts) {
-                                    expect(err).not.toBeTruthy()
-                                    expect(evts.length).toEqual(0)
-                                }
-                            )
-                        })
-                    })
-
-                    describe('without an aggregateId and without an aggregate but with a context', () => {
-                        it('it should return the correct events', async () => {
-                            await store.getEvents(
-                                { context: 'myCont' },
-                                0,
-                                -1,
-                                function (err, evts) {
-                                    expect(err).not.toBeTruthy()
-                                    expect(evts.length).toEqual(3)
-                                    expect(evts[0].aggregateId).toEqual(stream4[0].aggregateId)
-                                    expect(evts[0].commitStamp.getTime()).toEqual(
-                                        stream4[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[0].streamRevision).toEqual(
-                                        stream4[0].streamRevision
-                                    )
-                                    expect(evts[1].aggregateId).toEqual(stream4[1].aggregateId)
-                                    expect(evts[1].commitStamp.getTime()).toEqual(
-                                        stream4[1].commitStamp.getTime()
-                                    )
-                                    expect(evts[1].streamRevision).toEqual(
-                                        stream4[1].streamRevision
-                                    )
-                                    expect(evts[2].aggregateId).toEqual(stream5[0].aggregateId)
-                                    expect(evts[2].commitStamp.getTime()).toEqual(
-                                        stream5[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[2].streamRevision).toEqual(
-                                        stream5[0].streamRevision
-                                    )
-                                }
-                            )
-                        })
-
-                        it('and limit it with skip and limit it should return the correct events', async () => {
-                            await store.getEvents(
-                                { context: 'myCont' },
-                                1,
-                                2,
-                                function (err, evts) {
-                                    expect(err).not.toBeTruthy()
-                                    expect(evts.length).toEqual(2)
-                                    expect(evts[0].aggregateId).toEqual(stream4[1].aggregateId)
-                                    expect(evts[0].commitStamp.getTime()).toEqual(
-                                        stream4[1].commitStamp.getTime()
-                                    )
-                                    expect(evts[0].streamRevision).toEqual(
-                                        stream4[1].streamRevision
-                                    )
-                                    expect(evts[1].aggregateId).toEqual(stream5[0].aggregateId)
-                                    expect(evts[1].commitStamp.getTime()).toEqual(
-                                        stream5[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[1].streamRevision).toEqual(
-                                        stream5[0].streamRevision
-                                    )
-                                }
-                            )
-                        })
-                    })
 
                     describe('without an aggregateId but with an aggregate and with a context', () => {
                         it('it should return the correct events', async () => {
-                            await store.getEvents(
+                            const evts = await store.getEvents(
                                 { context: 'myConttttt', aggregate: 'myAggrrr' },
                                 0,
-                                -1,
-                                function (err, evts) {
-                                    expect(err).not.toBeTruthy()
-                                    expect(evts.length).toEqual(3)
-                                    expect(evts[0].aggregateId).toEqual(stream6[0].aggregateId)
-                                    expect(evts[0].commitStamp.getTime()).toEqual(
-                                        stream6[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[0].streamRevision).toEqual(
-                                        stream6[0].streamRevision
-                                    )
-                                    expect(evts[1].aggregateId).toEqual(stream6[1].aggregateId)
-                                    expect(evts[1].commitStamp.getTime()).toEqual(
-                                        stream6[1].commitStamp.getTime()
-                                    )
-                                    expect(evts[1].streamRevision).toEqual(
-                                        stream6[1].streamRevision
-                                    )
-                                    expect(evts[2].aggregateId).toEqual(stream8[0].aggregateId)
-                                    expect(evts[2].commitStamp.getTime()).toEqual(
-                                        stream8[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[2].streamRevision).toEqual(
-                                        stream8[0].streamRevision
-                                    )
-                                }
+                                -1
                             )
+                            expect(evts.length).toEqual(3)
+                            expect(evts[0].aggregateId).toEqual(stream6[0].aggregateId)
+                            expect(evts[0].commitStamp.getTime()).toEqual(
+                                stream6[0].commitStamp.getTime()
+                            )
+                            expect(evts[0].streamRevision).toEqual(stream6[0].streamRevision)
+                            expect(evts[1].aggregateId).toEqual(stream6[1].aggregateId)
+                            expect(evts[1].commitStamp.getTime()).toEqual(
+                                stream6[1].commitStamp.getTime()
+                            )
+                            expect(evts[1].streamRevision).toEqual(stream6[1].streamRevision)
+                            expect(evts[2].aggregateId).toEqual(stream8[0].aggregateId)
+                            expect(evts[2].commitStamp.getTime()).toEqual(
+                                stream8[0].commitStamp.getTime()
+                            )
+                            expect(evts[2].streamRevision).toEqual(stream8[0].streamRevision)
                         })
 
                         it('and limit it with skip and limit it should return the correct events', async () => {
-                            await store.getEvents(
+                            const evts = await store.getEvents(
                                 { context: 'myConttttt', aggregate: 'myAggrrr' },
                                 1,
-                                2,
-                                function (err, evts) {
-                                    expect(err).not.toBeTruthy()
-                                    expect(evts.length).toEqual(2)
-                                    expect(evts[0].aggregateId).toEqual(stream6[1].aggregateId)
-                                    expect(evts[0].commitStamp.getTime()).toEqual(
-                                        stream6[1].commitStamp.getTime()
-                                    )
-                                    expect(evts[0].streamRevision).toEqual(
-                                        stream6[1].streamRevision
-                                    )
-                                    expect(evts[1].aggregateId).toEqual(stream8[0].aggregateId)
-                                    expect(evts[1].commitStamp.getTime()).toEqual(
-                                        stream8[0].commitStamp.getTime()
-                                    )
-                                    expect(evts[1].streamRevision).toEqual(
-                                        stream8[0].streamRevision
-                                    )
-                                }
+                                2
                             )
+                            expect(evts.length).toEqual(2)
+                            expect(evts[0].aggregateId).toEqual(stream6[1].aggregateId)
+                            expect(evts[0].commitStamp.getTime()).toEqual(
+                                stream6[1].commitStamp.getTime()
+                            )
+                            expect(evts[0].streamRevision).toEqual(stream6[1].streamRevision)
+                            expect(evts[1].aggregateId).toEqual(stream8[0].aggregateId)
+                            expect(evts[1].commitStamp.getTime()).toEqual(
+                                stream8[0].commitStamp.getTime()
+                            )
+                            expect(evts[1].streamRevision).toEqual(stream8[0].streamRevision)
                         })
                     })
                 })
