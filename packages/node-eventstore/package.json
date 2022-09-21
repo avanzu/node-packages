@@ -22,7 +22,7 @@
         "url": "git+https://github.com/avanzu/node-packages.git"
     },
     "homepage": "https://github.com/avanzu/node-packages/blob/main/packages/node-eventstore/README.md",
-    "description": "Node-eventstore is a node.js module for multiple databases. It can be very useful as eventstore if you work with (d)ddd, cqrs, eventsourcing, commands and events, etc.",
+    "description": "An eventsourcing backend supporting multiple storage engines.",
     "keywords": [
         "cqrs",
         "eventstore",
@@ -31,11 +31,7 @@
         "eventsourcing",
         "mongodb",
         "redis",
-        "tingodb",
-        "azure",
-        "azuretable",
-        "inmemory",
-        "elasticsearch"
+        "inmemory"
     ],
     "main": "./index.js",
     "directories": {
