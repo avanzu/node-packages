@@ -10,6 +10,7 @@ var types = [
             type: 'mongodb',
             host: process.env.__MONGO_HOST__,
             port: process.env.__MONGO_PORT__,
+            url: process.env.__MONGO_URL__,
         },
         Mongodb,
     ],
@@ -55,15 +56,13 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
             afterAll(() => store.disconnect())
 
             it('it should callback successfully', async () => {
-                await store.connect((err) => {
-                    expect(err).not.toBeTruthy()
-                })
+                await expect(store.connect()).resolves.toBeDefined()
             })
 
             it('it should emit connect', async () => {
                 const connect = jest.fn()
                 store.once('connect', connect)
-                await store.connect()
+                await expect(store.connect()).resolves.toBeDefined()
                 expect(connect).toHaveBeenCalled()
             })
         })
@@ -246,7 +245,7 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                             aggregate: event1.aggregate,
                             context: event1.context,
                         })
-                        await store.events.removeOne({ _id: event2.id })
+                        await store.events.deleteOne({ _id: event2.id })
                         const txs = await store.getPendingTransactions()
                         expect(txs).toBeInstanceOf(Array)
                         expect(txs).toHaveLength(1)
@@ -326,7 +325,7 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                             context: event1.context,
                         })
 
-                        await store.events.removeMany({
+                        await store.events.deleteMany({
                             $or: [{ _id: event1.id }, { _id: event2.id }, { _id: event3.id }],
                         })
 
@@ -419,7 +418,7 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                             aggregate: event1.aggregate,
                             context: event1.context,
                         })
-                        await store.events.removeMany({
+                        await store.events.deleteMany({
                             $or: [{ _id: event2.id }, { _id: event3.id }],
                         })
                         const txs = await store.getPendingTransactions()
@@ -512,7 +511,7 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                             aggregate: event1.aggregate,
                             context: event1.context,
                         })
-                        await store.events.removeMany({
+                        await store.events.deleteMany({
                             $or: [{ _id: event2.id }, { _id: event3.id }],
                         })
                         const txs = await store.getPendingTransactions()
@@ -597,7 +596,7 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                             aggregate: event1.aggregate,
                             context: event1.context,
                         })
-                        await store.events.removeOne({ _id: event2.id })
+                        await store.events.deleteOne({ _id: event2.id })
                         const txs = await store.getPendingTransactions()
                         expect(txs).toBeInstanceOf(Array)
                         expect(txs).toHaveLength(1)

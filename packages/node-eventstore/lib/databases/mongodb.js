@@ -107,7 +107,7 @@ class Mongo extends Store {
         _.defaults(options, defaults)
 
         var defaultOpt = {
-            ssl: false,
+            tls: false,
         }
 
         _.defaults(options.options, defaultOpt)
@@ -142,44 +142,68 @@ class Mongo extends Store {
 
         return connectionUrl
     }
+
+    connectV2(connectionUrl, options) {
+        debug('connectV2 using %s and %o', connectionUrl, options)
+        this.client = new MongoClient()
+        return this.client
+            .connect(connectionUrl, options)
+            .then((db) => (this.db = db))
+            .then(() => this.db.on('close', () => this.close()))
+            .then(() => this.initDb())
+            .then(() => this.finish('ensureIndex'))
+    }
+
+    connectV3(connectionUrl, options) {
+        debug('connectV3 using %s and %o', connectionUrl, options)
+        this.client = new MongoClient(connectionUrl, {
+            ...options,
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        })
+
+        return this.client
+            .connect()
+            .then((client) => (this.db = client.db()))
+            .then(() => this.client.on('close', () => this.close()))
+            .then(() => this.initDb())
+            .then(() => this.finish('createIndex'))
+    }
+
+    async connectV4(connectionUrl, options) {
+        debug('connectV4 using %s and %o', connectionUrl, options)
+
+        this.client = new MongoClient(connectionUrl, {
+            ...options,
+            appName: 'node-eventstore',
+            directConnection: true,
+        })
+        return this.client
+            .connect()
+            .then(inspect('Connected'))
+            .then(() => (this.db = this.client.db()))
+            .then(() => this.client.on('close', () => this.close()))
+            .then(() => this.initDb())
+            .then(() => this.finish('createIndex'))
+    }
+
     connect() {
         return new Promise((Ok, Err) => {
-            debug('Opening connection to mongodb version %s', version)
             const { options } = this.options
             const connectionUrl = this.connectionUrl()
+            const method = `connectV${semver.major(version)}`
 
-            if (semver.satisfies(version, '>=3.0.0')) {
-                debug('calling connect with %s and %o', connectionUrl, options)
-                this.client = new MongoClient(connectionUrl, {
-                    ...options,
-                    useNewUrlParser: true,
-                    useUnifiedTopology: true,
-                })
+            debug(
+                'Opening connection to mongodb version %s V%s using %s',
+                version,
+                semver.major(version),
+                method
+            )
 
-                this.client
-                    .connect()
-                    .then((client) => {
-                        debug('connected')
-                        this.db = client.db()
-                        this.db.close || (this.db.close = client.close.bind(client))
-                    })
-                    .then(() => this._initDb())
-                    .then(() => this._finish('createIndex'))
-                    .then(Ok)
-                    .catch((err) => (debug(err), Err(err)))
-            } else {
-                this.client = new MongoClient()
-                this.client
-                    .connect(connectionUrl, options)
-                    .then((db) => (this.db = db))
-                    .then(() => this._initDb())
-                    .then(() => this._finish('ensureIndex'))
-                    .then(Ok)
-                    .catch((err) => (debug(err), Err(err)))
-            }
+            this[method].call(this, connectionUrl, options).then(Ok, Err)
         })
     }
-    _finish(ensureIndex) {
+    finish(ensureIndex) {
         return Promise.all([
             this.events[ensureIndex]({ aggregateId: 1, streamRevision: 1 }),
             this.events[ensureIndex]({ commitStamp: 1 }),
@@ -208,7 +232,7 @@ class Mongo extends Store {
             .then(() => this)
     }
 
-    _initDb() {
+    initDb() {
         const options = this.options
         debug('acquiring collections and building indexes')
         this.events = this.db.collection(options.eventsCollectionName)
@@ -219,22 +243,12 @@ class Mongo extends Store {
             this.positions = this.db.collection(options.positionsCollectionName)
             this.positionsCounterId = options.eventsCollectionName
         }
-
-        if (semver.satisfies(version, '^3.0.0')) {
-            this.client.on('close', () => this._close())
-        }
-        if (semver.satisfies(version, '^2.0.0')) {
-            this.db.on('close', () => this._close())
-        }
-        if (semver.satisfies(version, '^1.0.0')) {
-            this.client.on('close', () => this._close())
-            this.db.on('close', () => this._close())
-        }
     }
 
-    _close() {
+    close() {
         this.emit('disconnect')
         this.stopHeartbeat()
+        return this
     }
 
     stopHeartbeat() {
@@ -273,15 +287,16 @@ class Mongo extends Store {
             debug('closing connection')
             this.stopHeartbeat()
 
-            if (!this.db) {
+            if (!this.client) {
+                this.close()
                 Ok(this)
                 return
             }
 
-            this.db
+            this.client
                 .close()
-                .then(() => Ok(this))
-                .catch((err) => (debug(err), Err(err)))
+                .then(() => this.close())
+                .then(Ok, Err)
         })
     }
 
@@ -314,7 +329,7 @@ class Mongo extends Store {
                 .findOneAndUpdate(
                     { _id: this.positionsCounterId },
                     { $inc: { position: positions } },
-                    { returnOriginal: false, upsert: true }
+                    { returnDocument: 'after', upsert: true }
                 )
                 .then(({ value }) => (value.position += 1))
                 .then((position) => _.range(position - positions, position))

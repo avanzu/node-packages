@@ -191,7 +191,7 @@ describe('The mongodb backend', () => {
             const promise = store
                 .addEvents([event1, event2])
                 .then(() =>
-                    store.transactions.insert({
+                    store.transactions.insertOne({
                         _id: event1.commitId,
                         events: [event1, event2],
                         aggregateId: event1.aggregateId,
@@ -199,7 +199,7 @@ describe('The mongodb backend', () => {
                         context: event1.context,
                     })
                 )
-                .then(() => store.events.remove({ _id: event2.id }))
+                .then(() => store.events.deleteOne({ _id: event2.id }))
                 .then(() => store.getPendingTransactions())
                 .then((txs) => store.getLastEvent(txs[0]))
                 .then((lastEvt) => store.repairFailedTransaction(lastEvt))
