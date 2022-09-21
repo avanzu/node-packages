@@ -1,6 +1,6 @@
 {
   "name": "@avanzu/rhea-composable",
-  "version": "1.8.2",
+  "version": "1.8.3",
   "description": "Allows bidirectional and unidirectional messaging using the AMQP 1.0 protocol.",
   "author": "Marc Bach <mail@avanzu.de>",
   "homepage": "https://github.com/avanzu/node-packages/tree/main/packages/rhea-composable#readme",

@@ -1,7 +1,7 @@
 {
     "name": "celtic-sun",
     "description": "",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "homepage": "",
     "private": true,
     "main": "src",
@@ -28,8 +28,8 @@
         "ignore": []
     },
     "dependencies": {
-        "@avanzu/redis-composable": "^1.2.1",
-        "@avanzu/rhea-composable": "^1.8.2"
+        "@avanzu/redis-composable": "^1.2.2",
+        "@avanzu/rhea-composable": "^1.8.3"
     },
     "devDependencies": {
         "axios": "^0.26.1",
