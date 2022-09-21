@@ -2,8 +2,9 @@ var Store = require('../base'),
     _ = require('lodash'),
     async = require('async'),
     stream = require('stream'),
-    mongo = require('mongodb'),
-    ObjectID = mongo.ObjectID,
+    { MongoClient, ObjectId: ObjectID } = require('mongodb'),
+    { version } = require('mongodb/package.json'),
+    semver = require('semver'),
     debug = require('debug')('@avanzu/eventstore/database/mongodb')
 
 const inspect = (message) => (data) => (debug(message, data), data)
@@ -107,9 +108,6 @@ class Mongo extends Store {
 
         var defaultOpt = {
             ssl: false,
-            autoReconnect: false,
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
         }
 
         _.defaults(options.options, defaultOpt)
@@ -117,151 +115,126 @@ class Mongo extends Store {
         this.options = options
     }
 
+    connectionUrl() {
+        var options = this.options
+
+        var connectionUrl
+
+        if (options.url) {
+            connectionUrl = options.url
+        } else {
+            var members = options.servers
+                ? options.servers
+                : [{ host: options.host, port: options.port }]
+
+            var memberString = _(members).map((m) => {
+                return m.host + ':' + m.port
+            })
+            var authString =
+                options.username && options.password
+                    ? options.username + ':' + options.password + '@'
+                    : ''
+            var optionsString = options.authSource ? '?authSource=' + options.authSource : ''
+
+            connectionUrl =
+                'mongodb://' + authString + memberString + '/' + options.dbName + optionsString
+        }
+
+        return connectionUrl
+    }
     connect() {
         return new Promise((Ok, Err) => {
-            debug('Opening connection')
-            var options = this.options
+            debug('Opening connection to mongodb version %s', version)
+            const { options } = this.options
+            const connectionUrl = this.connectionUrl()
 
-            var connectionUrl
-
-            if (options.url) {
-                connectionUrl = options.url
-            } else {
-                var members = options.servers
-                    ? options.servers
-                    : [{ host: options.host, port: options.port }]
-
-                var memberString = _(members).map((m) => {
-                    return m.host + ':' + m.port
+            if (semver.satisfies(version, '>=3.0.0')) {
+                debug('calling connect with %s and %o', connectionUrl, options)
+                this.client = new MongoClient(connectionUrl, {
+                    ...options,
+                    useNewUrlParser: true,
+                    useUnifiedTopology: true,
                 })
-                var authString =
-                    options.username && options.password
-                        ? options.username + ':' + options.password + '@'
-                        : ''
-                var optionsString = options.authSource ? '?authSource=' + options.authSource : ''
 
-                connectionUrl =
-                    'mongodb://' + authString + memberString + '/' + options.dbName + optionsString
-            }
-
-            var client
-            var ensureIndex = 'ensureIndex'
-
-            if (mongo.MongoClient.length === 2) {
-                debug('mongoClient.length === 2')
-                ensureIndex = 'createIndex'
-                new mongo.MongoClient(connectionUrl, options.options)
+                this.client
                     .connect()
-                    .then((cl) => {
-                        this.db = cl.db(cl.s.options.dbName)
-                        if (!this.db.close) {
-                            this.db.close = cl.close.bind(cl)
-                        }
-                        initDb()
+                    .then((client) => {
+                        debug('connected')
+                        this.db = client.db()
+                        this.db.close || (this.db.close = client.close.bind(client))
                     })
-                    .then(() => Ok(this))
-                    .catch((err) => {
-                        debug(err)
-                        Err(err)
-                    })
+                    .then(() => this._initDb())
+                    .then(() => this._finish('createIndex'))
+                    .then(Ok)
+                    .catch((err) => (debug(err), Err(err)))
             } else {
-                debug('mongoClient.length !== 2')
-                client = new mongo.MongoClient()
-                client
-                    .connect(connectionUrl, options.options)
-                    .then((db) => {
-                        this.db = db
-                        initDb()
-                    })
-                    .then(() => Ok(this))
-                    .catch((err) => {
-                        debug(err)
-                        Err(err)
-                    })
-            }
-
-            const initDb = () => {
-                this.db.on('close', () => {
-                    this.emit('disconnect')
-                    this.stopHeartbeat()
-                })
-
-                const finish = (err) => {
-                    if (err) {
-                        debug(err)
-                        return
-                    }
-
-                    this.events = this.db.collection(options.eventsCollectionName)
-                    this.events[ensureIndex]({ aggregateId: 1, streamRevision: 1 }, (err) => {
-                        if (err) {
-                            debug(err)
-                        }
-                    })
-                    this.events[ensureIndex]({ commitStamp: 1 }, (err) => {
-                        if (err) {
-                            debug(err)
-                        }
-                    })
-                    this.events[ensureIndex]({ dispatched: 1 }, { sparse: true }, (err) => {
-                        if (err) {
-                            debug(err)
-                        }
-                    })
-                    this.events[ensureIndex](
-                        { commitStamp: 1, streamRevision: 1, commitSequence: 1 },
-                        (err) => {
-                            if (err) {
-                                debug(err)
-                            }
-                        }
-                    )
-
-                    this.snapshots = this.db.collection(options.snapshotsCollectionName)
-                    this.snapshots[ensureIndex]({ aggregateId: 1, revision: -1 }, (err) => {
-                        if (err) {
-                            debug(err)
-                        }
-                    })
-
-                    this.transactions = this.db.collection(options.transactionsCollectionName)
-                    this.transactions[ensureIndex](
-                        { aggregateId: 1, 'events.streamRevision': 1 },
-                        (err) => {
-                            if (err) {
-                                debug(err)
-                            }
-                        }
-                    )
-                    this.events[ensureIndex](
-                        {
-                            aggregate: 1,
-                            aggregateId: 1,
-                            commitStamp: -1,
-                            streamRevision: -1,
-                            commitSequence: -1,
-                        },
-                        (err) => {
-                            if (err) {
-                                debug(err)
-                            }
-                        }
-                    )
-
-                    if (options.positionsCollectionName) {
-                        this.positions = this.db.collection(options.positionsCollectionName)
-                        this.positionsCounterId = options.eventsCollectionName
-                    }
-
-                    this.emit('connect')
-                    if (this.options.heartbeat) {
-                        this.startHeartbeat()
-                    }
-                }
-
-                finish()
+                this.client = new MongoClient()
+                this.client
+                    .connect(connectionUrl, options)
+                    .then((db) => (this.db = db))
+                    .then(() => this._initDb())
+                    .then(() => this._finish('ensureIndex'))
+                    .then(Ok)
+                    .catch((err) => (debug(err), Err(err)))
             }
         })
+    }
+    _finish(ensureIndex) {
+        return Promise.all([
+            this.events[ensureIndex]({ aggregateId: 1, streamRevision: 1 }),
+            this.events[ensureIndex]({ commitStamp: 1 }),
+            this.events[ensureIndex]({ dispatched: 1 }, { sparse: true }),
+            this.events[ensureIndex]({
+                commitStamp: 1,
+                streamRevision: 1,
+                commitSequence: 1,
+            }),
+            this.events[ensureIndex]({
+                aggregate: 1,
+                aggregateId: 1,
+                commitStamp: -1,
+                streamRevision: -1,
+                commitSequence: -1,
+            }),
+            this.snapshots[ensureIndex]({ aggregateId: 1, revision: -1 }),
+            this.transactions[ensureIndex]({
+                aggregateId: 1,
+                'events.streamRevision': 1,
+            }),
+        ])
+            .then(inspect('indexes %o'))
+            .then(() => this.emit('connect'))
+            .then(() => this.options.heartbeat && this.startHeartbeat())
+            .then(() => this)
+    }
+
+    _initDb() {
+        const options = this.options
+        debug('acquiring collections and building indexes')
+        this.events = this.db.collection(options.eventsCollectionName)
+        this.snapshots = this.db.collection(options.snapshotsCollectionName)
+        this.transactions = this.db.collection(options.transactionsCollectionName)
+
+        if (options.positionsCollectionName) {
+            this.positions = this.db.collection(options.positionsCollectionName)
+            this.positionsCounterId = options.eventsCollectionName
+        }
+
+        if (semver.satisfies(version, '^3.0.0')) {
+            this.client.on('close', () => this._close())
+        }
+        if (semver.satisfies(version, '^2.0.0')) {
+            this.db.on('close', () => this._close())
+        }
+        if (semver.satisfies(version, '^1.0.0')) {
+            this.client.on('close', () => this._close())
+            this.db.on('close', () => this._close())
+        }
+    }
+
+    _close() {
+        this.emit('disconnect')
+        this.stopHeartbeat()
     }
 
     stopHeartbeat() {
@@ -565,20 +538,14 @@ class Mongo extends Store {
 
     getUndispatchedEvents(query) {
         return new Promise((Ok, Err) => {
+            query || (query = {})
             var findStatement = {
                 dispatched: false,
-            }
-
-            if (query && query.aggregate) {
-                findStatement.aggregate = query.aggregate
-            }
-
-            if (query && query.context) {
-                findStatement.context = query.context
-            }
-
-            if (query && query.aggregateId) {
-                findStatement.aggregateId = query.aggregateId
+                ...filterEmpty({
+                    aggregate: query.aggregate,
+                    context: query.context,
+                    aggregateId: query.aggregateId,
+                }),
             }
 
             this.events
@@ -606,6 +573,7 @@ class Mongo extends Store {
 
     addSnapshot(snap) {
         return new Promise((Ok, Err) => {
+            debug('Adding snapshot %o', snap)
             if (!snap.aggregateId) {
                 var errMsg = 'aggregateId not defined!'
                 debug(errMsg)
@@ -616,6 +584,7 @@ class Mongo extends Store {
             this.snapshots
                 .insertOne(snap)
                 .then(({ result }) => result)
+                .then(inspect('snapshot result %o'))
                 .then(Ok, Err)
         })
     }
@@ -628,22 +597,19 @@ class Mongo extends Store {
                 return Err(new Error(errMsg))
             }
 
-            var findStatement = {
+            var findStatement = filterEmpty({
                 aggregateId: query.aggregateId,
-            }
-
-            if (query.aggregate) {
-                findStatement.aggregate = query.aggregate
-            }
-
-            if (query.context) {
-                findStatement.context = query.context
-            }
+                aggregate: query.aggregate,
+                context: query.context,
+            })
 
             const remove = (elements) =>
                 Promise.all(elements.map(({ _id }) => this.snapshots.deleteOne({ _id })))
 
-            const countRemaining = () => this.snapshots.count(findStatement)
+            const countRemaining = () =>
+                semver.satisfies(version, '<3.0.0')
+                    ? this.snapshots.count(findStatement)
+                    : this.snapshots.countDocuments(findStatement)
 
             this.snapshots
                 .find(findStatement, {
@@ -669,30 +635,25 @@ class Mongo extends Store {
                 return Err(new Error(errMsg))
             }
 
-            var findStatement = {
+            // var findStatement = filterEmpty()
+            Promise.resolve({
                 aggregateId: query.aggregateId,
-            }
-
-            if (query.aggregate) {
-                findStatement.aggregate = query.aggregate
-            }
-
-            if (query.context) {
-                findStatement.context = query.context
-            }
-
-            if (revMax > -1) {
-                findStatement.revision = { $lte: revMax }
-            }
-
-            this.snapshots
-                .findOne(findStatement, {
-                    sort: [
-                        ['revision', 'desc'],
-                        ['version', 'desc'],
-                        ['commitStamp', 'desc'],
-                    ],
-                })
+                aggregate: query.aggregate,
+                context: query.context,
+                revision: revMax > -1 ? { $lte: revMax } : null,
+            })
+                .then(filterEmpty)
+                .then(inspect('Trying to load snapshot using %o'))
+                .then((findStatement) =>
+                    this.snapshots.findOne(findStatement, {
+                        sort: [
+                            ['revision', 'desc'],
+                            ['version', 'desc'],
+                            ['commitStamp', 'desc'],
+                        ],
+                    })
+                )
+                .then(inspect('snapshot result %o'))
                 .then(Ok, Err)
         })
     }
@@ -705,15 +666,11 @@ class Mongo extends Store {
                 return Err(new Error(errMsg))
             }
 
-            var findStatement = { aggregateId: evt.aggregateId }
-
-            if (evt.aggregate) {
-                findStatement.aggregate = evt.aggregate
-            }
-
-            if (evt.context) {
-                findStatement.context = evt.context
-            }
+            var findStatement = filterEmpty({
+                aggregateId: evt.aggregateId,
+                aggregate: evt.aggregate,
+                context: evt.context,
+            })
 
             // the following is usually unnecessary
             this.transactions

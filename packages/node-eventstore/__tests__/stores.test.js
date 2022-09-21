@@ -239,14 +239,14 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                         }
 
                         await store.addEvents([event1, event2])
-                        await store.transactions.insert({
+                        await store.transactions.insertOne({
                             _id: event1.commitId,
                             events: [event1, event2],
                             aggregateId: event1.aggregateId,
                             aggregate: event1.aggregate,
                             context: event1.context,
                         })
-                        await store.events.remove({ _id: event2.id })
+                        await store.events.removeOne({ _id: event2.id })
                         const txs = await store.getPendingTransactions()
                         expect(txs).toBeInstanceOf(Array)
                         expect(txs).toHaveLength(1)
@@ -261,9 +261,7 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                         expect(lastEvt.payload.event).toEqual(event1.payload.event)
 
                         const evts = await store.getEventsByRevision(
-                            {
-                                aggregateId: event2.aggregateId,
-                            },
+                            { aggregateId: event2.aggregateId },
                             0,
                             -1
                         )
@@ -320,14 +318,15 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                         }
 
                         await store.addEvents([event1, event2, event3])
-                        await store.transactions.insert({
+                        await store.transactions.insertOne({
                             _id: event1.commitId,
                             events: [event1, event2, event3],
                             aggregateId: event1.aggregateId,
                             aggregate: event1.aggregate,
                             context: event1.context,
                         })
-                        await store.events.remove({
+
+                        await store.events.removeMany({
                             $or: [{ _id: event1.id }, { _id: event2.id }, { _id: event3.id }],
                         })
 
@@ -413,14 +412,14 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                         }
 
                         await store.addEvents([event1, event2, event3])
-                        await store.transactions.insert({
+                        await store.transactions.insertOne({
                             _id: event1.commitId,
                             events: [event1, event2, event3],
                             aggregateId: event1.aggregateId,
                             aggregate: event1.aggregate,
                             context: event1.context,
                         })
-                        await store.events.remove({
+                        await store.events.removeMany({
                             $or: [{ _id: event2.id }, { _id: event3.id }],
                         })
                         const txs = await store.getPendingTransactions()
@@ -506,14 +505,14 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                         }
 
                         await store.addEvents([event1, event2, event3])
-                        await store.transactions.insert({
+                        await store.transactions.insertOne({
                             _id: event1.commitId,
                             events: [event1, event2, event3],
                             aggregateId: event1.aggregateId,
                             aggregate: event1.aggregate,
                             context: event1.context,
                         })
-                        await store.events.remove({
+                        await store.events.removeMany({
                             $or: [{ _id: event2.id }, { _id: event3.id }],
                         })
                         const txs = await store.getPendingTransactions()
@@ -591,14 +590,14 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                         }
 
                         await store.addEvents([event1, event2])
-                        await store.transactions.insert({
+                        await store.transactions.insertOne({
                             _id: event1.commitId,
                             events: [event1, event2],
                             aggregateId: event1.aggregateId,
                             aggregate: event1.aggregate,
                             context: event1.context,
                         })
-                        await store.events.remove({ _id: event2.id })
+                        await store.events.removeOne({ _id: event2.id })
                         const txs = await store.getPendingTransactions()
                         expect(txs).toBeInstanceOf(Array)
                         expect(txs).toHaveLength(1)
@@ -2195,12 +2194,13 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                         },
                     }
 
-                    beforeEach(async () =>
-                        [snap1, snap2, snap3, snap4, snap5, snap6, snap7, snap8].reduce(
-                            (p, v) => p.then(store.addSnapshot(v)),
-                            store.clear()
+                    const addSnapshots = () =>
+                        Promise.all(
+                            [snap1, snap2, snap3, snap4, snap5, snap6, snap7, snap8].map((snap) =>
+                                store.addSnapshot(snap)
+                            )
                         )
-                    )
+                    beforeEach(() => store.clear().then(addSnapshots))
 
                     it('with a revision that already exists but with a newer version it should return the correct snapshot', async () => {
                         const shot = await store.getSnapshot(
