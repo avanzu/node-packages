@@ -1,60 +1,29 @@
-# ⚠️ IMPORTANT NEWS! 📰
-
-I’ve been dealing with CQRS, event-sourcing and DDD long enough now that I don’t need working with it anymore unfortunately, so at least for now this my formal farewell!
-
-I want to thank everyone who has contributed in one way or another.
-Especially...
-
--   [Jan](https://github.com/jamuhl), who introduced me to this topic.
--   [Dimitar](https://github.com/nanov), one of the last bigger contributors and maintainer.
--   My last employer, who gave me the possibility to use all these CQRS modules in a big Cloud-System.
--   My family and friends, who very often came up short.
-
-Finally, I would like to thank [Golo Roden](https://github.com/goloroden), who was there very early at the beginning of my CQRS/ES/DDD journey and is now here again to take over these modules.
-
-Golo Roden is the founder, CTO and managing director of [the native web](https://www.thenativeweb.io/), a company specializing in native web technologies. Among other things, he also teaches CQRS/ES/DDD etc. and based on his vast knowledge, he brought wolkenkit to life.
-[wolkenkit](https://wolkenkit.io) is a CQRS and event-sourcing framework based on Node.js. It empowers you to build and run scalable distributed web and cloud services that process and store streams of domain events.
-
-With this step, I can focus more on [i18next](https://www.i18next.com), [locize](https://locize.com) and [localistars](https://localistars.com). I'm happy about that. 😊
-
-So, there is no end, but the start of a new phase for my CQRS modules. 😉
-
-I wish you all good luck on your journey.
-
-Who knows, maybe we'll meet again in a github issue or PR at [i18next](https://github.com/i18next/i18next) 😉
-
-[Adriano Raiano](https://twitter.com/adrirai)
-
----
 
 # Introduction
 
-[![JS.ORG](https://img.shields.io/badge/js.org-eventstore-ffb400.svg?style=flat-square)](http://js.org)
-[![travis](https://img.shields.io/travis/adrai/node-eventstore.svg)](https://travis-ci.org/adrai/node-eventstore) [![npm](https://img.shields.io/npm/v/eventstore.svg)](https://npmjs.org/package/eventstore)
+**This is a heavily modified version of the original [node-eventstore](https://github.com/thenativeweb/node-eventstore) by Adriano Raiano.**
+
+
 
 The project goal is to provide an eventstore implementation for node.js:
 
 -   load and store events via EventStream object
 -   event dispatching to your publisher (optional)
--   supported Dbs (inmemory, mongodb, redis, tingodb, elasticsearch, azuretable, dynamodb)
+-   supported Dbs (inmemory, mongodb, ~~redis, tingodb, elasticsearch, azuretable, dynamodb~~)
 -   snapshot support
 -   query your events
 
-# Consumers
-
--   [cqrs-domain](https://github.com/adrai/node-cqrs-domain)
--   [cqrs](https://github.com/leogiese/cqrs)
 
 # Installation
 
-    npm install eventstore
+    npm install @avanzu/eventstore
 
 # Usage
 
 ## Require the module and init the eventstore:
 
 ```javascript
-var eventstore = require('eventstore')
+var eventstore = require('@avanzu/eventstore')
 
 var es = eventstore()
 ```
@@ -67,14 +36,14 @@ For logging and debugging you can use [debug](https://github.com/visionmedia/deb
 
 simply run your process with
 
-    DEBUG=eventstore* node app.js
+    DEBUG=@avanzu/eventstore/* node app.js
 
 ## Provide implementation for storage
 
 example with mongodb:
 
 ```javascript
-var es = require('eventstore')({
+var es = require('@avanzu/eventstore')({
     type: 'mongodb',
     host: 'localhost', // optional
     port: 27017, // optional
@@ -92,11 +61,11 @@ var es = require('eventstore')({
     // positionsCollectionName: 'positions'        // optional, defaultly wont keep position
 })
 ```
-
+<!-- 
 example with redis:
 
 ```javascript
-var es = require('eventstore')({
+var es = require('@avanzu/eventstore')({
     type: 'redis',
     host: 'localhost', // optional
     port: 6379, // optional
@@ -238,7 +207,7 @@ es.useEventPublisher(function (evt, callback) {
     // bus.sendAndWaitForAck('event', evt, callback);
 })
 ```
-
+-->
 ## catch connect and disconnect events
 
 ```javascript
@@ -268,13 +237,7 @@ es.defineEventMappings({
 ## initialize
 
 ```javascript
-es.init(function (err) {
-    // this callback is called when all is ready...
-})
-
-// or
-
-es.init() // callback is optional
+await es.init()
 ```
 
 ## working with the eventstore
@@ -282,28 +245,17 @@ es.init() // callback is optional
 ### get the eventhistory (of an aggregate)
 
 ```javascript
-es.getEventStream('streamId', function (err, stream) {
-    var history = stream.events // the original event will be in events[i].payload
-
-    // myAggregate.loadFromHistory(history);
-})
+const { events } = await es.getEventStream('streamId')
 ```
 
 or
 
 ```javascript
-es.getEventStream(
-    {
+const { events } = await es.getEventStream({
         aggregateId: 'myAggregateId',
         aggregate: 'person', // optional
         context: 'hr', // optional
-    },
-    function (err, stream) {
-        var history = stream.events // the original event will be in events[i].payload
-
-        // myAggregate.loadFromHistory(history);
-    }
-)
+})
 ```
 
 'streamId' and 'aggregateId' are the same...
@@ -317,36 +269,24 @@ you can request an eventstream even by limit the query with a 'minimum revision 
 var revMin = 5,
     revMax = 8 // if you omit revMax or you define it as -1 it will retrieve until the end
 
-es.getEventStream(
-    'streamId' ||
-        {
-            /* query */
-        },
+const {events} = await es.getEventStream(
+    'streamId' || {/* query */ },
     revMin,
-    revMax,
-    function (err, stream) {
-        var history = stream.events // the original event will be in events[i].payload
-
-        // myAggregate.loadFromHistory(history);
-    }
+    revMax
 )
 ```
 
 store a new event and commit it to store
 
 ```javascript
-es.getEventStream('streamId', function (err, stream) {
-    stream.addEvent({ my: 'event' })
-    stream.addEvents([{ my: 'event2' }])
+const stream = await es.getEventStream('streamId')
 
-    stream.commit()
+stream.addEvent({ my: 'event' })
+stream.addEvents([{ my: 'event2' }])
 
-    // or
+await stream.commit()
+console.log(stream.eventsToDispatch)
 
-    stream.commit(function (err, stream) {
-        console.log(stream.eventsToDispatch) // this is an array containing all added events in this commit.
-    })
-})
 ```
 
 if you defined an event publisher function the committed event will be dispatched to the provided publisher
@@ -358,32 +298,17 @@ if you just want to load the last event as stream you can call getLastEventAsStr
 get snapshot and eventhistory from the snapshot point
 
 ```javascript
-es.getFromSnapshot('streamId', function (err, snapshot, stream) {
-    var snap = snapshot.data
-    var history = stream.events // events history from given snapshot
-
-    // myAggregate.loadSnapshot(snap);
-    // myAggregate.loadFromHistory(history);
-})
+const [snapshot, stream] = await es.getFromSnapshot('streamId')
 ```
 
 or
 
 ```javascript
-es.getFromSnapshot(
-    {
+const [snapshot, stream] = await es.getFromSnapshot({
         aggregateId: 'myAggregateId',
         aggregate: 'person', // optional
         context: 'hr', // optional
-    },
-    function (err, snapshot, stream) {
-        var snap = snapshot.data
-        var history = stream.events // events history from given snapshot
-
-        // myAggregate.loadSnapshot(snap);
-        // myAggregate.loadFromHistory(history);
-    }
-)
+    })
 ```
 
 you can request a snapshot and an eventstream even by limit the query with a 'maximum revision number'
@@ -391,62 +316,48 @@ you can request a snapshot and an eventstream even by limit the query with a 'ma
 ```javascript
 var revMax = 8 // if you omit revMax or you define it as -1 it will retrieve until the end
 
-es.getFromSnapshot(
-    'streamId' ||
-        {
-            /* query */
-        },
-    revMax,
-    function (err, snapshot, stream) {
-        var snap = snapshot.data
-        var history = stream.events // events history from given snapshot
-
-        // myAggregate.loadSnapshot(snap);
-        // myAggregate.loadFromHistory(history);
-    }
+const [snapshot, stream] = es.getFromSnapshot(
+    'streamId' || { /* query */ },
+    revMax
 )
 ```
 
 create a snapshot point
 
 ```javascript
-es.getFromSnapshot('streamId', function(err, snapshot, stream) {
+const [snapshot, stream] = await es.getFromSnapshot('streamId')
+const snap = snapshot.data
+const history = stream.events
+, function(err, snapshot, stream) {
 
   var snap = snapshot.data;
   var history = stream.events; // events history from given snapshot
 
-  // myAggregate.loadSnapshot(snap);
-  // myAggregate.loadFromHistory(history);
-
   // create a new snapshot depending on your rules
   if (history.length > myLimit) {
-    es.createSnapshot({
+    await es.createSnapshot({
       streamId: 'streamId',
       data: myAggregate.getSnap(),
       revision: stream.lastRevision,
       version: 1 // optional
-    }, function(err) {
-      // snapshot saved
     });
 
     // or
 
-    es.createSnapshot({
+    await es.createSnapshot({
       aggregateId: 'myAggregateId',
       aggregate: 'person',          // optional
       context: 'hr'                 // optional
       data: myAggregate.getSnap(),
       revision: stream.lastRevision,
       version: 1 // optional
-    }, function(err) {
-      // snapshot saved
     });
   }
 
   // go on: store new event and commit it
   // stream.addEvents...
 
-});
+}
 ```
 
 You can automatically clean older snapshots by configuring the number of snapshots to keep with `maxSnapshotsCount` in `eventstore` options.
@@ -454,26 +365,7 @@ You can automatically clean older snapshots by configuring the number of snapsho
 ## own event dispatching (no event publisher function defined)
 
 ```javascript
-es.getUndispatchedEvents(function (err, evts) {
-    // or es.getUndispatchedEvents('streamId', function(err, evts) {
-    // or es.getUndispatchedEvents({ // free choice (all, only context, only aggregate, only aggregateId...)
-    //                                context: 'hr',
-    //                                aggregate: 'person',
-    //                                aggregateId: 'uuid'
-    //                              }, function(err, evts) {
-
-    // all undispatched events
-    console.log(evts)
-
-    // dispatch it and set the event as dispatched
-
-    for (var e in evts) {
-        var evt = evts[r]
-        es.setEventToDispatched(evt, function (err) {})
-        // or
-        es.setEventToDispatched(evt.id, function (err) {})
-    }
-})
+const evts = await es.getUndispatchedEvents()
 ```
 
 ## query your events
@@ -486,27 +378,15 @@ skip, limit always optional
 var skip = 0,
     limit = 100 // if you omit limit or you define it as -1 it will retrieve until the end
 
-es.getEvents(skip, limit, function (err, evts) {
-    // if (events.length === amount) {
-    //   events.next(function (err, nextEvts) {}); // just call next to retrieve the next page...
-    // } else {
-    //   // finished...
-    // }
-})
+const events = await es.getEvents(skip, limit)
 
 // or
 
-es.getEvents('streamId', skip, limit, function (err, evts) {
-    // if (events.length === amount) {
-    //   events.next(function (err, nextEvts) {}); // just call next to retrieve the next page...
-    // } else {
-    //   // finished...
-    // }
-})
+const events = await es.getEvents('streamId', skip, limit)
 
 // or
 
-es.getEvents(
+const events = await es.getEvents(
     {
         // free choice (all, only context, only aggregate, only aggregateId...)
         context: 'hr',
@@ -514,14 +394,7 @@ es.getEvents(
         aggregateId: 'uuid',
     },
     skip,
-    limit,
-    function (err, evts) {
-        // if (events.length === amount) {
-        //   events.next(function (err, nextEvts) {}); // just call next to retrieve the next page...
-        // } else {
-        //   // finished...
-        // }
-    }
+    limit
 )
 ```
 
@@ -533,19 +406,17 @@ revMin, revMax always optional
 var revMin = 5,
     revMax = 8 // if you omit revMax or you define it as -1 it will retrieve until the end
 
-es.getEventsByRevision('streamId', revMin, revMax, function (err, evts) {})
-
+const events = await es.getEventsByRevision('streamId', revMin, revMax)
 // or
 
-es.getEventsByRevision(
+const events = await es.getEventsByRevision(
     {
         aggregateId: 'myAggregateId',
         aggregate: 'person', // optional
         context: 'hr', // optional
     },
     revMin,
-    revMax,
-    function (err, evts) {}
+    revMax
 )
 ```
 
@@ -557,33 +428,15 @@ skip, limit always optional
 var skip = 0,
     limit = 100 // if you omit limit or you define it as -1 it will retrieve until the end
 
-es.getEventsSince(new Date(2015, 5, 23), skip, limit, function (err, evts) {
-    // if (events.length === amount) {
-    //   events.next(function (err, nextEvts) {}); // just call next to retrieve the next page...
-    // } else {
-    //   // finished...
-    // }
-})
+cosnt events = await es.getEventsSince(new Date(2015, 5, 23), skip, limit)
 
 // or
 
-es.getEventsSince(new Date(2015, 5, 23), limit, function (err, evts) {
-    // if (events.length === amount) {
-    //   events.next(function (err, nextEvts) {}); // just call next to retrieve the next page...
-    // } else {
-    //   // finished...
-    // }
-})
+const events = await es.getEventsSince(new Date(2015, 5, 23), limit)
 
 // or
 
-es.getEventsSince(new Date(2015, 5, 23), function (err, evts) {
-    // if (events.length === amount) {
-    //   events.next(function (err, nextEvts) {}); // just call next to retrieve the next page...
-    // } else {
-    //   // finished...
-    // }
-})
+const events = await es.getEventsSince(new Date(2015, 5, 23))
 ```
 
 ## streaming your events
@@ -629,30 +482,21 @@ currently supported by:
 for example to obtain the last revision nr
 
 ```javascript
-es.getLastEvent('streamId', function(err, evt) {
-});
+const event = await es.getLastEvent('streamId')
 
 // or
 
-es.getLastEvent({ // free choice (all, only context, only aggregate, only aggregateId...)
+const event = await es.getLastEvent({ // free choice (all, only context, only aggregate, only aggregateId...)
   context: 'hr',
   aggregate: 'person',
   aggregateId: 'uuid'
-} function(err, evt) {
 });
 ```
 
 ## obtain a new id
 
 ```javascript
-es.getNewId(function (err, newId) {
-    if (err) {
-        console.log('ohhh :-(')
-        return
-    }
-
-    console.log('the new id is: ' + newId)
-})
+const id = await es.getNewId()
 ```
 
 ## position of event in store
@@ -671,135 +515,20 @@ For the eventstore tries to repair itself when calling `getEventsByRevision`.
 But if you want you can trigger this from outside:
 
 ```javascript
-es.store.getPendingTransactions(function (err, txs) {
-    if (err) {
-        console.log('ohhh :-(')
-        return
-    }
+const [firstTransaction] = await es.store.getPendingTransactions()
 
-    // txs is an array of objects like:
-    // {
-    //   _id: '/* the commitId of the committed event stream */',
-    //   events: [ /* all events of the committed event stream */ ],
-    //   aggregateId: 'aggregateId',
-    //   aggregate: 'aggregate', // optional
-    //   context: 'context'      // optional
-    // }
-
-    es.store.getLastEvent(
-        {
-            aggregateId: txs[0].aggregateId,
-            aggregate: txs[0].aggregate, // optional
-            context: txs[0].context, // optional
-        },
-        function (err, lastEvent) {
-            if (err) {
-                console.log('ohhh :-(')
-                return
-            }
-
-            es.store.repairFailedTransaction(lastEvent, function (err) {
-                if (err) {
-                    console.log('ohhh :-(')
-                    return
-                }
-
-                console.log('everything is fine')
-            })
-        }
-    )
+const lastEvent = await es.store.getLastEvent({
+        aggregateId: firstTransaction.aggregateId,
+        aggregate: firstTransaction.aggregate, // optional
+        context: firstTransaction.context, // optional
 })
+
+await es.store.repairFailedTransaction(lastEvent)    
+
 ```
-
-## Catch before and after eventstore events
-
-Optionally the eventstore can emit brefore and after events, to enable this feature set the `emitStoreEvents` to true.
-
-```javascript
-var eventstore = require('eventstore');
-var es = eventstore({
-  emitStoreEvents: true,
-});
-
-es.on('before-clear', function({milliseconds}) {});
-es.on('after-clear', function({milliseconds}) {});
-
-es.on('before-get-next-positions', function({milliseconds, arguments: [positions]}) {});
-es.on('after-get-next-positions', function({milliseconds, arguments: [positions]}) {});
-
-es.on('before-add-events', function({milliseconds, arguments: [events]}) {});
-es.on('after-add-events', function(milliseconds, arguments: [events]) {});
-
-es.on('before-get-events', function({milliseconds, arguments: [query, skip, limit]}) {});
-es.on('after-get-events', function({milliseconds, arguments: [query, skip, limit]}) {});
-
-es.on('before-get-events-since', function({milliseconds, arguments: [milliseconds, date, skip, limit]}) {});
-es.on('after-get-events-since', function({milliseconds, arguments: [date, skip, limit]}) {});
-
-es.on('before-get-events-by-revision', function({milliseconds, arguments: [query, revMin, revMax]}) {});
-es.on('after-get-events-by-revision', function({milliseconds, arguments, [query, revMin, revMax]}) {});
-
-es.on('before-get-last-event', function({milliseconds, arguments: [query]}) {});
-es.on('after-get-last-event', function({milliseconds, arguments: [query]}) {});
-
-es.on('before-get-undispatched-events', function({milliseconds, arguments: [query]}) {});
-es.on('after-get-undispatched-events', function({milliseconds, arguments: [query]}) {});
-
-es.on('before-set-event-to-dispatched', function({milliseconds, arguments: [id]}) {});
-es.on('after-set-event-to-dispatched', function({milliseconds, arguments: [id]}) {});
-
-es.on('before-add-snapshot', function({milliseconds, arguments: [snap]}) {});
-es.on('after-add-snapshot', function({milliseconds, arguments: [snap]}) {});
-
-es.on('before-clean-snapshots', function({milliseconds, arguments: [query]}) {});
-es.on('after-clean-snapshots', function({milliseconds, arguments: [query]}) {});
-
-es.on('before-get-snapshot', function({milliseconds, arguments: [query, revMax]}) {});
-es.on('after-get-snapshot', function({milliseconds, arguments: [query, revMax]}) {});
-
-es.on('before-remove-transactions', function({milliseconds}, arguments: [event]) {});
-es.on('after-remove-transactions', function({milliseconds}, arguments: [event]) {});
-
-es.on('before-get-pending-transactions', function({milliseconds}) {});
-es.on('after-get-pending-transactions', function({milliseconds}) {});
-
-es.on('before-repair-failed-transactions', function({milliseconds, arguments: [lastEvt]}) {});
-es.on('after-repair-failed-transactions', function({milliseconds, arguments: [lastEvt]}) {});
-
-es.on('before-remove-tables', function({milliseconds}) {});
-es.on('after-remove-tables', function({milliseconds}) {});
-
-es.on('before-stream-events', function({milliseconds, arguments: [query, skip, limit]}) {});
-es.on('after-stream-events', function({milliseconds, arguments: [query, skip, limit]}) {});
-
-es.on('before-stream-events-since', function({milliseconds, arguments: [date, skip, limit]}) {});
-es.on('after-stream-events-since', function({milliseconds, arguments: [date, skip, limit]}) {});
-
-es.on('before-get-event-stream', function({milliseconds, arguments: [query, revMin, revMax]}) {});
-es.on('after-get-event-stream', function({milliseconds, arguments: [query, revMin, revMax]}) {});
-
-es.on('before-get-from-snapshot', function({milliseconds, arguments: [query, revMax]}) {});
-es.on('after-get-from-snapshot', function({milliseconds, arguments: [query, revMax]}) {});
-
-es.on('before-create-snapshot', function({milliseconds, arguments: [obj]}) {});
-es.on('after-create-snapshot', function({milliseconds, arguments: [obj]}) {});
-
-es.on('before-commit', function({milliseconds, arguments: [eventstream]}) {});
-es.on('after-commit', function({milliseconds, arguments: [eventstream]}) {});
-
-es.on('before-get-last-event-as-stream', function({milliseconds, arguments: [query]}) {});
-es.on('after-get-last-event-as-stream', function({milliseconds, arguments: [query]}) {});
-```
-
-# Sample Integration
-
--   [nodeCQRS](https://github.com/jamuhl/nodeCQRS) A CQRS sample integrating eventstore
-
 # Inspiration
 
 -   Jonathan Oliver's [EventStore](https://github.com/joliver/EventStore) for .net.
-
-# [Release notes](https://github.com/adrai/node-eventstore/blob/master/releasenotes.md)
 
 # Database Support
 
@@ -807,30 +536,26 @@ Currently these databases are supported:
 
 1. inmemory
 2. mongodb ([node-mongodb-native](https://github.com/mongodb/node-mongodb-native))
-3. redis ([redis](https://github.com/mranney/node_redis))
-4. tingodb ([tingodb](https://github.com/sergeyksv/tingodb))
-5. azuretable ([azure-storage](https://github.com/Azure/azure-storage-node))
-6. dynamodb ([aws-sdk](https://github.com/aws/aws-sdk-js))
+3. ~~redis ([redis](https://github.com/mranney/node_redis))~~
+4. ~~tingodb ([tingodb](https://github.com/sergeyksv/tingodb))~~
+5. ~~azuretable ([azure-storage](https://github.com/Azure/azure-storage-node))~~
+6. ~~dynamodb ([aws-sdk](https://github.com/aws/aws-sdk-js))~~
 
 ## own db implementation
 
 You can use your own db implementation by extending this...
 
 ```javascript
-var Store = require('eventstore').Store,
+var Store = require('@avanzu/eventstore').Store,
     util = require('util'),
     _ = require('lodash')
 
-function MyDB(options) {
-    options = options || {}
-    Store.call(this, options)
+
+class MyDB extends Store {
+    constructor(options) {
+        super(options)
+    }
 }
-
-util.inherits(MyDB, Store)
-
-_.extend(MyDB.prototype, {
-    // ...
-})
 
 module.exports = MyDB
 ```
@@ -838,30 +563,8 @@ module.exports = MyDB
 and you can use it in this way
 
 ```javascript
-var es = require('eventstore')({
+var es = require('@avanzu/eventstore')({
     type: MyDB,
 })
 // es.init...
 ```
-
-# License
-
-Copyright (c) 2018 Adriano Raiano, Jan Muehlemann
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
