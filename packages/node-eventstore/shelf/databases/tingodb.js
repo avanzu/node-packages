@@ -4,7 +4,7 @@ var util = require('util'),
     async = require('async'),
     tingodb = Store.use('tingodb')(),
     ObjectID = tingodb.ObjectID,
-    debug = require('debug')('eventstore:store:tingodb')
+    debug = require('debug')('@avanzu/eventstore/store/tingodb')
 
 function Tingo(options) {
     options = options || {}

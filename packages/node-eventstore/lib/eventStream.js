@@ -1,4 +1,4 @@
-var debug = require('debug')('eventstore:eventstream'),
+var debug = require('debug')('@avanzu/eventstore/eventstream'),
     _ = require('lodash'),
     Event = require('./event')
 

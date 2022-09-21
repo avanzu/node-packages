@@ -4,7 +4,7 @@ var util = require('util'),
     uuid = require('uuid'),
     elasticsearch = Store.use('elasticsearch'),
     elasticsearchVersion = Store.use('elasticsearch/package.json').version,
-    debug = require('debug')('eventstore:store:elasticsearch')
+    debug = require('debug')('@avanzu/eventstore/store/elasticsearch')
 
 function Elastic(options) {
     options = options || {}

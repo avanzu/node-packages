@@ -1,4 +1,4 @@
-var debug = require('debug')('eventstore:eventdispatcher')
+var debug = require('debug')('@avanzu/eventstore/eventdispatcher')
 
 /**
  * Triggers to publish all events in undispatchedEventsQueue.

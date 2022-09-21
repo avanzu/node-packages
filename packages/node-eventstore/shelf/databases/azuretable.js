@@ -4,7 +4,7 @@ var util = require('util'),
     async = require('async'),
     azure = Store.use('azure-storage'),
     eg = azure.TableUtilities.entityGenerator,
-    debug = require('debug')('eventstore:store:azuretable')
+    debug = require('debug')('@avanzu/eventstore/store/azuretable')
 
 function AzureTable(options) {
     options = options || {}

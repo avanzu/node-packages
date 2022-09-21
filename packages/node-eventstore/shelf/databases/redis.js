@@ -4,7 +4,7 @@ var util = require('util'),
     async = require('async'),
     redis = Store.use('redis'),
     jsondate = require('jsondate'),
-    debug = require('debug')('eventstore:store:redis')
+    debug = require('debug')('@avanzu/eventstore/store/redis')
 
 function Redis(options) {
     options = options || {}

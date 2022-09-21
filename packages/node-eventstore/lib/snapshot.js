@@ -1,4 +1,4 @@
-var debug = require('debug')('eventstore:snapshot')
+var debug = require('debug')('@avanzu/eventstore/snapshot')
 
 /**
  * Snapshot constructor

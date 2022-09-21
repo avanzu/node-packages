@@ -1,7 +1,7 @@
 var Store = require('../base'),
     _ = require('lodash'),
     jsondate = require('jsondate'),
-    debug = require('debug')('eventstore:store:inmemory')
+    debug = require('debug')('@avanzu/eventstore/store/inmemory')
 
 function deepFind(obj, pattern) {
     var found

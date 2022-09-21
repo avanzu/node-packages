@@ -1,4 +1,4 @@
-var debug = require('debug')('eventstore:event'),
+var debug = require('debug')('@avanzu/eventstore/event'),
     dotty = require('dotty')
 
 /**
