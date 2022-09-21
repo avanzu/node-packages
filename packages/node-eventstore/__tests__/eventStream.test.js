@@ -173,31 +173,18 @@ describe('EventStream', () => {
             })
 
             describe('calling commit', () => {
-                var commitCalledArg
-                function commitCheck(str, clb) {
-                    commitCalledArg = str
-                    clb(null)
-                }
-                var stream
-
-                beforeEach(() => {
-                    commitCalledArg = null
-                    stream = new EventStream(
+                it('it should add the passed events to the uncommitted event array', async () => {
+                    const commitCheck = jest.fn().mockResolvedValue()
+                    const stream = new EventStream(
                         { commit: commitCheck },
                         { aggregateId: 'myAggId', aggregate: 'myAgg', context: 'myCont' },
                         evts
                     )
-                })
 
-                it('it should add the passed events to the uncommitted event array', function (done) {
                     stream.addEvents([{ new1: 'event1' }, { new2: 'event2' }])
 
-                    stream.commit(function (err) {
-                        expect(err).not.toBeTruthy()
-                        expect(commitCalledArg).toEqual(stream)
-
-                        done()
-                    })
+                    await stream.commit()
+                    expect(commitCheck).toHaveBeenCalledWith(stream)
                 })
             })
         })

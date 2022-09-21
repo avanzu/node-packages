@@ -191,7 +191,7 @@ describe('The inmemory backend', () => {
                 callback
             )
             promise.catch(console.log)
-            await expect(promise).resolves.toEqual(0)
+            await expect(promise).resolves.toEqual(1)
             expect(callback).toHaveBeenCalled()
         })
     })
