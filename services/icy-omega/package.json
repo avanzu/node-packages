@@ -1,7 +1,7 @@
 {
     "name": "icy-omega",
     "description": "",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "homepage": "",
     "private": true,
     "main": "src",
@@ -28,8 +28,8 @@
         "ignore": []
     },
     "dependencies": {
-        "@avanzu/redis-composable": "^1.2.3",
-        "@avanzu/rhea-composable": "^1.8.4"
+        "@avanzu/redis-composable": "^1.2.4",
+        "@avanzu/rhea-composable": "^1.8.5"
     },
     "devDependencies": {
         "axios": "^0.26.1",
