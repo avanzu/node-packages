@@ -44,5 +44,6 @@
     "nanoid": "^3.3.2",
     "ramda": "^0.28.0",
     "rhea": "^3.0.0"
-  }
+  },
+  "gitHead": "be8f7393f0b7a11fefff647def5f507ab6bf87f9"
 }
