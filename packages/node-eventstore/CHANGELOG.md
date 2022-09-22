@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.18.0](https://github.com/avanzu/node-packages/compare/@avanzu/eventstore@1.17.1...@avanzu/eventstore@1.18.0) (2022-09-22)
+
+
+### Features
+
+* adds support for mongodb v4 without streaming ([7c39bb3](https://github.com/avanzu/node-packages/commit/7c39bb3487609c6a259f9336fceb5877ddc1ac80))
+
+
+
+
+
 ## [1.17.1](https://github.com/avanzu/node-packages/compare/@avanzu/eventstore@1.17.0...@avanzu/eventstore@1.17.1) (2022-09-21)
 
 **Note:** Version bump only for package @avanzu/eventstore

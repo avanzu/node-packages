@@ -1,7 +1,7 @@
 {
     "author": "Marc Bach <mail@avanzu.de>",
     "name": "@avanzu/eventstore",
-    "version": "1.17.1",
+    "version": "1.18.0",
     "contributors": [
         {
             "name": "Mard Bach",
