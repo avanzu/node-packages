@@ -1,6 +1,5 @@
 /* eslint-disable no-unused-vars */
 var EventEmitter = require('events').EventEmitter,
-    prequire = require('parent-require'),
     uuid = require('uuid').v4
 
 /**
