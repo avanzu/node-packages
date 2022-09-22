@@ -1,5 +1,7 @@
 const eventstore = require('..')
 const InMemory = require('../lib/databases/inmemory')
+const MongoDB = require('../lib/databases/mongodb')
+
 const Base = require('../lib/base')
 const Eventstore = require('../lib/eventstore')
 // const { default: async } = require('async')
@@ -652,8 +654,17 @@ describe('eventstore', () => {
                     host: process.env.__MONGO_HOST__,
                     port: process.env.__MONGO_PORT__,
                 },
+                {
+                    isStreamable: MongoDB.isStreamable(),
+                },
             ],
-            // ['inmemory', { type: 'inmemory' }],
+            [
+                'inmemory',
+                { type: 'inmemory' },
+                {
+                    isStreamable: InMemory.isStreamable(),
+                },
+            ],
             // [
             //     'redis',
             //     {
@@ -664,12 +675,12 @@ describe('eventstore', () => {
             //     },
             // ],
         ]
-        var streamingApiTypes = ['mongodb']
+        // var streamingApiTypes = ['mongodb']
         var positionTypes = ['mongodb', 'inmemory']
         const idle = (time) => new Promise((Ok) => setTimeout(Ok, time))
 
         //            types.forEach(function (type) {
-        describe.each(types)('Type %s', (type, options) => {
+        describe.each(types)('Type %s', (type, options, testOpts) => {
             debug('Implementation of ', type)
             var es = null
 
@@ -1122,74 +1133,82 @@ describe('eventstore', () => {
                         })
                     })
 
-                    if (streamingApiTypes.indexOf(type) !== -1) {
+                    if (testOpts.isStreamable) {
                         describe('streaming api', () => {
                             describe('streaming existing events', () => {
+                                beforeAll(async () => {
+                                    const id = await es.getNewId()
+
+                                    const stream = await es.getEventStream({
+                                        aggregateId: id,
+                                        aggregate: 'myStreamableAgg',
+                                        context: 'myCont',
+                                    })
+
+                                    stream.addEvents([
+                                        { one: 'one' },
+                                        { two: 'two' },
+                                        { three: 'three' },
+                                    ])
+
+                                    await stream.commit()
+                                })
                                 describe('and committing some new events', () => {
-                                    it('it should work as expected', (done) => {
+                                    it('it should work as expected', async () => {
                                         var evts = []
                                         var stream = es.streamEvents(
-                                            { aggregate: 'myAgg', context: 'myCont' },
+                                            { aggregate: 'myStreamableAgg', context: 'myCont' },
                                             0,
                                             3
                                         )
-                                        stream.on('data', function (e) {
-                                            evts.push(e)
-                                        })
-                                        stream.on('end', () => {
-                                            expect(evts.length).toEqual(3)
-                                            done()
-                                        })
+
+                                        stream.on('data', (e) => evts.push(e))
+                                        stream.on('end', () => {})
+
+                                        await idle(250)
+                                        expect(evts.length).toEqual(3)
                                     })
                                 })
                             })
                             describe('streaming all existing events, without query argument', () => {
                                 describe('and committing some new events', () => {
-                                    it('it should work as expected', (done) => {
+                                    it('it should work as expected', async () => {
                                         var evts = []
                                         var stream = es.streamEvents(0, 3)
-                                        stream.on('data', function (e) {
-                                            evts.push(e)
-                                        })
-                                        stream.on('end', () => {
-                                            expect(evts.length).toEqual(3)
-                                            done()
-                                        })
+                                        stream.on('data', (e) => evts.push(e))
+                                        stream.on('end', () => {})
+
+                                        await idle(250)
+                                        expect(evts.length).toEqual(3)
                                     })
                                 })
                             })
 
                             describe('requesting existing events since a date', () => {
                                 describe('and committing some new events', () => {
-                                    it('it should work as expected', (done) => {
+                                    it('it should work as expected', async () => {
                                         var evts = []
                                         var stream = es.streamEventsSince(
                                             new Date(2000, 1, 1),
                                             0,
                                             3
                                         )
-                                        stream.on('data', function (e) {
-                                            evts.push(e)
-                                        })
-                                        stream.on('end', () => {
-                                            expect(evts.length).toEqual(3)
-                                            done()
-                                        })
+                                        stream.on('data', (e) => evts.push(e))
+                                        stream.on('end', () => {})
+                                        await idle(250)
+                                        expect(evts.length).toEqual(3)
                                     })
                                 })
                             })
                             describe('requesting existing events by revision', () => {
                                 describe('and committing some new events', () => {
-                                    it('it should work as expected', (done) => {
+                                    it('it should work as expected', async () => {
                                         var evts = []
                                         var stream = es.streamEventsByRevision('myAggId2', 0, 3)
-                                        stream.on('data', function (e) {
-                                            evts.push(e)
-                                        })
-                                        stream.on('end', () => {
-                                            expect(evts.length).toEqual(3)
-                                            done()
-                                        })
+                                        stream.on('data', (e) => evts.push(e))
+                                        stream.on('end', () => {})
+                                        await idle(250)
+                                        expect(evts.length).toEqual(3)
                                     })
                                 })
                             })

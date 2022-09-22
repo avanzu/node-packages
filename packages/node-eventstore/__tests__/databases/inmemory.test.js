@@ -114,7 +114,7 @@ describe('The inmemory backend', () => {
                 .getLastEvent({ aggregateId: 'id1' })
                 .then(({ id }) => store.setEventToDispatched(id))
 
-            await expect(promise).resolves.toMatchObject({ ok: 1 })
+            await expect(promise).resolves.toEqual(store)
         })
 
         it('should add snapshots', async () => {
@@ -131,7 +131,7 @@ describe('The inmemory backend', () => {
                 },
             }
             const promise = store.addSnapshot(snap1)
-            await expect(promise).resolves.toMatchObject({ ok: 1 })
+            await expect(promise).resolves.toEqual(store)
         })
 
         it('should retrieve snapshots', async () => {

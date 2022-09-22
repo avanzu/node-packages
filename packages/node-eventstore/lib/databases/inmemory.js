@@ -389,7 +389,7 @@ class InMemory extends Store {
                 evt
             )
             delete this.undispatchedEvents._direct[id]
-            Ok({ ok: 1 })
+            Ok(this)
         })
     }
 
@@ -412,7 +412,7 @@ class InMemory extends Store {
                 this.snapshots[context][aggregate][aggregateId] || []
 
             this.snapshots[context][aggregate][aggregateId].push(snap)
-            Ok({ ok: 1 })
+            Ok(this)
         })
     }
 

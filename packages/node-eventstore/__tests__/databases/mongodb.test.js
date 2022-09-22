@@ -118,9 +118,9 @@ describe('The mongodb backend', () => {
         it('should mark a single event as undispatched', async () => {
             const promise = store
                 .getLastEvent({ aggregateId: 'id1' })
-                .then(({ _id }) => store.setEventToDispatched(_id))
+                .then(({ id }) => store.setEventToDispatched(id))
 
-            await expect(promise).resolves.toMatchObject({ ok: 1 })
+            await expect(promise).resolves.toEqual(store)
         })
 
         it('should add snapshots', async () => {
@@ -137,7 +137,7 @@ describe('The mongodb backend', () => {
                 },
             }
             const promise = store.addSnapshot(snap1)
-            await expect(promise).resolves.toMatchObject({ ok: 1 })
+            await expect(promise).resolves.toEqual(store)
         })
 
         it('should retrieve snapshots', async () => {

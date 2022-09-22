@@ -163,6 +163,14 @@ class Store extends EventEmitter {
         return implementError()
     }
 
+    get streamable() {
+        return this.constructor.isStreamable()
+    }
+
+    static isStreamable() {
+        return false
+    }
+
     static use(toRequire) {
         return require(toRequire)
     }

@@ -123,13 +123,12 @@ class Eventstore extends EventEmitter {
      * @returns {Stream} a stream with the events
      */
     streamEvents(query, skip, limit) {
-        if (!this.store.streamEvents) {
+        if (!this.store.streamable)
             throw new Error(
                 'Streaming API is not suppoted by ' +
                     (this.options.type || 'inmemory') +
                     ' db implementation.'
             )
-        }
 
         if (typeof query === 'number') {
             limit = skip
@@ -152,13 +151,12 @@ class Eventstore extends EventEmitter {
      * @returns {Stream} a stream with the events
      */
     streamEventsSince(commitStamp, skip, limit) {
-        if (!this.store.streamEvents) {
+        if (!this.store.streamable)
             throw new Error(
                 'Streaming API is not suppoted by ' +
                     (this.options.type || 'inmemory') +
                     ' db implementation.'
             )
-        }
 
         if (!commitStamp) {
             var err = new Error('Please pass in a date object!')

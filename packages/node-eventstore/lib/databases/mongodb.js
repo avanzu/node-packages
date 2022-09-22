@@ -146,6 +146,7 @@ class Mongo extends Store {
     connectV2(connectionUrl, options) {
         debug('connectV2 using %s and %o', connectionUrl, options)
         this.client = new MongoClient()
+
         return this.client
             .connect(connectionUrl, options)
             .then((db) => (this.db = db))
@@ -180,7 +181,6 @@ class Mongo extends Store {
         })
         return this.client
             .connect()
-            .then(inspect('Connected'))
             .then(() => (this.db = this.client.db()))
             .then(() => this.client.on('close', () => this.close()))
             .then(() => this.initDb())
@@ -203,6 +203,11 @@ class Mongo extends Store {
             this[method].call(this, connectionUrl, options).then(Ok, Err)
         })
     }
+
+    static isStreamable() {
+        return semver.satisfies(version, '<4.0.0')
+    }
+
     finish(ensureIndex) {
         return Promise.all([
             this.events[ensureIndex]({ aggregateId: 1, streamRevision: 1 }),
@@ -581,7 +586,7 @@ class Mongo extends Store {
             var updateCommand = { $unset: { dispatched: null } }
             this.events
                 .updateOne({ _id: id }, updateCommand)
-                .then(({ result }) => result)
+                .then(() => this)
                 .then(Ok, Err)
         })
     }
@@ -598,8 +603,7 @@ class Mongo extends Store {
             snap._id = snap.id
             this.snapshots
                 .insertOne(snap)
-                .then(({ result }) => result)
-                .then(inspect('snapshot result %o'))
+                .then(() => this)
                 .then(Ok, Err)
         })
     }
