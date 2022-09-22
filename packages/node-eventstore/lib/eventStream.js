@@ -1,6 +1,7 @@
 var debug = require('debug')('@avanzu/eventstore/eventstream'),
     _ = require('lodash'),
-    Event = require('./event')
+    Event = require('./event'),
+    TombstoneEvent = require('./tombstoneEvent')
 
 /**
  * EventStream constructor
@@ -61,6 +62,7 @@ class EventStream {
         this.context = query.context
         this.events = events || []
         this.uncommittedEvents = []
+        this.eventsToDispatch = []
         this.lastRevision = -1
 
         this.events = _.sortBy(this.events, 'streamRevision')
@@ -88,6 +90,12 @@ class EventStream {
      */
     addEvent(event) {
         new Event(this, event, this.eventstore.eventMappings)
+        return this
+    }
+
+    addTombstoneEvent() {
+        new TombstoneEvent(this, this, this.eventstore.eventMappings)
+        return this
     }
 
     /**
@@ -104,22 +112,23 @@ class EventStream {
         _.each(events, (evt) => {
             this.addEvent(evt)
         })
+        return this
     }
 
     /**
      * commits all uncommittedEvents
      * @param {Function} callback the function that will be called when this action has finished [optional]
      */
-    commit(callback = () => {}) {
+    commit() {
         return new Promise((Ok, Err) => {
             this.eventstore
                 .commit(this)
                 .then((res) => {
-                    callback(null, res)
+                    // callback(null, res)
                     Ok(res)
                 })
                 .catch((err) => {
-                    callback(err)
+                    // callback(err)
                     Err(err)
                 })
         })

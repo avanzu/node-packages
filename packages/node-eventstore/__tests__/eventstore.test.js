@@ -4,6 +4,7 @@ const MongoDB = require('../lib/databases/mongodb')
 
 const Base = require('../lib/base')
 const Eventstore = require('../lib/eventstore')
+const TombstoneEvent = require('../lib/tombstoneEvent')
 // const { default: async } = require('async')
 const debug = require('debug')('@avanzu/eventstore/tests')
 
@@ -656,6 +657,7 @@ describe('eventstore', () => {
                 },
                 {
                     isStreamable: MongoDB.isStreamable(),
+                    isDeletable: MongoDB.isDeletable(),
                 },
             ],
             [
@@ -663,6 +665,7 @@ describe('eventstore', () => {
                 { type: 'inmemory' },
                 {
                     isStreamable: InMemory.isStreamable(),
+                    isDeletable: InMemory.isDeletable(),
                 },
             ],
             // [
@@ -1215,7 +1218,7 @@ describe('eventstore', () => {
                         })
                     }
 
-                    if (positionTypes.indexOf(type) !== -1) {
+                    if (positionTypes.includes(type)) {
                         describe('setting event position option', () => {
                             beforeEach(async () => {
                                 es = eventstore({
@@ -1255,6 +1258,58 @@ describe('eventstore', () => {
                                 expect(st.events.length).toEqual(2)
                                 expect(st.events[0].payload.head.position).toEqual(1)
                                 expect(st.events[1].payload.head.position).toEqual(2)
+                            })
+                        })
+                    }
+
+                    if (testOpts.isDeletable) {
+                        describe('Deleting a stream', () => {
+                            beforeEach(async () => {
+                                const deletable = await es.getEventStream({
+                                    aggregateId: 'myDeletableAggregate',
+                                })
+
+                                deletable.addEvent({ foo: 'foo' })
+                                deletable.addEvent({ bar: 'bar' })
+                                await deletable.commit()
+
+                                await es.createSnapshot({
+                                    aggregateId: deletable.aggregateId,
+                                    data: { foo: 'foo', bar: 'bar' },
+                                })
+
+                                const unDeletable = await es.getEventStream({
+                                    aggregateId: 'myUnDeletableAggregate',
+                                })
+
+                                unDeletable.addEvent({ foo: 'foo' })
+                                unDeletable.addEvent({ bar: 'bar' })
+                                await unDeletable.commit()
+
+                                await es.createSnapshot({
+                                    aggregateId: unDeletable.aggregateId,
+                                    data: { foo: 'foo', bar: 'bar' },
+                                })
+                            })
+
+                            afterEach(() => es.store.clear())
+
+                            it('should remove events, transactions and snapshots', async () => {
+                                const countEventsOf = (aggregateId) =>
+                                    es.store.events.find({ aggregateId }).count()
+                                const countTransactionsOf = (aggregateId) =>
+                                    es.store.transactions.find({ aggregateId }).count()
+                                const countSnapshotsOf = (aggregateId) =>
+                                    es.store.snapshots.find({ aggregateId }).count()
+
+                                const stream = await es.deleteStream('myDeletableAggregate')
+                                expect(stream.eventsToDispatch).toHaveLength(1)
+                                expect(stream.eventsToDispatch[0]).toBeInstanceOf(TombstoneEvent)
+                                expect(stream.eventsToDispatch[0]).toHaveProperty('payload', stream)
+
+                                expect(await countEventsOf('myDeletableAggregate')).toEqual(0)
+                                expect(await countSnapshotsOf('myDeletableAggregate')).toEqual(0)
+                                expect(await countTransactionsOf('myDeletableAggregate')).toEqual(0)
                             })
                         })
                     }
@@ -1357,38 +1412,34 @@ describe('eventstore', () => {
                 expect(es.publisher).toBeTruthy()
             })
 
-            describe('when committing a new event', () => {
-                it('it should publish a new event', async () => {
-                    const publish = jest.fn()
-                    // function publish(evt, callback) {
-                    //     expect(evt.one).toEqual('event')
-                    //     callback()
-                    //
-                    // }
+            it('when committing a new event it should publish a new event', async () => {
+                const publish = jest.fn()
+                // function publish(evt, callback) {
+                //     expect(evt.one).toEqual('event')
+                //     callback()
+                //
+                // }
 
-                    var es = eventstore()
-                    es.useEventPublisher(publish)
-                    await es.init()
-                    const stream = await es.getEventStream('streamId')
-                    stream.addEvent({ one: 'event' })
+                var es = eventstore()
+                es.useEventPublisher(publish)
+                await es.init()
+                const stream = await es.getEventStream('streamId')
+                stream.addEvent({ one: 'event' })
 
-                    await stream.commit()
-                    expect(publish).toHaveBeenCalledWith(
-                        expect.objectContaining({ one: 'event' }),
-                        expect.any(Function)
-                    )
-                })
+                await stream.commit()
+                expect(publish).toHaveBeenCalledWith(
+                    expect.objectContaining({ one: 'event' }),
+                    expect.any(Function)
+                )
             })
         })
 
-        describe('and not defining a publisher function', () => {
-            it('it should not initialize an eventDispatcher', async () => {
-                debug('it should not initialize an eventDispatcher')
+        it('and not defining a publisher function it should not initialize an eventDispatcher', async () => {
+            debug('it should not initialize an eventDispatcher')
 
-                var es = eventstore()
-                await es.init()
-                expect(es.publisher).not.toBeTruthy()
-            })
+            var es = eventstore()
+            await es.init()
+            expect(es.publisher).not.toBeTruthy()
         })
     })
 })

@@ -170,6 +170,10 @@ class Store extends EventEmitter {
         return false
     }
 
+    static isDeletable() {
+        return false
+    }
+
     static use(toRequire) {
         return require(toRequire)
     }

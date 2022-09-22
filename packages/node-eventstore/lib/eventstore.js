@@ -558,6 +558,18 @@ class Eventstore extends EventEmitter {
     getNewId() {
         return this.store.getNewId()
     }
+
+    deleteStream(aggregateId) {
+        return new Promise((Ok, Err) => {
+            if (!this.store.deleteStream) throw new Error('Store does not support deletion')
+
+            this.store
+                .deleteStream(aggregateId)
+                .then((events) => new EventStream(this, { aggregateId }, events))
+                .then((stream) => stream.addTombstoneEvent())
+                .then(Ok, Err)
+        })
+    }
 }
 
 module.exports = Eventstore

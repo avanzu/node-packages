@@ -56,6 +56,11 @@ class Event {
             )
         }
 
+        this.addToStream(eventstream)
+        //eventstream.uncommittedEvents.push(this)
+    }
+
+    addToStream(eventstream) {
         eventstream.uncommittedEvents.push(this)
     }
 }

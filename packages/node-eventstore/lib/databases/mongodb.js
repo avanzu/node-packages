@@ -207,6 +207,9 @@ class Mongo extends Store {
     static isStreamable() {
         return semver.satisfies(version, '<4.0.0')
     }
+    static isDeletable() {
+        return true
+    }
 
     finish(ensureIndex) {
         return Promise.all([
@@ -264,8 +267,6 @@ class Mongo extends Store {
     }
 
     startHeartbeat() {
-        //
-
         var gracePeriod = Math.round(this.options.heartbeat / 2)
         this.heartbeatInterval = setInterval(() => {
             var graceTimer = setTimeout(() => {
@@ -736,56 +737,6 @@ class Mongo extends Store {
                 .then((xs) => xs.map(({ event }) => event))
                 .then(inspect('pending events %o'))
                 .then(Ok, Err)
-            /*
-            this.transactions.find({}).toArray((err, txs) => {
-                if (err) {
-                    debug(err)
-                    return Err(err)
-                }
-
-                if (txs.length === 0) {
-                    return Ok(txs)
-                }
-
-                var goodTxs = []
-
-                async.map(
-                    txs,
-                    (tx, clb) => {
-                        var findStatement = { commitId: tx._id, aggregateId: tx.aggregateId }
-
-                        if (tx.aggregate) {
-                            findStatement.aggregate = tx.aggregate
-                        }
-
-                        if (tx.context) {
-                            findStatement.context = tx.context
-                        }
-
-                        this.events.findOne(findStatement, (err, evt) => {
-                            if (err) {
-                                return clb(err)
-                            }
-
-                            if (evt) {
-                                goodTxs.push(evt)
-                                return clb(null)
-                            }
-
-                            this.transactions.deleteOne({ _id: tx._id }, clb)
-                        })
-                    },
-                    (err) => {
-                        if (err) {
-                            debug(err)
-                            return callback(err), Err(err)
-                        }
-
-                        callback(null, goodTxs), Ok(goodTxs)
-                    }
-                )
-            })
-            */
         })
     }
 
@@ -837,6 +788,24 @@ class Mongo extends Store {
                 .then(() => this.removeTransactions(lastEvt))
                 .then(() => this)
                 .then(Ok, Err)
+        })
+    }
+
+    deleteStream(aggregateId) {
+        const deleteEvents = () => this.events.deleteMany({ aggregateId })
+        const deleteSnapshots = () => this.snapshots.deleteMany({ aggregateId })
+        const deleteTransactions = () => this.transactions.deleteMany({ aggregateId })
+        const loadEvents = () => this.getEvents(aggregateId)
+
+        const deleteEntries = (events) =>
+            Promise.allSettled([deleteEvents(), deleteTransactions(), deleteSnapshots()]).then(
+                (results) => [events].concat(results)
+            )
+
+        return new Promise((Ok, Err) => {
+            loadEvents()
+                .then(deleteEntries)
+                .then(([events]) => Ok(events), Err)
         })
     }
 }
