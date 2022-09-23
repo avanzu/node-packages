@@ -1049,8 +1049,11 @@ describe('eventstore', () => {
 
                                 const stream = await es.deleteStream('myDeletableAggregate')
                                 expect(stream.eventsToDispatch).toHaveLength(1)
-                                expect(stream.eventsToDispatch[0]).toBeInstanceOf(TombstoneEvent)
-                                expect(stream.eventsToDispatch[0]).toHaveProperty('payload', stream)
+
+                                const [tombstone] = stream.eventsToDispatch
+
+                                expect(tombstone).toBeInstanceOf(TombstoneEvent)
+                                expect(tombstone).toHaveProperty('payload', stream)
 
                                 expect(await countEventsOf('myDeletableAggregate')).toEqual(0)
                                 expect(await countSnapshotsOf('myDeletableAggregate')).toEqual(0)

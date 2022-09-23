@@ -328,36 +328,32 @@ create a snapshot point
 const [snapshot, stream] = await es.getFromSnapshot('streamId')
 const snap = snapshot.data
 const history = stream.events
-, function(err, snapshot, stream) {
 
-  var snap = snapshot.data;
-  var history = stream.events; // events history from given snapshot
+// create a new snapshot depending on your rules
+if (history.length > myLimit) {
+await es.createSnapshot({
+    streamId: 'streamId',
+    data: myAggregate.getSnap(),
+    revision: stream.lastRevision,
+    version: 1 // optional
+});
 
-  // create a new snapshot depending on your rules
-  if (history.length > myLimit) {
-    await es.createSnapshot({
-      streamId: 'streamId',
-      data: myAggregate.getSnap(),
-      revision: stream.lastRevision,
-      version: 1 // optional
-    });
+// or
 
-    // or
-
-    await es.createSnapshot({
-      aggregateId: 'myAggregateId',
-      aggregate: 'person',          // optional
-      context: 'hr'                 // optional
-      data: myAggregate.getSnap(),
-      revision: stream.lastRevision,
-      version: 1 // optional
-    });
-  }
-
-  // go on: store new event and commit it
-  // stream.addEvents...
-
+await es.createSnapshot({
+    aggregateId: 'myAggregateId',
+    aggregate: 'person',          // optional
+    context: 'hr'                 // optional
+    data: myAggregate.getSnap(),
+    revision: stream.lastRevision,
+    version: 1 // optional
+});
 }
+
+// go on: store new event and commit it
+// stream.addEvents...
+
+
 ```
 
 You can automatically clean older snapshots by configuring the number of snapshots to keep with `maxSnapshotsCount` in `eventstore` options.
@@ -366,6 +362,24 @@ You can automatically clean older snapshots by configuring the number of snapsho
 
 ```javascript
 const evts = await es.getUndispatchedEvents()
+```
+## Deleting aggregates
+
+currently supported by: 
+
+ 1. mongodb 
+
+You can delete an aggregate including the event history, snapshots and transactions by calling `deleteStream`. 
+```js
+const deletedStream = await es.deleteStream('myStreamId')
+```
+The return value is the `EventStream` that has just been deleted. 
+
+This stream will contain an undispatched `TombstoneEvent` ready to be processed. 
+The `payload` attribute of that event contains the complete event history. 
+
+```js 
+const [tombstoneEvent] = deletedStream.eventsToDispatch 
 ```
 
 ## query your events
@@ -428,7 +442,7 @@ skip, limit always optional
 var skip = 0,
     limit = 100 // if you omit limit or you define it as -1 it will retrieve until the end
 
-cosnt events = await es.getEventsSince(new Date(2015, 5, 23), skip, limit)
+const events = await es.getEventsSince(new Date(2015, 5, 23), skip, limit)
 
 // or
 
