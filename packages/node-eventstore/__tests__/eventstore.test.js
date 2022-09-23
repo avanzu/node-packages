@@ -48,369 +48,206 @@ describe('eventstore', () => {
             })
         })
 
-        describe('with options of a non existing db implementation', () => {
-            it('it should throw an error', () => {
-                debug('it should throw an error')
+        it('with options of a non existing db implementation it should throw an error', () => {
+            debug('it should throw an error')
 
-                expect(() => eventstore({ type: 'strangeDb' })).toThrowError()
-            })
+            expect(() => eventstore({ type: 'strangeDb' })).toThrowError()
         })
 
-        describe('with options of an own db implementation', () => {
-            it('it should return with the an instance of that implementation', () => {
-                debug('it should return with the an instance of that implementation')
+        it('with options of an own db implementation it should return with the an instance of that implementation', () => {
+            debug('it should return with the an instance of that implementation')
 
-                var es = eventstore({ type: InMemory })
-                expect(es).toBeInstanceOf(Eventstore)
-                expect(es.useEventPublisher).toBeInstanceOf(Function)
-                expect(es.init).toBeInstanceOf(Function)
-                expect(es.streamEvents).toBeInstanceOf(Function)
-                expect(es.getEvents).toBeInstanceOf(Function)
-                expect(es.getEventsByRevision).toBeInstanceOf(Function)
-                expect(es.getEventStream).toBeInstanceOf(Function)
-                expect(es.getFromSnapshot).toBeInstanceOf(Function)
-                expect(es.createSnapshot).toBeInstanceOf(Function)
-                expect(es.commit).toBeInstanceOf(Function)
-                expect(es.getUndispatchedEvents).toBeInstanceOf(Function)
-                expect(es.setEventToDispatched).toBeInstanceOf(Function)
-                expect(es.getNewId).toBeInstanceOf(Function)
+            var es = eventstore({ type: InMemory })
+            expect(es).toBeInstanceOf(Eventstore)
+            expect(es.useEventPublisher).toBeInstanceOf(Function)
+            expect(es.init).toBeInstanceOf(Function)
+            expect(es.streamEvents).toBeInstanceOf(Function)
+            expect(es.getEvents).toBeInstanceOf(Function)
+            expect(es.getEventsByRevision).toBeInstanceOf(Function)
+            expect(es.getEventStream).toBeInstanceOf(Function)
+            expect(es.getFromSnapshot).toBeInstanceOf(Function)
+            expect(es.createSnapshot).toBeInstanceOf(Function)
+            expect(es.commit).toBeInstanceOf(Function)
+            expect(es.getUndispatchedEvents).toBeInstanceOf(Function)
+            expect(es.setEventToDispatched).toBeInstanceOf(Function)
+            expect(es.getNewId).toBeInstanceOf(Function)
 
-                expect(es.store).toBeInstanceOf(InMemory)
-            })
+            expect(es.store).toBeInstanceOf(InMemory)
         })
 
         describe('and checking the api function by calling', () => {
             describe('getEvents', () => {
                 var es = eventstore(),
-                    orgFunc = es.store.getEvents
+                    orgFunc = es.store.getEvents,
+                    mockFn = jest.fn().mockResolvedValue()
 
-                beforeEach(() => es.init())
+                beforeEach(() =>
+                    es
+                        .init()
+                        .then(() => (es.store.getEvents = mockFn))
+                        .then(() => jest.clearAllMocks())
+                )
+                afterEach(() => (es.store.getEvents = orgFunc))
 
-                afterEach(() => {
-                    es.store.getEvents = orgFunc
+                it('with nice arguments it should pass them correctly', async () => {
+                    const query = { aggregateId: 'myAggId', aggregate: 'myAgg', context: 'myCont' },
+                        skip = 2,
+                        limit = 32
+
+                    await es.getEvents(query, skip, limit)
+                    expect(mockFn).toHaveBeenCalledWith(query, skip, limit)
                 })
 
-                describe('with nice arguments', () => {
-                    it('it should pass them correctly', async () => {
-                        var given = {
-                            query: {
-                                aggregateId: 'myAggId',
-                                aggregate: 'myAgg',
-                                context: 'myCont',
-                            },
-                            skip: 2,
-                            limit: 32,
-                        }
-
-                        es.store.getEvents = jest.fn().mockResolvedValue()
-
-                        await es.getEvents(given.query, given.skip, given.limit)
-                        expect(es.store.getEvents).toHaveBeenCalledWith(
-                            given.query,
-                            given.skip,
-                            given.limit
-                        )
-                    })
+                it('with only the callback it should pass them correctly', async () => {
+                    await es.getEvents()
+                    expect(mockFn).toHaveBeenCalledWith({}, 0, -1)
                 })
 
-                describe('with only the callback', () => {
-                    it('it should pass them correctly', async () => {
-                        es.store.getEvents = jest.fn().mockResolvedValue()
+                it('with query and callback it should pass them correctly', async () => {
+                    const query = { aggregateId: 'myAggId', aggregate: 'myAgg', context: 'myCont' }
 
-                        await es.getEvents()
-                        expect(es.store.getEvents).toHaveBeenCalledWith({}, 0, -1)
-                    })
+                    await es.getEvents(query)
+                    expect(mockFn).toHaveBeenCalledWith(query, 0, -1)
                 })
 
-                describe('with query and callback', () => {
-                    it('it should pass them correctly', async () => {
-                        var given = {
-                            query: {
-                                aggregateId: 'myAggId',
-                                aggregate: 'myAgg',
-                                context: 'myCont',
-                            },
-                            callback: () => {},
-                        }
-
-                        es.store.getEvents = jest.fn().mockResolvedValue()
-
-                        await es.getEvents(given.query)
-                        expect(es.store.getEvents).toHaveBeenCalledWith(given.query, 0, -1)
-                    })
+                it('with skip and callback it should pass them correctly', async () => {
+                    await es.getEvents(3)
+                    expect(mockFn).toHaveBeenCalledWith({}, 3, -1)
                 })
 
-                describe('with skip and callback', () => {
-                    it('it should pass them correctly', async () => {
-                        var given = {
-                            skip: 3,
-                            callback: () => {},
-                        }
+                it('with query, skip and callback it should pass them correctly', async () => {
+                    const query = { aggregateId: 'myAggId', aggregate: 'myAgg', context: 'myCont' },
+                        skip = 3
 
-                        es.store.getEvents = jest.fn().mockResolvedValue()
-
-                        await es.getEvents(given.skip)
-                        expect(es.store.getEvents).toHaveBeenCalledWith({}, given.skip, -1)
-                    })
+                    await es.getEvents(query, skip)
+                    expect(mockFn).toHaveBeenCalledWith(query, skip, -1)
                 })
 
-                describe('with query, skip and callback', () => {
-                    it('it should pass them correctly', async () => {
-                        var given = {
-                            query: {
-                                aggregateId: 'myAggId',
-                                aggregate: 'myAgg',
-                                context: 'myCont',
-                            },
-                            skip: 3,
-                        }
+                it('with skip, limit and callback it should pass them correctly', async () => {
+                    const skip = 3,
+                        limit = 50
 
-                        es.store.getEvents = jest.fn().mockResolvedValue()
-
-                        await es.getEvents(given.query, given.skip)
-                        expect(es.store.getEvents).toHaveBeenCalledWith(given.query, given.skip, -1)
-                    })
+                    await es.getEvents(skip, limit)
+                    expect(mockFn).toHaveBeenCalledWith({}, skip, limit)
                 })
 
-                describe('with skip, limit and callback', () => {
-                    it('it should pass them correctly', async () => {
-                        var given = {
-                            skip: 3,
-                            limit: 50,
-                            callback: () => {},
-                        }
+                it('with query as string,  skip, limit and callback it should pass them correctly', async () => {
+                    const query = 'myAggId',
+                        skip = 3,
+                        limit = 50
 
-                        es.store.getEvents = jest.fn().mockResolvedValue()
-
-                        await es.getEvents(given.skip, given.limit)
-                        expect(es.store.getEvents).toHaveBeenCalledWith({}, given.skip, given.limit)
-                    })
-                })
-
-                describe('with query as string,  skip, limit and callback', () => {
-                    it('it should pass them correctly', async () => {
-                        var given = {
-                            query: 'myAggId',
-                            skip: 3,
-                            limit: 50,
-                            callback: () => {},
-                        }
-
-                        es.store.getEvents = jest.fn().mockResolvedValue()
-
-                        await es.getEvents(given.query, given.skip, given.limit)
-                        expect(es.store.getEvents).toHaveBeenCalledWith(
-                            { aggregateId: 'myAggId' },
-                            given.skip,
-                            given.limit
-                        )
-                    })
+                    await es.getEvents(query, skip, limit)
+                    expect(mockFn).toHaveBeenCalledWith({ aggregateId: 'myAggId' }, skip, limit)
                 })
             })
 
             describe('getEventsByRevision', () => {
                 var es = eventstore(),
-                    orgFunc = es.store.getEventsByRevision
+                    orgFunc = es.store.getEventsByRevision,
+                    mockFn = jest.fn().mockResolvedValue()
 
-                beforeEach(() => es.init())
+                beforeEach(() =>
+                    es
+                        .init()
+                        .then(() => (es.store.getEventsByRevision = mockFn))
+                        .then(() => jest.clearAllMocks())
+                )
 
                 afterEach(() => {
                     es.store.getEventsByRevision = orgFunc
                 })
 
-                describe('with nice arguments', () => {
-                    it('it should pass them correctly', async () => {
-                        var given = {
-                            query: {
-                                aggregateId: 'myAggId',
-                                aggregate: 'myAgg',
-                                context: 'myCont',
-                            },
-                            revMin: 2,
-                            revMax: 32,
-                        }
+                it('with nice arguments it should pass them correctly', async () => {
+                    const query = { aggregateId: 'myAggId', aggregate: 'myAgg', context: 'myCont' },
+                        revMin = 2,
+                        revMax = 32
 
-                        es.store.getEventsByRevision = jest.fn().mockResolvedValue()
-
-                        await es.getEventsByRevision(given.query, given.revMin, given.revMax)
-                        expect(es.store.getEventsByRevision).toHaveBeenCalledWith(
-                            given.query,
-                            given.revMin,
-                            given.revMax
-                        )
-                    })
+                    await es.getEventsByRevision(query, revMin, revMax)
+                    expect(mockFn).toHaveBeenCalledWith(query, revMin, revMax)
                 })
 
-                describe('with query and callback', () => {
-                    it('it should pass them correctly', async () => {
-                        var given = {
-                            query: {
-                                aggregateId: 'myAggId',
-                                aggregate: 'myAgg',
-                                context: 'myCont',
-                            },
-                        }
+                it('with query and callback it should pass them correctly', async () => {
+                    const query = { aggregateId: 'myAggId', aggregate: 'myAgg', context: 'myCont' }
 
-                        es.store.getEventsByRevision = jest.fn().mockResolvedValue()
-
-                        await es.getEventsByRevision(given.query)
-                        expect(es.store.getEventsByRevision).toHaveBeenCalledWith(
-                            given.query,
-                            0,
-                            -1
-                        )
-                    })
+                    await es.getEventsByRevision(query)
+                    expect(mockFn).toHaveBeenCalledWith(query, 0, -1)
                 })
 
-                describe('with query, revMin and callback', () => {
-                    it('it should pass them correctly', async () => {
-                        var given = {
-                            query: {
-                                aggregateId: 'myAggId',
-                                aggregate: 'myAgg',
-                                context: 'myCont',
-                            },
-                            revMin: 2,
-                        }
+                it('with query, revMin and callback it should pass them correctly', async () => {
+                    const query = { aggregateId: 'myAggId', aggregate: 'myAgg', context: 'myCont' },
+                        revMin = 2
 
-                        es.store.getEventsByRevision = jest.fn().mockResolvedValue()
-
-                        await es.getEventsByRevision(given.query, given.revMin)
-                        expect(es.store.getEventsByRevision).toHaveBeenCalledWith(
-                            given.query,
-                            given.revMin,
-                            -1
-                        )
-                    })
+                    await es.getEventsByRevision(query, revMin)
+                    expect(mockFn).toHaveBeenCalledWith(query, revMin, -1)
                 })
 
-                describe('with query as string, revMin, revMax and callback', () => {
-                    it('it should pass them correctly', async () => {
-                        var given = {
-                            query: 'myAggId',
-                            revMin: 2,
-                            revMax: 4,
-                        }
+                it('with query as string, revMin, revMax and callback it should pass them correctly', async () => {
+                    const query = 'myAggId',
+                        revMin = 2,
+                        revMax = 4
 
-                        es.store.getEventsByRevision = jest.fn().mockResolvedValue()
-
-                        await es.getEventsByRevision(given.query, given.revMin, given.revMax)
-                        expect(es.store.getEventsByRevision).toHaveBeenCalledWith(
-                            { aggregateId: 'myAggId' },
-                            given.revMin,
-                            given.revMax
-                        )
-                    })
+                    await es.getEventsByRevision(query, revMin, revMax)
+                    expect(mockFn).toHaveBeenCalledWith({ aggregateId: 'myAggId' }, revMin, revMax)
                 })
 
-                describe('with wrong query', () => {
-                    it('it should pass them correctly', async () => {
-                        await expect(es.getEventsByRevision(123, 3, 100)).rejects.toBeInstanceOf(
-                            Error
-                        )
-                    })
+                it('with wrong query it should pass them correctly', async () => {
+                    es.getEventsByRevision = orgFunc
+                    await expect(es.getEventsByRevision(123, 3, 100)).rejects.toBeInstanceOf(Error)
                 })
             })
 
             describe('getEventStream', () => {
                 var es = eventstore(),
-                    orgFunc = es.store.getEventsByRevision
+                    orgFunc = es.store.getEventsByRevision,
+                    mockFn = jest.fn().mockResolvedValue()
 
-                beforeEach(() => es.init())
+                beforeEach(() =>
+                    es
+                        .init()
+                        .then(() => (es.store.getEventsByRevision = mockFn))
+                        .then(() => jest.clearAllMocks())
+                )
 
                 afterEach(() => {
                     es.store.getEventsByRevision = orgFunc
                 })
 
-                describe('with nice arguments', () => {
-                    it('it should pass them correctly', async () => {
-                        var given = {
-                            query: {
-                                aggregateId: 'myAggId',
-                                aggregate: 'myAgg',
-                                context: 'myCont',
-                            },
-                            revMin: 2,
-                            revMax: 32,
-                        }
+                it('with nice arguments it should pass them correctly', async () => {
+                    const query = { aggregateId: 'myAggId', aggregate: 'myAgg', context: 'myCont' },
+                        revMin = 2,
+                        revMax = 32
 
-                        es.store.getEventsByRevision = jest.fn().mockResolvedValue()
-
-                        await es.getEventStream(given.query, given.revMin, given.revMax)
-                        expect(es.store.getEventsByRevision).toHaveBeenCalledWith(
-                            given.query,
-                            given.revMin,
-                            given.revMax
-                        )
-                    })
+                    await es.getEventStream(query, revMin, revMax)
+                    expect(mockFn).toHaveBeenCalledWith(query, revMin, revMax)
                 })
 
-                describe('with query and callback', () => {
-                    it('it should pass them correctly', async () => {
-                        var given = {
-                            query: {
-                                aggregateId: 'myAggId',
-                                aggregate: 'myAgg',
-                                context: 'myCont',
-                            },
-                        }
+                it('with query and callback it should pass them correctly', async () => {
+                    const query = { aggregateId: 'myAggId', aggregate: 'myAgg', context: 'myCont' }
 
-                        es.store.getEventsByRevision = jest.fn().mockResolvedValue()
-
-                        await es.getEventStream(given.query)
-                        expect(es.store.getEventsByRevision).toHaveBeenCalledWith(
-                            given.query,
-                            0,
-                            -1
-                        )
-                    })
+                    await es.getEventStream(query)
+                    expect(mockFn).toHaveBeenCalledWith(query, 0, -1)
                 })
 
-                describe('with query, revMin and callback', () => {
-                    it('it should pass them correctly', async () => {
-                        var given = {
-                            query: {
-                                aggregateId: 'myAggId',
-                                aggregate: 'myAgg',
-                                context: 'myCont',
-                            },
-                            revMin: 2,
-                        }
+                it('with query, revMin and callback it should pass them correctly', async () => {
+                    const query = { aggregateId: 'myAggId', aggregate: 'myAgg', context: 'myCont' },
+                        revMin = 2
 
-                        es.store.getEventsByRevision = jest.fn().mockResolvedValue()
-
-                        await es.getEventStream(given.query, given.revMin)
-                        expect(es.store.getEventsByRevision).toHaveBeenCalledWith(
-                            given.query,
-                            given.revMin,
-                            -1
-                        )
-                    })
+                    await es.getEventStream(query, revMin)
+                    expect(mockFn).toHaveBeenCalledWith(query, revMin, -1)
                 })
 
-                describe('with query as string, revMin, revMax and callback', () => {
-                    it('it should pass them correctly', async () => {
-                        var given = {
-                            query: 'myAggId',
-                            revMin: 2,
-                            revMax: 4,
-                        }
+                it('with query as string, revMin, revMax and callback it should pass them correctly', async () => {
+                    const query = 'myAggId',
+                        revMin = 2,
+                        revMax = 4
 
-                        es.store.getEventsByRevision = jest.fn().mockResolvedValue()
-
-                        await es.getEventStream(given.query, given.revMin, given.revMax)
-                        expect(es.store.getEventsByRevision).toHaveBeenCalledWith(
-                            { aggregateId: 'myAggId' },
-                            given.revMin,
-                            given.revMax
-                        )
-                    })
+                    await es.getEventStream(query, revMin, revMax)
+                    expect(mockFn).toHaveBeenCalledWith({ aggregateId: 'myAggId' }, revMin, revMax)
                 })
 
-                describe('with wrong query', () => {
-                    it('it should pass them correctly', async () => {
-                        await expect(es.getEventStream(123, 3, 100)).rejects.toBeInstanceOf(Error)
-                    })
+                it('with wrong query it should pass them correctly', async () => {
+                    es.store.getEventsByRevision = orgFunc
+                    await expect(es.getEventStream(123, 3, 100)).rejects.toBeInstanceOf(Error)
                 })
             })
 
@@ -424,62 +261,54 @@ describe('eventstore', () => {
                     es.store.getSnapshot = orgFunc
                 })
 
-                describe('with nice arguments', () => {
-                    it('it should pass them correctly', async () => {
-                        var given = {
-                            query: {
-                                aggregateId: 'myAggId',
-                                aggregate: 'myAgg',
-                                context: 'myCont',
-                            },
-                            revMax: 32,
-                        }
+                it('with nice arguments it should pass them correctly', async () => {
+                    var given = {
+                        query: {
+                            aggregateId: 'myAggId',
+                            aggregate: 'myAgg',
+                            context: 'myCont',
+                        },
+                        revMax: 32,
+                    }
 
-                        es.store.getSnapshot = jest.fn().mockResolvedValue()
+                    es.store.getSnapshot = jest.fn().mockResolvedValue()
 
-                        await es.getFromSnapshot(given.query, given.revMax)
-                        expect(es.store.getSnapshot).toHaveBeenCalledWith(given.query, given.revMax)
-                    })
+                    await es.getFromSnapshot(given.query, given.revMax)
+                    expect(es.store.getSnapshot).toHaveBeenCalledWith(given.query, given.revMax)
                 })
 
-                describe('with query and callback', () => {
-                    it('it should pass them correctly', async () => {
-                        var given = {
-                            query: {
-                                aggregateId: 'myAggId',
-                                aggregate: 'myAgg',
-                                context: 'myCont',
-                            },
-                        }
+                it('with query and callback it should pass them correctly', async () => {
+                    var given = {
+                        query: {
+                            aggregateId: 'myAggId',
+                            aggregate: 'myAgg',
+                            context: 'myCont',
+                        },
+                    }
 
-                        es.store.getSnapshot = jest.fn().mockResolvedValue()
+                    es.store.getSnapshot = jest.fn().mockResolvedValue()
 
-                        await es.getFromSnapshot(given.query)
-                        expect(es.store.getSnapshot).toHaveBeenCalledWith(given.query, -1)
-                    })
+                    await es.getFromSnapshot(given.query)
+                    expect(es.store.getSnapshot).toHaveBeenCalledWith(given.query, -1)
+                })
 
-                    describe('with query as string, revMax and callback', () => {
-                        it('it should pass them correctly', async () => {
-                            var given = {
-                                query: 'myAggId',
-                                revMax: 31,
-                            }
+                it('with query as string, revMax and callback it should pass them correctly', async () => {
+                    var given = {
+                        query: 'myAggId',
+                        revMax: 31,
+                    }
 
-                            es.store.getSnapshot = jest.fn().mockResolvedValue()
+                    es.store.getSnapshot = jest.fn().mockResolvedValue()
 
-                            await es.getFromSnapshot(given.query, given.revMax)
-                            expect(es.store.getSnapshot).toHaveBeenCalledWith(
-                                { aggregateId: 'myAggId' },
-                                given.revMax
-                            )
-                        })
-                    })
+                    await es.getFromSnapshot(given.query, given.revMax)
+                    expect(es.store.getSnapshot).toHaveBeenCalledWith(
+                        { aggregateId: 'myAggId' },
+                        given.revMax
+                    )
+                })
 
-                    describe('with wrong query', () => {
-                        it('it should pass them correctly', async () => {
-                            await expect(es.getFromSnapshot(123, 100)).rejects.toBeInstanceOf(Error)
-                        })
-                    })
+                it('with wrong query it should pass them correctly', async () => {
+                    await expect(es.getFromSnapshot(123, 100)).rejects.toBeInstanceOf(Error)
                 })
             })
 
@@ -493,60 +322,48 @@ describe('eventstore', () => {
                     es.store.addSnapshot = orgFunc
                 })
 
-                describe('with nice arguments', () => {
-                    it('it should pass them correctly', async () => {
-                        var obj = {
-                            aggregateId: 'myAggId',
-                            aggregate: 'myAgg',
-                            context: 'myCont',
-                            data: { snap: 'data' },
-                        }
+                it('with nice arguments it should pass them correctly', async () => {
+                    var obj = {
+                        aggregateId: 'myAggId',
+                        aggregate: 'myAgg',
+                        context: 'myCont',
+                        data: { snap: 'data' },
+                    }
 
-                        es.store.addSnapshot = jest.fn().mockResolvedValue()
+                    es.store.addSnapshot = jest.fn().mockResolvedValue()
 
-                        await es.createSnapshot(obj, () => {})
-                        expect(es.store.addSnapshot).toHaveBeenCalledWith(
-                            expect.objectContaining(obj)
-                        )
-                    })
+                    await es.createSnapshot(obj, () => {})
+                    expect(es.store.addSnapshot).toHaveBeenCalledWith(expect.objectContaining(obj))
                 })
 
-                describe('with streamId', () => {
-                    it('it should pass them correctly', async () => {
-                        var obj = {
-                            streamId: 'myAggId',
-                            data: { snap: 'data' },
-                        }
+                it('with streamId it should pass them correctly', async () => {
+                    var obj = {
+                        streamId: 'myAggId',
+                        data: { snap: 'data' },
+                    }
 
-                        es.store.addSnapshot = jest.fn().mockResolvedValue()
+                    es.store.addSnapshot = jest.fn().mockResolvedValue()
 
-                        await es.createSnapshot(obj, () => {})
-                        expect(es.store.addSnapshot).toHaveBeenCalledWith(
-                            expect.objectContaining(obj)
-                        )
-                    })
+                    await es.createSnapshot(obj, () => {})
+                    expect(es.store.addSnapshot).toHaveBeenCalledWith(expect.objectContaining(obj))
                 })
 
-                describe('with wrong aggregateId', () => {
-                    it('it should pass them correctly', async () => {
-                        var obj = {
-                            data: { snap: 'data' },
-                        }
+                it('with wrong aggregateId it should pass them correctly', async () => {
+                    var obj = {
+                        data: { snap: 'data' },
+                    }
 
-                        await expect(es.createSnapshot(obj)).rejects.toBeInstanceOf(Error)
-                    })
+                    await expect(es.createSnapshot(obj)).rejects.toBeInstanceOf(Error)
                 })
 
-                describe('with wrong data', () => {
-                    it('it should pass them correctly', async () => {
-                        var obj = {
-                            aggregateId: 'myAggId',
-                            aggregate: 'myAgg',
-                            context: 'myCont',
-                        }
+                it('with wrong data it should pass them correctly', async () => {
+                    var obj = {
+                        aggregateId: 'myAggId',
+                        aggregate: 'myAgg',
+                        context: 'myCont',
+                    }
 
-                        await expect(es.createSnapshot(obj)).rejects.toBeInstanceOf(Error)
-                    })
+                    await expect(es.createSnapshot(obj)).rejects.toBeInstanceOf(Error)
                 })
             })
 
@@ -568,44 +385,38 @@ describe('eventstore', () => {
                     es.store.addSnapshot = addSnapshot
                 })
 
-                describe('with streamId', () => {
-                    it('it should pass them correctly', async () => {
-                        var obj = {
-                            streamId: 'myAggId',
-                            aggregate: 'myAgg',
-                            context: 'myCont',
-                            data: { snap: 'data' },
-                        }
+                it('with streamId it should pass them correctly', async () => {
+                    var obj = {
+                        streamId: 'myAggId',
+                        aggregate: 'myAgg',
+                        context: 'myCont',
+                        data: { snap: 'data' },
+                    }
 
-                        es.store.cleanSnapshots = jest.fn().mockResolvedValue()
+                    es.store.cleanSnapshots = jest.fn().mockResolvedValue()
 
-                        await es.createSnapshot(obj)
-                        expect(es.store.cleanSnapshots).toHaveBeenCalledWith({
-                            aggregateId: obj.streamId,
-                            aggregate: obj.aggregate,
-                            context: obj.context,
-                        })
+                    await es.createSnapshot(obj)
+                    expect(es.store.cleanSnapshots).toHaveBeenCalledWith({
+                        aggregateId: obj.streamId,
+                        aggregate: obj.aggregate,
+                        context: obj.context,
                     })
                 })
 
-                describe('with options not activated', () => {
-                    beforeEach(() => {
-                        es.options.maxSnapshotsCount = 0
-                    })
+                it('with options not activated it should not clean snapshots', async () => {
+                    es.options.maxSnapshotsCount = 0
 
-                    it('it should not clean snapshots', async () => {
-                        var obj = {
-                            streamId: 'myAggId',
-                            aggregate: 'myAgg',
-                            context: 'myCont',
-                            data: { snap: 'data' },
-                        }
+                    var obj = {
+                        streamId: 'myAggId',
+                        aggregate: 'myAgg',
+                        context: 'myCont',
+                        data: { snap: 'data' },
+                    }
 
-                        es.store.cleanSnapshots = jest.fn().mockResolvedValue()
+                    es.store.cleanSnapshots = jest.fn().mockResolvedValue()
 
-                        await es.createSnapshot(obj)
-                        expect(es.store.cleanSnapshots).not.toHaveBeenCalled()
-                    })
+                    await es.createSnapshot(obj)
+                    expect(es.store.cleanSnapshots).not.toHaveBeenCalled()
                 })
             })
 
@@ -619,30 +430,26 @@ describe('eventstore', () => {
                     es.store.setEventToDispatched = orgFunc
                 })
 
-                describe('with an event', () => {
-                    it('it should pass it correctly', async () => {
-                        var evt = {
-                            id: '1234',
-                        }
+                it('with an event it should pass it correctly', async () => {
+                    var evt = {
+                        id: '1234',
+                    }
 
-                        es.store.setEventToDispatched = jest.fn().mockResolvedValue()
+                    es.store.setEventToDispatched = jest.fn().mockResolvedValue()
 
-                        await es.setEventToDispatched(evt, () => {})
-                        expect(es.store.setEventToDispatched).toHaveBeenCalledWith(evt.id)
-                    })
+                    await es.setEventToDispatched(evt, () => {})
+                    expect(es.store.setEventToDispatched).toHaveBeenCalledWith(evt.id)
                 })
 
-                describe('with a commitId', () => {
-                    it('it should pass it correctly', async () => {
-                        var evt = {
-                            commitId: '1234',
-                        }
+                it('with a commitId it should pass it correctly', async () => {
+                    var evt = {
+                        commitId: '1234',
+                    }
 
-                        es.store.setEventToDispatched = jest.fn().mockResolvedValue()
+                    es.store.setEventToDispatched = jest.fn().mockResolvedValue()
 
-                        await es.setEventToDispatched(evt.commitId, () => {})
-                        expect(es.store.setEventToDispatched).toHaveBeenCalledWith(evt.commitId)
-                    })
+                    await es.setEventToDispatched(evt.commitId, () => {})
+                    expect(es.store.setEventToDispatched).toHaveBeenCalledWith(evt.commitId)
                 })
             })
         })
@@ -689,42 +496,32 @@ describe('eventstore', () => {
 
             beforeAll(() => debug(type, options))
 
-            describe('calling init without callback', () => {
-                afterEach(async () => {
-                    await es.store.disconnect()
-                    await idle(100)
-                })
+            it('calling init without callback it should emit connect', async () => {
+                debug('it should emit connect')
 
-                beforeEach(() => {
-                    es = eventstore(options)
-                })
+                es = eventstore(options)
 
-                it('it should emit connect', async () => {
-                    debug('it should emit connect')
+                await es.store.disconnect()
 
-                    const connect = jest.fn()
-                    es.once('connect', connect)
-                    await es.init()
-                    expect(connect).toHaveBeenCalled()
-                })
+                const connect = jest.fn()
+                es.once('connect', connect)
+                await es.init()
+                await es.store.disconnect()
+                expect(connect).toHaveBeenCalled()
             })
 
             describe('having initialized (connected)', () => {
-                describe('calling disconnect on store', () => {
-                    beforeEach(async () => {
-                        es = eventstore(options)
-                        await es.init()
-                    })
+                it('calling disconnect on store it should callback successfully', async () => {
+                    debug('it should callback successfully')
 
-                    it('it should callback successfully', async () => {
-                        debug('it should callback successfully')
+                    es = eventstore(options)
+                    await es.init()
 
-                        const disconnect = jest.fn()
-                        es.once('disconnect', disconnect)
-                        await es.store.disconnect()
+                    const disconnect = jest.fn()
+                    es.once('disconnect', disconnect)
+                    await es.store.disconnect()
 
-                        expect(disconnect).toHaveBeenCalled()
-                    })
+                    expect(disconnect).toHaveBeenCalled()
                 })
 
                 describe('using the eventstore', () => {
@@ -736,269 +533,234 @@ describe('eventstore', () => {
 
                     afterAll(async () => await es.store.clear())
 
-                    describe('calling getNewId', () => {
-                        it('it should callback with a new Id as string', async () => {
-                            debug('it should callback with a new Id as string')
+                    it('calling getNewId it should callback with a new Id as string', async () => {
+                        debug('it should callback with a new Id as string')
 
-                            const id = await es.getNewId()
-                            expect(id).toMatch(/.+/)
-                        })
+                        const id = await es.getNewId()
+                        expect(id).toMatch(/.+/)
                     })
 
-                    describe('requesting a new eventstream', () => {
-                        describe('and committing some new events', () => {
-                            it('it should work as expected', async () => {
-                                debug('it should work as expected')
+                    it('requesting a new eventstream and committing some new events it should work as expected', async () => {
+                        debug('it should work as expected')
 
-                                const stream = await es.getEventStream({
-                                    aggregateId: 'myAggId',
-                                    aggregate: 'myAgg',
-                                    context: 'myCont',
-                                })
-                                expect(stream.lastRevision).toEqual(-1)
-
-                                stream.addEvents([
-                                    { one: 'event1' },
-                                    { two: 'event2' },
-                                    { three: 'event3' },
-                                ])
-
-                                expect(stream.streamId).toEqual('myAggId')
-                                expect(stream.uncommittedEvents.length).toEqual(3)
-                                expect(stream.events.length).toEqual(0)
-                                expect(stream.lastRevision).toEqual(-1)
-
-                                const str = await stream.commit()
-                                expect(str).toEqual(stream)
-
-                                expect(str.uncommittedEvents.length).toEqual(0)
-                                expect(str.events.length).toEqual(3)
-                                expect(str.lastRevision).toEqual(2)
-
-                                expect(str.events[0].commitSequence).toEqual(0)
-                                expect(str.events[1].commitSequence).toEqual(1)
-                                expect(str.events[2].commitSequence).toEqual(2)
-
-                                expect(str.events[0].restInCommitStream).toEqual(2)
-                                expect(str.events[1].restInCommitStream).toEqual(1)
-                                expect(str.events[2].restInCommitStream).toEqual(0)
-
-                                expect(str.eventsToDispatch.length).toEqual(3)
-                            })
+                        const stream = await es.getEventStream({
+                            aggregateId: 'myAggId',
+                            aggregate: 'myAgg',
+                            context: 'myCont',
                         })
+                        expect(stream.lastRevision).toEqual(-1)
+
+                        stream.addEvents([
+                            { one: 'event1' },
+                            { two: 'event2' },
+                            { three: 'event3' },
+                        ])
+
+                        expect(stream.streamId).toEqual('myAggId')
+                        expect(stream.uncommittedEvents.length).toEqual(3)
+                        expect(stream.events.length).toEqual(0)
+                        expect(stream.lastRevision).toEqual(-1)
+
+                        const str = await stream.commit()
+                        expect(str).toEqual(stream)
+
+                        expect(str.uncommittedEvents.length).toEqual(0)
+                        expect(str.events.length).toEqual(3)
+                        expect(str.lastRevision).toEqual(2)
+
+                        expect(str.events[0].commitSequence).toEqual(0)
+                        expect(str.events[1].commitSequence).toEqual(1)
+                        expect(str.events[2].commitSequence).toEqual(2)
+
+                        expect(str.events[0].restInCommitStream).toEqual(2)
+                        expect(str.events[1].restInCommitStream).toEqual(1)
+                        expect(str.events[2].restInCommitStream).toEqual(0)
+
+                        expect(str.eventsToDispatch.length).toEqual(3)
                     })
 
-                    describe('requesting an existing eventstream', () => {
-                        describe('and committing some new events', () => {
-                            beforeEach(async () => {
-                                const stream = await es.getEventStream({
-                                    aggregateId: 'myAggId2',
-                                    aggregate: 'myAgg',
-                                    context: 'myCont',
-                                })
-
-                                stream.addEvents([
-                                    { one: 'event1' },
-                                    { two: 'event2' },
-                                    { three: 'event3' },
-                                ])
-
-                                await stream.commit()
+                    describe('requesting an existing eventstream and committing some new events', () => {
+                        beforeEach(async () => {
+                            const stream = await es.getEventStream({
+                                aggregateId: 'myAggId2',
+                                aggregate: 'myAgg',
+                                context: 'myCont',
                             })
 
-                            it('it should work as expected', async () => {
-                                debug('it should work as expected')
+                            stream.addEvents([
+                                { one: 'event1' },
+                                { two: 'event2' },
+                                { three: 'event3' },
+                            ])
 
-                                const stream = await es.getEventStream({
-                                    aggregateId: 'myAggId2',
-                                    aggregate: 'myAgg',
-                                    context: 'myCont',
-                                })
-                                expect(stream.lastRevision).toEqual(2)
-
-                                await stream.addEvents([{ for: 'event4' }, { five: 'event5' }])
-
-                                expect(stream.streamId).toEqual('myAggId2')
-                                expect(stream.uncommittedEvents.length).toEqual(2)
-                                expect(stream.events.length).toEqual(3)
-                                expect(stream.lastRevision).toEqual(2)
-
-                                const str = await stream.commit()
-                                expect(str).toEqual(stream)
-
-                                expect(str.uncommittedEvents.length).toEqual(0)
-                                expect(str.events.length).toEqual(5)
-                                expect(str.lastRevision).toEqual(4)
-
-                                expect(str.events[3].commitSequence).toEqual(0)
-                                expect(str.events[4].commitSequence).toEqual(1)
-
-                                expect(str.events[3].restInCommitStream).toEqual(1)
-                                expect(str.events[4].restInCommitStream).toEqual(0)
-
-                                expect(str.eventsToDispatch.length).toEqual(2)
-                            })
-
-                            it('it should be able to retrieve them', async () => {
-                                debug('it should be able to retrieve them')
-
-                                const evts = await es.getEvents({
-                                    aggregateId: 'myAggId2',
-                                    aggregate: 'myAgg',
-                                    context: 'myCont',
-                                })
-                                expect(evts.length).toEqual(8)
-                            })
-
-                            it('it should be able to retrieve by context', async () => {
-                                debug('it should be able to retrieve by context')
-
-                                const evts = await es.getEvents({ context: 'myCont' })
-                                expect(evts.length).toEqual(14)
-                            })
+                            await stream.commit()
                         })
-                    })
 
-                    describe('requesting existing events and using next function', () => {
-                        describe('and committing some new events', () => {
-                            it('it should work as expected', async () => {
-                                debug('it should work as expected')
+                        it('it should work as expected', async () => {
+                            debug('it should work as expected')
 
-                                const evts = await es.getEvents(
-                                    { aggregate: 'myAgg', context: 'myCont' },
-                                    0,
-                                    3
-                                )
-                                expect(evts.length).toEqual(3)
-
-                                expect(evts.next).toBeInstanceOf(Function)
-
-                                const nextEvts = await evts.next()
-                                expect(nextEvts.length).toEqual(3)
-
-                                expect(nextEvts.next).toBeInstanceOf(Function)
-
-                                const nextNextEvts = await nextEvts.next()
-                                expect(nextNextEvts.length).toEqual(3)
-
-                                expect(nextNextEvts.next).toBeInstanceOf(Function)
+                            const stream = await es.getEventStream({
+                                aggregateId: 'myAggId2',
+                                aggregate: 'myAgg',
+                                context: 'myCont',
                             })
+                            expect(stream.lastRevision).toEqual(2)
+
+                            await stream.addEvents([{ for: 'event4' }, { five: 'event5' }])
+
+                            expect(stream.streamId).toEqual('myAggId2')
+                            expect(stream.uncommittedEvents.length).toEqual(2)
+                            expect(stream.events.length).toEqual(3)
+                            expect(stream.lastRevision).toEqual(2)
+
+                            const str = await stream.commit()
+                            expect(str).toEqual(stream)
+
+                            expect(str.uncommittedEvents.length).toEqual(0)
+                            expect(str.events.length).toEqual(5)
+                            expect(str.lastRevision).toEqual(4)
+
+                            expect(str.events[3].commitSequence).toEqual(0)
+                            expect(str.events[4].commitSequence).toEqual(1)
+
+                            expect(str.events[3].restInCommitStream).toEqual(1)
+                            expect(str.events[4].restInCommitStream).toEqual(0)
+
+                            expect(str.eventsToDispatch.length).toEqual(2)
                         })
-                    })
 
-                    describe('requesting all existing events, without query argument and using next function', () => {
-                        debug(
-                            'requesting all existing events, without query argument and using next function'
-                        )
-                        describe('and committing some new events', () => {
-                            it('it should work as expected', async () => {
-                                debug('it should work as expected')
+                        it('it should be able to retrieve them', async () => {
+                            debug('it should be able to retrieve them')
 
-                                const evts = await es.getEvents(0, 3)
-                                expect(evts.length).toEqual(3)
-
-                                expect(evts.next).toBeInstanceOf(Function)
-
-                                const nextEvts = await evts.next()
-                                expect(nextEvts.length).toEqual(3)
-
-                                expect(nextEvts.next).toBeInstanceOf(Function)
-
-                                const nextNextEvts = await nextEvts.next()
-                                expect(nextNextEvts.length).toEqual(3)
-
-                                expect(nextNextEvts.next).toBeInstanceOf(Function)
+                            const evts = await es.getEvents({
+                                aggregateId: 'myAggId2',
+                                aggregate: 'myAgg',
+                                context: 'myCont',
                             })
+                            expect(evts.length).toEqual(8)
                         })
-                    })
 
-                    describe('requesting existing events since a date and using next function', () => {
-                        describe('and committing some new events', () => {
-                            it('it should work as expected', async () => {
-                                debug('it should work as expected')
+                        it('it should be able to retrieve by context', async () => {
+                            debug('it should be able to retrieve by context')
 
-                                const evts = await es.getEventsSince(new Date(2000, 1, 1), 0, 3)
-                                expect(evts.length).toEqual(3)
-
-                                expect(evts.next).toBeInstanceOf(Function)
-
-                                const nextEvts = await evts.next()
-                                expect(nextEvts.length).toEqual(3)
-
-                                expect(nextEvts.next).toBeInstanceOf(Function)
-
-                                const nextNextEvts = await nextEvts.next()
-                                expect(nextNextEvts.length).toEqual(3)
-
-                                expect(nextNextEvts.next).toBeInstanceOf(Function)
-                            })
-                        })
-                    })
-
-                    describe('requesting all undispatched events', () => {
-                        it('it should return the correct events', async () => {
-                            debug('it should return the correct events')
-
-                            const evts = await es.getUndispatchedEvents()
+                            const evts = await es.getEvents({ context: 'myCont' })
                             expect(evts.length).toEqual(14)
                         })
                     })
 
-                    describe('requesting all undispatched events by streamId', () => {
-                        it('it should return the correct events', async () => {
-                            debug('it should return the correct events')
+                    it('requesting existing events and using next function and committing some new events it should work as expected', async () => {
+                        debug('it should work as expected')
 
-                            const evts = await es.getUndispatchedEvents('myAggId2')
-                            expect(evts.length).toEqual(11)
-                        })
+                        const evts = await es.getEvents(
+                            { aggregate: 'myAgg', context: 'myCont' },
+                            0,
+                            3
+                        )
+                        expect(evts.length).toEqual(3)
+
+                        expect(evts.next).toBeInstanceOf(Function)
+
+                        const nextEvts = await evts.next()
+                        expect(nextEvts.length).toEqual(3)
+
+                        expect(nextEvts.next).toBeInstanceOf(Function)
+
+                        const nextNextEvts = await nextEvts.next()
+                        expect(nextNextEvts.length).toEqual(3)
+
+                        expect(nextNextEvts.next).toBeInstanceOf(Function)
+                    })
+
+                    it('requesting all existing events, without query argument and using next function and committing some new events it should work as expected', async () => {
+                        debug('it should work as expected')
+
+                        const evts = await es.getEvents(0, 3)
+                        expect(evts.length).toEqual(3)
+
+                        expect(evts.next).toBeInstanceOf(Function)
+
+                        const nextEvts = await evts.next()
+                        expect(nextEvts.length).toEqual(3)
+
+                        expect(nextEvts.next).toBeInstanceOf(Function)
+
+                        const nextNextEvts = await nextEvts.next()
+                        expect(nextNextEvts.length).toEqual(3)
+
+                        expect(nextNextEvts.next).toBeInstanceOf(Function)
+                    })
+
+                    it('requesting existing events since a date and using next function and committing some new events it should work as expected', async () => {
+                        debug('it should work as expected')
+
+                        const evts = await es.getEventsSince(new Date(2000, 1, 1), 0, 3)
+                        expect(evts.length).toEqual(3)
+
+                        expect(evts.next).toBeInstanceOf(Function)
+
+                        const nextEvts = await evts.next()
+                        expect(nextEvts.length).toEqual(3)
+
+                        expect(nextEvts.next).toBeInstanceOf(Function)
+
+                        const nextNextEvts = await nextEvts.next()
+                        expect(nextNextEvts.length).toEqual(3)
+
+                        expect(nextNextEvts.next).toBeInstanceOf(Function)
+                    })
+
+                    it('requesting all undispatched events it should return the correct events', async () => {
+                        debug('it should return the correct events')
+
+                        const evts = await es.getUndispatchedEvents()
+                        expect(evts.length).toEqual(14)
+                    })
+
+                    it('requesting all undispatched events by streamId it should return the correct events', async () => {
+                        debug('it should return the correct events')
+
+                        const evts = await es.getUndispatchedEvents('myAggId2')
+                        expect(evts.length).toEqual(11)
                     })
 
                     describe('requesting all undispatched events by query', () => {
-                        describe('aggregateId', () => {
-                            it('it should return the correct events', async () => {
-                                debug('it should return the correct events')
+                        it('aggregateId it should return the correct events', async () => {
+                            debug('it should return the correct events')
 
-                                const evts = await es.getUndispatchedEvents({
-                                    aggregateId: 'myAggId',
-                                })
-                                expect(evts.length).toEqual(3)
+                            const evts = await es.getUndispatchedEvents({
+                                aggregateId: 'myAggId',
                             })
+                            expect(evts.length).toEqual(3)
                         })
 
-                        describe('aggregate', () => {
-                            it('it should return the correct events', async () => {
-                                debug('it should return the correct events')
+                        it('aggregate it should return the correct events', async () => {
+                            debug('it should return the correct events')
 
-                                const evts = await es.getUndispatchedEvents({
-                                    aggregate: 'myAgg',
-                                })
-                                expect(evts.length).toEqual(14)
+                            const evts = await es.getUndispatchedEvents({
+                                aggregate: 'myAgg',
                             })
+                            expect(evts.length).toEqual(14)
                         })
 
-                        describe('context', () => {
-                            it('it should return the correct events', async () => {
-                                debug('it should return the correct events')
+                        it('context it should return the correct events', async () => {
+                            debug('it should return the correct events')
 
-                                const evts = await es.getUndispatchedEvents({
-                                    context: 'myCont',
-                                })
-                                expect(evts.length).toEqual(14)
+                            const evts = await es.getUndispatchedEvents({
+                                context: 'myCont',
                             })
+                            expect(evts.length).toEqual(14)
                         })
                     })
 
-                    describe('setting an event to dispatched', () => {
-                        it('it should work correctly', async () => {
-                            debug('it should work correctly')
+                    it('setting an event to dispatched it should work correctly', async () => {
+                        debug('it should work correctly')
 
-                            const evts = await es.getUndispatchedEvents()
-                            expect(evts.length).toEqual(14)
+                        const evts = await es.getUndispatchedEvents()
+                        expect(evts.length).toEqual(14)
 
-                            await es.setEventToDispatched(evts[0])
-                            const nextEvts = await es.getUndispatchedEvents()
-                            expect(nextEvts.length).toEqual(13)
-                        })
+                        await es.setEventToDispatched(evts[0])
+                        const nextEvts = await es.getUndispatchedEvents()
+                        expect(nextEvts.length).toEqual(13)
                     })
 
                     describe('creating a snapshot', () => {
@@ -1137,83 +899,66 @@ describe('eventstore', () => {
                     })
 
                     if (testOpts.isStreamable) {
-                        describe('streaming api', () => {
-                            describe('streaming existing events', () => {
-                                beforeAll(async () => {
-                                    const id = await es.getNewId()
+                        describe('streaming api streaming existing events', () => {
+                            beforeAll(async () => {
+                                const id = await es.getNewId()
 
-                                    const stream = await es.getEventStream({
-                                        aggregateId: id,
-                                        aggregate: 'myStreamableAgg',
-                                        context: 'myCont',
-                                    })
-
-                                    stream.addEvents([
-                                        { one: 'one' },
-                                        { two: 'two' },
-                                        { three: 'three' },
-                                    ])
-
-                                    await stream.commit()
+                                const stream = await es.getEventStream({
+                                    aggregateId: id,
+                                    aggregate: 'myStreamableAgg',
+                                    context: 'myCont',
                                 })
-                                describe('and committing some new events', () => {
-                                    it('it should work as expected', async () => {
-                                        var evts = []
-                                        var stream = es.streamEvents(
-                                            { aggregate: 'myStreamableAgg', context: 'myCont' },
-                                            0,
-                                            3
-                                        )
 
-                                        stream.on('data', (e) => evts.push(e))
-                                        stream.on('end', () => {})
+                                stream.addEvents([
+                                    { one: 'one' },
+                                    { two: 'two' },
+                                    { three: 'three' },
+                                ])
 
-                                        await idle(250)
-                                        expect(evts.length).toEqual(3)
-                                    })
-                                })
-                            })
-                            describe('streaming all existing events, without query argument', () => {
-                                describe('and committing some new events', () => {
-                                    it('it should work as expected', async () => {
-                                        var evts = []
-                                        var stream = es.streamEvents(0, 3)
-                                        stream.on('data', (e) => evts.push(e))
-                                        stream.on('end', () => {})
-
-                                        await idle(250)
-                                        expect(evts.length).toEqual(3)
-                                    })
-                                })
+                                await stream.commit()
                             })
 
-                            describe('requesting existing events since a date', () => {
-                                describe('and committing some new events', () => {
-                                    it('it should work as expected', async () => {
-                                        var evts = []
-                                        var stream = es.streamEventsSince(
-                                            new Date(2000, 1, 1),
-                                            0,
-                                            3
-                                        )
-                                        stream.on('data', (e) => evts.push(e))
-                                        stream.on('end', () => {})
-                                        await idle(250)
-                                        expect(evts.length).toEqual(3)
-                                    })
-                                })
+                            it('and committing some new events it should work as expected', async () => {
+                                var evts = []
+                                var stream = es.streamEvents(
+                                    { aggregate: 'myStreamableAgg', context: 'myCont' },
+                                    0,
+                                    3
+                                )
+
+                                stream.on('data', (e) => evts.push(e))
+                                stream.on('end', () => {})
+
+                                await idle(250)
+                                expect(evts.length).toEqual(3)
                             })
-                            describe('requesting existing events by revision', () => {
-                                describe('and committing some new events', () => {
-                                    it('it should work as expected', async () => {
-                                        var evts = []
-                                        var stream = es.streamEventsByRevision('myAggId2', 0, 3)
-                                        stream.on('data', (e) => evts.push(e))
-                                        stream.on('end', () => {})
-                                        await idle(250)
-                                        expect(evts.length).toEqual(3)
-                                    })
-                                })
+
+                            it('streaming all existing events, without query argument and committing some new events it should work as expected', async () => {
+                                var evts = []
+                                var stream = es.streamEvents(0, 3)
+                                stream.on('data', (e) => evts.push(e))
+                                stream.on('end', () => {})
+
+                                await idle(250)
+                                expect(evts.length).toEqual(3)
+                            })
+
+                            it('requesting existing events since a date and committing some new events it should work as expected', async () => {
+                                var evts = []
+                                var stream = es.streamEventsSince(new Date(2000, 1, 1), 0, 3)
+                                stream.on('data', (e) => evts.push(e))
+                                stream.on('end', () => {})
+                                await idle(250)
+                                expect(evts.length).toEqual(3)
+                            })
+
+                            it('requesting existing events by revision and committing some new events it should work as expected', async () => {
+                                var evts = []
+                                var stream = es.streamEventsByRevision('myAggId2', 0, 3)
+                                stream.on('data', (e) => evts.push(e))
+                                stream.on('end', () => {})
+                                await idle(250)
+                                expect(evts.length).toEqual(3)
                             })
                         })
                     }
@@ -1318,52 +1063,46 @@ describe('eventstore', () => {
         })
         //            })
 
-        describe('and defining the commitStamp option', () => {
-            it('it should save the commitStamp correctly', async () => {
-                debug('it should save the commitStamp correctly')
+        it('and defining the commitStamp option it should save the commitStamp correctly', async () => {
+            debug('it should save the commitStamp correctly')
 
-                var es = eventstore()
-                es.defineEventMappings({ commitStamp: 'head.date' })
-                await es.init()
-                const stream = await es.getEventStream('streamIdWithDate')
-                stream.addEvent({ one: 'event' })
+            var es = eventstore()
+            es.defineEventMappings({ commitStamp: 'head.date' })
+            await es.init()
+            const stream = await es.getEventStream('streamIdWithDate')
+            stream.addEvent({ one: 'event' })
 
-                const st = await stream.commit()
-                expect(st.events.length).toEqual(1)
-                expect(st.events[0].payload.head.date).toEqual(st.events[0].commitStamp)
-            })
+            const st = await stream.commit()
+            expect(st.events.length).toEqual(1)
+            expect(st.events[0].payload.head.date).toEqual(st.events[0].commitStamp)
         })
 
-        describe('and not defining the commitStamp option', () => {
-            it('it should not save the commitStamp', async () => {
-                debug('it should not save the commitStamp')
+        it('and not defining the commitStamp option it should not save the commitStamp', async () => {
+            debug('it should not save the commitStamp')
 
-                var es = eventstore({})
-                await es.init()
-                const stream = await es.getEventStream('streamIdWithoutDate')
-                stream.addEvent({ one: 'event' })
+            var es = eventstore({})
+            await es.init()
+            const stream = await es.getEventStream('streamIdWithoutDate')
+            stream.addEvent({ one: 'event' })
 
-                const st = await stream.commit()
-                expect(st.events.length).toEqual(1)
-                expect(st.events[0].payload.date).not.toBeTruthy()
-                expect(st.events[0].payload.head).not.toBeTruthy()
-            })
+            const st = await stream.commit()
+            expect(st.events.length).toEqual(1)
+            expect(st.events[0].payload.date).not.toBeTruthy()
+            expect(st.events[0].payload.head).not.toBeTruthy()
         })
 
-        describe('and defining the streamRevision option', () => {
-            it('it should save the streamRevision correctly', async () => {
-                debug('it should save the streamRevision correctly')
+        it('and defining the streamRevision option it should save the streamRevision correctly', async () => {
+            debug('it should save the streamRevision correctly')
 
-                var es = eventstore()
-                es.defineEventMappings({ streamRevision: 'version' })
-                await es.init()
-                const stream = await es.getEventStream('streamIdWithDate')
-                stream.addEvent({ one: 'event' })
+            var es = eventstore()
+            es.defineEventMappings({ streamRevision: 'version' })
+            await es.init()
+            const stream = await es.getEventStream('streamIdWithDate')
+            stream.addEvent({ one: 'event' })
 
-                const st = await stream.commit()
-                expect(st.events.length).toEqual(1)
-                expect(st.events[0].payload.version).toEqual(st.events[0].streamRevision)
-            })
+            const st = await stream.commit()
+            expect(st.events.length).toEqual(1)
+            expect(st.events[0].payload.version).toEqual(st.events[0].streamRevision)
         })
 
         describe('and defining a publisher function in a synchronous way', () => {
@@ -1377,25 +1116,23 @@ describe('eventstore', () => {
                 expect(es.publisher).toBeTruthy()
             })
 
-            describe('when committing a new event', () => {
-                it('it should publish a new event', async () => {
-                    debug('it should publish a new event')
+            it('when committing a new event it should publish a new event', async () => {
+                debug('it should publish a new event')
 
-                    const publish = jest.fn()
-                    //function publish(evt) {
-                    //    expect(evt.one).toEqual('event')
-                    //    done()
-                    //}
+                const publish = jest.fn()
+                //function publish(evt) {
+                //    expect(evt.one).toEqual('event')
+                //    done()
+                //}
 
-                    var es = eventstore()
-                    es.useEventPublisher(publish)
-                    await es.init()
-                    const stream = await es.getEventStream('streamId')
-                    stream.addEvent({ one: 'event' })
+                var es = eventstore()
+                es.useEventPublisher(publish)
+                await es.init()
+                const stream = await es.getEventStream('streamId')
+                stream.addEvent({ one: 'event' })
 
-                    await stream.commit()
-                    expect(publish).toHaveBeenCalled()
-                })
+                await stream.commit()
+                expect(publish).toHaveBeenCalled()
             })
         })
 
@@ -1414,11 +1151,6 @@ describe('eventstore', () => {
 
             it('when committing a new event it should publish a new event', async () => {
                 const publish = jest.fn()
-                // function publish(evt, callback) {
-                //     expect(evt.one).toEqual('event')
-                //     callback()
-                //
-                // }
 
                 var es = eventstore()
                 es.useEventPublisher(publish)
