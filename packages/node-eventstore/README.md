@@ -489,7 +489,7 @@ stream.pipe(myWritableStream)
 
 currently supported by:
 
-1. mongodb
+1. mongodb (driver version <= 4.0.0)
 
 ## get the last event
 
