@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.19.0](https://github.com/avanzu/node-packages/compare/@avanzu/eventstore@1.18.0...@avanzu/eventstore@1.19.0) (2022-09-28)
+
+
+### Features
+
+* **mongodb:**  adds stream deletion support with tombstone event ([daac9d2](https://github.com/avanzu/node-packages/commit/daac9d26a696a466bf56e4d5331c760480875a5e))
+
+
+
+
+
 # [1.18.0](https://github.com/avanzu/node-packages/compare/@avanzu/eventstore@1.17.1...@avanzu/eventstore@1.18.0) (2022-09-22)
 
 
