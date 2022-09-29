@@ -1,8 +1,8 @@
-const throwable = (message) => (message instanceof Error ? message : new Error(message))
+const throwable = (e) => (e instanceof Error ? e : new Error(e))
 
-exports.panic = (error) => {
-    throw throwable(error)
+exports.panic = (e) => {
+    throw throwable(e)
 }
 
-exports.promiseOk = (value) => Promise.resolve(value)
-exports.promiseErr = (err) => Promise.reject(throwable(err))
+exports.promiseOk = (x) => Promise.resolve(x)
+exports.promiseErr = (e) => Promise.reject(throwable(e))

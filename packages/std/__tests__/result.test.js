@@ -52,6 +52,7 @@ describe('Type "Result"', () => {
         test('unwrapOrElse', () => {
             expect(val.unwrapOrElse(() => 'something else')).toBe('something')
         })
+        test('unwrapAlways', () => expect(val.unwrapAlways('const')).toBe('const'))
 
         test('fold', () => {
             const onOk = jest.fn().mockReturnValue('onOk')
@@ -90,6 +91,19 @@ describe('Type "Result"', () => {
         test('promise', async () => {
             await expect(val.promise()).resolves.toBe('something')
         })
+
+        test('tap', () => {
+            const fn = jest.fn()
+            expect(val.tap(fn).unwrap()).toBe('something')
+            expect(fn).toHaveBeenCalledWith('something')
+        })
+        test('inspect', () => {
+            const onSome = jest.fn(),
+                onNone = jest.fn()
+            expect(val.inspect(onNone, onSome).unwrap()).toBe('something')
+            expect(onSome).toHaveBeenCalledWith('something')
+            expect(onNone).not.toHaveBeenCalled()
+        })
     })
 
     describe('Variant "Err"', () => {
@@ -103,7 +117,7 @@ describe('Type "Result"', () => {
         test('unwrapOrElse', () => {
             expect(val.unwrapOrElse(() => 'something else')).toBe('something else')
         })
-
+        test('unwrapAlways', () => expect(val.unwrapAlways('const')).toBe('const'))
         test('fold', () => {
             const onOk = jest.fn().mockReturnValue('onOk')
             const onErr = jest.fn().mockReturnValue('onErr')
@@ -145,6 +159,18 @@ describe('Type "Result"', () => {
         test('promise', async () => {
             await expect(val.promise()).rejects.toBeInstanceOf(Error)
         })
+        test('tap', () => {
+            const fn = jest.fn()
+            expect(val.tap(fn).isErr()).toBe(true)
+            expect(fn).not.toHaveBeenCalled()
+        })
+        test('inspect', () => {
+            const onOk = jest.fn(),
+                onErr = jest.fn()
+            expect(() => val.inspect(onErr, onOk).unwrap()).toThrow(Result.ERROR)
+            expect(onOk).not.toHaveBeenCalled()
+            expect(onErr).toHaveBeenCalledWith(Result.ERROR)
+        })
     })
 
     describe('Promises', () => {
@@ -160,6 +186,123 @@ describe('Type "Result"', () => {
             const result = await Result.promised(bad)
 
             expect(() => result.unwrap()).toThrow(new Error('ERR'))
+        })
+    })
+    describe('boolean combining', () => {
+        test('Ok and Ok -> Ok', () => {
+            const result = Result.Ok('value 1').and(Result.Ok('value 2'))
+            expect(result.isOk()).toBe(true)
+            expect(result.unwrap()).toEqual(['value 1', 'value 2'])
+        })
+        test('Ok and Err -> Err', () => {
+            const result = Result.Ok('value 1').and(Result.Err())
+            expect(result.isErr()).toBe(true)
+        })
+        test('Err and Nome -> Err', () => {
+            const result = Result.Err().and(Result.Ok('value 1'))
+            expect(result.isErr()).toBe(true)
+        })
+
+        test('All (Ok) -> Ok', () => {
+            const result = Result.all([
+                Result.Ok('value1'),
+                Result.Ok('value2'),
+                Result.Ok('value3'),
+                Result.Ok('value4'),
+            ])
+
+            expect(result.isOk()).toBe(true)
+            expect(result.unwrap()).toEqual(['value1', 'value2', 'value3', 'value4'])
+        })
+
+        test('All (Err) -> Err', () => {
+            const result = Result.all([
+                Result.Err('Error 1'),
+                Result.Err('Error 2'),
+                Result.Err('Error 3'),
+            ])
+            expect(result.isErr()).toBe(true)
+
+            expect(() => result.unwrap()).toThrow('Error 1')
+        })
+
+        test('Ok, Ok and Err -> Err', () => {
+            const result = Result.all([Result.Ok('val1'), Result.Ok('val2'), Result.Err()])
+            expect(result.isErr()).toBe(true)
+        })
+
+        test('Err, Ok and Ok -> Err', () => {
+            const result = Result.all([Result.Err(), Result.Ok('val1'), Result.Ok('val2')])
+            expect(result.isErr()).toBe(true)
+        })
+    })
+    describe('Semigroup', () => {
+        test('Ok(a) concat Ok(b) -> Ok(c)', () => {
+            const result = Result.Ok('Foo').concat(Result.Ok('Bar'))
+            expect(result.unwrap()).toEqual('FooBar')
+        })
+        test('Ok(a) concat Err(b) -> Err(b)', () => {
+            const result = Result.Ok('Foo').concat(Result.Err('Err1'))
+            expect(() => result.unwrap()).toThrow('Err1')
+        })
+
+        test('Err(a) concat Ok(b) -> Err(a)', () => {
+            const result = Result.Err('Err1').concat(Result.Ok('Foo'))
+            expect(() => result.unwrap()).toThrow('Err1')
+        })
+        test('Err(a) concat Err(b) -> Err(a)', () => {
+            const result = Result.Err('Err1').concat(Result.Err('Err2'))
+            expect(() => result.unwrap()).toThrow('Err1')
+        })
+    })
+
+    describe('examples', () => {
+        const Version = { Version1: 'Version1', Version2: 'Version2' }
+
+        const parseVersion = ([num] = []) => {
+            switch (num) {
+                case undefined:
+                    return Result.Err('invalid header length')
+                case 1:
+                    return Result.Ok(Version.Version1)
+                case 2:
+                    return Result.Ok(Version.Version2)
+                default:
+                    return Result.Err('invalid version')
+            }
+        }
+
+        test('parseVersion', () => {
+            expect(() => parseVersion().unwrap()).toThrow('invalid header length')
+            expect(parseVersion([1]).unwrap()).toEqual(Version.Version1)
+            expect(parseVersion([2]).unwrap()).toEqual(Version.Version2)
+            expect(() => parseVersion([99]).unwrap()).toThrow('invalid version')
+        })
+
+        test('try', () => {
+            const parse = Result.try(JSON.parse)
+
+            expect(() => parse('{"foo": "bar"').unwrap()).toThrow('Unexpected end of JSON input')
+            expect(parse('{}').unwrap()).toEqual({})
+        })
+        test('await', async () => {
+            const promise = Promise.resolve('OK')
+            expect((await Result.promised(promise)).unwrap()).toEqual('OK')
+        })
+        test('applicative', () => {
+            const r = Result.Ok((a) => (b) => `${a}-${b}`)
+            expect(r.ap(Result.Ok('foo')).ap(Result.Ok('bar')).unwrapOr('')).toEqual('foo-bar')
+            expect(r.ap(Result.Ok('foo')).ap(Result.Err()).unwrapOr('')).toEqual('')
+        })
+
+        test('bifunctor', () => {
+            const onErr = () => new Error('Changed')
+            const onOk = (value) => value.toUpperCase()
+
+            Result.Ok('foo').bimap(onErr, onOk).fold(console.error, console.log)
+            // -> 'FOO
+            Result.Err().bimap(onErr, onOk).fold(console.error, console.log)
+            // ->  Error: Changed
         })
     })
 })
