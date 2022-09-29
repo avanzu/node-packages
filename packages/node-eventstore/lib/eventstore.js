@@ -1,13 +1,12 @@
 var debug = require('debug')('@avanzu/eventstore/eventstore'),
     EventEmitter = require('events').EventEmitter,
+    { Option, Result } = require('@avanzu/std'),
+    { noop, normalizeQuery, requireId } = require('./util'),
     _ = require('lodash'),
-    //    async = require('async'),
-    // tolerate = require('tolerance'),
+    { defaultTo, propOr } = require('ramda'),
     EventDispatcher = require('./eventDispatcher'),
     EventStream = require('./eventStream'),
     Snapshot = require('./snapshot')
-
-const noop = () => {}
 
 class Eventstore extends EventEmitter {
     constructor(options, store) {
@@ -15,6 +14,8 @@ class Eventstore extends EventEmitter {
         this.options = options || {}
         this.store = store
         this.eventMappings = {}
+        this.publisher = Option.None()
+        this.dispatcher = Option.None()
     }
     /**
      * Inject function for event publishing.
@@ -22,16 +23,27 @@ class Eventstore extends EventEmitter {
      * @returns {Eventstore}  to be able to chain...
      */
     useEventPublisher(fn) {
-        if (fn.length === 1) {
-            fn = _.wrap(fn, (func, evt, callback) => {
-                func(evt)
-                callback(null)
-            })
-        }
-
-        this.publisher = fn
+        this.publisher = Result.fromPredicate((fn) => fn.length === 1, fn)
+            .map((fn) => _.wrap(fn, (func, evt, callback) => (func(evt), callback(null))))
+            .fold(Option.Some, Option.Some)
 
         return this
+    }
+
+    get dbType() {
+        return Option.fromNullable(this.options.type).unwrapOr('inmemory')
+    }
+
+    get streamableStore() {
+        return Result.fromPredicate((store) => store.streamable, this.store)
+            .mapErr(() => new Error(`Streaming API is not suppoted by ${this.dbType}.`))
+            .unwrap()
+    }
+
+    get deletableStore() {
+        return Result.fromPredicate((store) => store.deleteStream, this.store)
+            .mapErr(() => new Error(`Deletion API is not suppoted by ${this.dbType}.`))
+            .unwrap()
     }
 
     /**
@@ -58,6 +70,18 @@ class Eventstore extends EventEmitter {
         return this
     }
 
+    initDispatcher() {
+        this.publisher
+            .map((publisher) => new EventDispatcher(publisher, this))
+            .tap((dispatcher) => (this.dispatcher = Option.Some(dispatcher)))
+            .tap((dispatcher) => dispatcher.start())
+            .bimap(
+                () => debug('no publisher defined'),
+                () => debug('init event dispatcher')
+            )
+            .unwrapAlways(this)
+    }
+
     /**
      * Call this function to initialize the eventstore.
      * If an event publisher function was injected it will additionally initialize an event dispatcher.
@@ -65,51 +89,12 @@ class Eventstore extends EventEmitter {
      */
     init() {
         return new Promise((Ok, Err) => {
-            this.store.on('connect', () => (debug('store up'), this.emit('connect')))
-            this.store.on('disconnect', () => (debug('store down'), this.emit('disconnect')))
-
-            const initDispatcher = () => {
-                if (!this.publisher) {
-                    debug('no publisher defined')
-                    return this
-                }
-
-                debug('init event dispatcher')
-                this.dispatcher = new EventDispatcher(this.publisher, this)
-                this.dispatcher.start()
-            }
-
             this.store
+                .on('connect', () => this.emit('connect'))
+                .on('disconnect', () => this.emit('disconnect'))
                 .connect()
-                .then(initDispatcher)
-                .then(() => this)
+                .then(() => this.initDispatcher())
                 .then(Ok, Err)
-            /*
-            tolerate(
-                (callback) => this.store.connect().then(() => callback()),
-                this.options.timeout || 0,
-                (err) => {
-                    if (err) {
-                        debug(err)
-                        if (callback) callback(err)
-                        Err(err)
-                        return
-                    }
-                    if (!this.publisher) {
-                        debug('no publisher defined')
-                        if (callback) callback(null)
-                        Ok(this)
-                        return
-                    }
-                    debug('init event dispatcher')
-                    this.dispatcher = new EventDispatcher(this.publisher, this)
-                    this.dispatcher.start(() => {
-                        callback(null, this)
-                        Ok(this)
-                    })
-                }
-            )
-            */
         })
     }
 
@@ -123,24 +108,14 @@ class Eventstore extends EventEmitter {
      * @returns {Stream} a stream with the events
      */
     streamEvents(query, skip, limit) {
-        if (!this.store.streamable)
-            throw new Error(
-                'Streaming API is not suppoted by ' +
-                    (this.options.type || 'inmemory') +
-                    ' db implementation.'
-            )
-
         if (typeof query === 'number') {
             limit = skip
             skip = query
             query = {}
         }
 
-        if (typeof query === 'string') {
-            query = { aggregateId: query }
-        }
-
-        return this.store.streamEvents(query, skip, limit)
+        const q = normalizeQuery(query).unwrap()
+        return this.streamableStore.streamEvents(q, skip, limit)
     }
 
     /**
@@ -151,22 +126,11 @@ class Eventstore extends EventEmitter {
      * @returns {Stream} a stream with the events
      */
     streamEventsSince(commitStamp, skip, limit) {
-        if (!this.store.streamable)
-            throw new Error(
-                'Streaming API is not suppoted by ' +
-                    (this.options.type || 'inmemory') +
-                    ' db implementation.'
-            )
+        const stamp = Result.fromNullable(commitStamp, 'Please pass in a date object!')
+            .map((stamp) => new Date(stamp))
+            .unwrap()
 
-        if (!commitStamp) {
-            var err = new Error('Please pass in a date object!')
-            debug(err)
-            throw err
-        }
-
-        commitStamp = new Date(commitStamp)
-
-        return this.store.streamEventsSince(commitStamp, skip, limit)
+        return this.streamableStore.streamEventsSince(stamp, skip, limit)
     }
 
     /**
@@ -177,19 +141,10 @@ class Eventstore extends EventEmitter {
      * @returns {Stream} a stream with the events
      */
     streamEventsByRevision(query, revMin, revMax) {
-        if (typeof query === 'string') {
-            query = { aggregateId: query }
-        }
-
-        if (!query.aggregateId) {
-            var err = new Error('An aggregateId should be passed!')
-            debug(err)
-            // FIXME: where is the callback supposed to come from?
-            // if (callback) callback(err)
-            return
-        }
-
-        return this.store.streamEventsByRevision(query, revMin, revMax)
+        return normalizeQuery(query)
+            .unwrapWith(requireId)
+            .map((query) => this.store.streamEventsByRevision(query, revMin, revMax))
+            .unwrap()
     }
 
     /**
@@ -225,11 +180,12 @@ class Eventstore extends EventEmitter {
                 query = { aggregateId: query }
             }
 
-            const nextFn = () => this.getEvents(query, skip + limit, limit)
+            const next = () => this.getEvents(query, skip + limit, limit)
 
             return this.store
                 .getEvents(query, skip, limit)
-                .then((res) => Object.assign(res || {}, { next: nextFn }))
+                .then(defaultTo({}))
+                .then((res) => Object.assign(res, { next }))
                 .then(Ok, Err)
         })
     }
@@ -242,26 +198,19 @@ class Eventstore extends EventEmitter {
      * @param {Function} callback    the function that will be called when this action has finished
      *                               `function(err, events){}`
      */
-    getEventsSince(commitStamp, skip = noop, limit = noop) {
+    getEventsSince(commitStamp, skip = 0, limit = -1) {
         return new Promise((Ok, Err) => {
-            if (!commitStamp) {
-                var err = new Error('Please pass in a date object!')
-                debug(err)
-                throw err
-            }
+            const [stamp, $skip] = Result.fromNullable(commitStamp, 'Please pass in a date object!')
+                .map((stamp) => new Date(stamp))
+                .map((stamp) => [stamp, skip + limit])
+                .unwrap()
 
-            if (typeof skip === 'function') {
-                skip = 0
-                limit = -1
-            } else if (typeof limit === 'function') {
-                limit = -1
-            }
-
-            const nextFn = () => this.getEventsSince(new Date(commitStamp), skip + limit, limit)
+            const next = () => this.getEventsSince(stamp, $skip, limit)
 
             return this.store
-                .getEventsSince(new Date(commitStamp), skip, limit)
-                .then((res) => Object.assign(res || {}, { next: nextFn }))
+                .getEventsSince(stamp, skip, limit)
+                .then(defaultTo({}))
+                .then((res) => Object.assign(res, { next }))
                 .then(Ok, Err)
         })
     }
@@ -274,26 +223,13 @@ class Eventstore extends EventEmitter {
      * @param {Function}         callback the function that will be called when this action has finished
      *                                    `function(err, events){}`
      */
-    getEventsByRevision(query, revMin = noop, revMax = noop) {
+    getEventsByRevision(query, revMin = 0, revMax = -1) {
         return new Promise((Ok, Err) => {
-            if (typeof revMin === 'function') {
-                revMin = 0
-                revMax = -1
-            } else if (typeof revMax === 'function') {
-                revMax = -1
-            }
-
-            if (typeof query === 'string') {
-                query = { aggregateId: query }
-            }
-
-            if (!query.aggregateId) {
-                var err = new Error('An aggregateId should be passed!')
-                debug(err)
-                return Err(err)
-            }
-
-            this.store.getEventsByRevision(query, revMin, revMax).then(Ok, Err)
+            normalizeQuery(query)
+                .unwrapWith(requireId)
+                .promise()
+                .then((query) => this.store.getEventsByRevision(query, revMin, revMax))
+                .then(Ok, Err)
         })
     }
 
@@ -305,27 +241,12 @@ class Eventstore extends EventEmitter {
      * @param {Function}         callback the function that will be called when this action has finished
      *                                    `function(err, eventstream){}`
      */
-    getEventStream(query, revMin, revMax) {
+    getEventStream(query, revMin = 0, revMax = -1) {
         return new Promise((Ok, Err) => {
-            if (typeof revMin === 'function') {
-                revMin = 0
-                revMax = -1
-            } else if (typeof revMax === 'function') {
-                revMax = -1
-            }
-
-            if (typeof query === 'string') {
-                query = { aggregateId: query }
-            }
-
-            if (!query.aggregateId) {
-                var err = new Error('An aggregateId should be passed!')
-                debug(err)
-                return Err(err)
-            }
-
-            this.getEventsByRevision(query, revMin, revMax)
-                .then((evts) => new EventStream(this, query, evts))
+            const q = normalizeQuery(query).unwrapWith(requireId).unwrap()
+            this.store
+                .getEventsByRevision(q, revMin, revMax)
+                .then((evts) => new EventStream(this, q, evts))
                 .then(Ok, Err)
         })
     }
@@ -337,21 +258,9 @@ class Eventstore extends EventEmitter {
      * @param {Function}         callback the function that will be called when this action has finished
      *                                    `function(err, snapshot, eventstream){}`
      */
-    getFromSnapshot(query, revMax = noop) {
+    getFromSnapshot(query, revMax = -1) {
         return new Promise((Ok, Err) => {
-            if (typeof revMax === 'function') {
-                revMax = -1
-            }
-
-            if (typeof query === 'string') {
-                query = { aggregateId: query }
-            }
-
-            if (!query.aggregateId) {
-                var err = new Error('An aggregateId should be passed!')
-                debug(err)
-                return Err(err)
-            }
+            const q = normalizeQuery(query).unwrapWith(requireId).unwrap()
 
             const getStream = (snap) =>
                 new Promise((Ok, Err) => {
@@ -360,7 +269,7 @@ class Eventstore extends EventEmitter {
                     if (snap && snap.revision !== undefined && snap.revision !== null) {
                         rev = snap.revision + 1
                     }
-                    this.getEventStream(query, rev, revMax)
+                    this.getEventStream(q, rev, revMax)
                         .then((stream) => {
                             if (rev > 0 && stream.lastRevision == -1) {
                                 stream.lastRevision = snap.revision
@@ -371,7 +280,7 @@ class Eventstore extends EventEmitter {
                         .catch((err) => Err(err))
                 })
 
-            this.store.getSnapshot(query, revMax).then(getStream).then(Ok, Err)
+            this.store.getSnapshot(q, revMax).then(getStream).then(Ok, Err)
         })
     }
 
@@ -386,11 +295,7 @@ class Eventstore extends EventEmitter {
                 obj.aggregateId = obj.streamId
             }
 
-            if (!obj.aggregateId) {
-                var err = new Error('An aggregateId should be passed!')
-                debug(err)
-                return Err(err)
-            }
+            requireId(obj).unwrap()
 
             obj.streamId = obj.aggregateId
 
@@ -426,7 +331,7 @@ class Eventstore extends EventEmitter {
      *                             `function(err, eventstream){}` (hint: eventstream.eventsToDispatch)
      */
     commit(eventstream) {
-        var currentRevision = eventstream.currentRevision(),
+        let currentRevision = eventstream.currentRevision(),
             uncommittedEvents = [].concat(eventstream.uncommittedEvents)
         eventstream.uncommittedEvents = []
 
@@ -449,31 +354,28 @@ class Eventstore extends EventEmitter {
             return uncommittedEvents
             // for (var i = 0, len = uncommittedEvents.length; i < len; i++) {}
         }
-        const addEvents = (uncommittedEvents) =>
+        const addEvents = (newEvents) =>
             this.store
-                .addEvents(uncommittedEvents)
+                .addEvents(newEvents)
+                .then(() => newEvents)
                 .catch((err) => {
-                    eventstream.uncommittedEvents = uncommittedEvents.concat(
-                        eventstream.uncommittedEvents
-                    )
+                    eventstream.uncommittedEvents = newEvents.concat(eventstream.uncommittedEvents)
                     throw err
                 })
-                .then(() => uncommittedEvents)
 
-        const publishEvents = (uncommittedEvents) => {
-            if (this.publisher && this.dispatcher) {
-                // push to undispatchedQueue
-                this.dispatcher.addUndispatchedEvents(uncommittedEvents)
-            } else {
-                eventstream.eventsToDispatch = [].concat(uncommittedEvents)
-            }
-            return uncommittedEvents
-        }
-        const concatEvents = (uncommittedEvents) => {
-            eventstream.events = eventstream.events.concat(uncommittedEvents)
-            eventstream.currentRevision()
-            return eventstream
-        }
+        const publishEvents = (uncommittedEvents) =>
+            this.dispatcher
+                .bimap(
+                    () => (eventstream.eventsToDispatch = [].concat(uncommittedEvents)),
+                    (dispatcher) => dispatcher.addUndispatchedEvents(uncommittedEvents)
+                )
+                .unwrapAlways(uncommittedEvents)
+
+        const concatEvents = (newEvents) =>
+            Option.Some(eventstream)
+                .tap((es) => (es.events = es.events.concat(newEvents)))
+                .tap((es) => es.currentRevision())
+                .unwrap()
 
         return new Promise((Ok, Err) => {
             Promise.all([newId(), nextPositions()])
@@ -493,11 +395,10 @@ class Eventstore extends EventEmitter {
      */
     getUndispatchedEvents(query = null) {
         return new Promise((Ok, Err) => {
-            if (typeof query === 'string') {
-                query = { aggregateId: query }
-            }
-
-            this.store.getUndispatchedEvents(query).then(Ok, Err)
+            normalizeQuery(query)
+                .promise()
+                .then((query) => this.store.getUndispatchedEvents(query))
+                .then(Ok, Err)
         })
     }
 
@@ -509,11 +410,10 @@ class Eventstore extends EventEmitter {
      */
     getLastEvent(query = null) {
         return new Promise((Ok, Err) => {
-            if (typeof query === 'string') {
-                query = { aggregateId: query }
-            }
-
-            this.store.getLastEvent(query).then(Ok, Err)
+            normalizeQuery(query)
+                .promise()
+                .then((query) => this.store.getLastEvent(query))
+                .then(Ok, Err)
         })
     }
 
@@ -525,12 +425,9 @@ class Eventstore extends EventEmitter {
      */
     getLastEventAsStream(query = null) {
         return new Promise((Ok, Err) => {
-            if (typeof query === 'string') {
-                query = { aggregateId: query }
-            }
-
-            this.store
-                .getLastEvent(query)
+            normalizeQuery(query)
+                .promise()
+                .then((query) => this.store.getLastEvent(query))
                 .then((evt) => [evt].filter(Boolean))
                 .then((evts) => new EventStream(this, query, evts))
                 .then(Ok, Err)
@@ -544,10 +441,8 @@ class Eventstore extends EventEmitter {
      */
     setEventToDispatched(evtOrId) {
         return new Promise((Ok, Err) => {
-            if (typeof evtOrId === 'object') {
-                evtOrId = evtOrId.id
-            }
-            this.store.setEventToDispatched(evtOrId).then(Ok, Err)
+            const id = propOr(evtOrId, 'id', evtOrId)
+            this.store.setEventToDispatched(id).then(Ok, Err)
         })
     }
 
@@ -561,9 +456,9 @@ class Eventstore extends EventEmitter {
 
     deleteStream(aggregateId) {
         return new Promise((Ok, Err) => {
-            if (!this.store.deleteStream) throw new Error('Store does not support deletion')
+            // if (!this.store.deleteStream) throw new Error('Store does not support deletion')
 
-            this.store
+            this.deletableStore
                 .deleteStream(aggregateId)
                 .then((events) => new EventStream(this, { aggregateId }, events))
                 .then((stream) => stream.addTombstoneEvent())

@@ -192,7 +192,9 @@ describe('eventstore', () => {
 
                 it('with wrong query it should pass them correctly', async () => {
                     es.getEventsByRevision = orgFunc
-                    await expect(es.getEventsByRevision(123, 3, 100)).rejects.toBeInstanceOf(Error)
+                    const promise = es.getEventsByRevision(123, 3, 100)
+
+                    await expect(promise).rejects.toBeInstanceOf(Error)
                 })
             })
 
@@ -1116,7 +1118,7 @@ describe('eventstore', () => {
                 var es = eventstore()
                 es.useEventPublisher(publish)
                 await es.init()
-                expect(es.publisher).toBeTruthy()
+                expect(es.publisher.isSome()).toBeTruthy()
             })
 
             it('when committing a new event it should publish a new event', async () => {
@@ -1149,7 +1151,7 @@ describe('eventstore', () => {
                 var es = eventstore()
                 es.useEventPublisher(publish)
                 await es.init()
-                expect(es.publisher).toBeTruthy()
+                expect(es.publisher.isSome()).toBeTruthy()
             })
 
             it('when committing a new event it should publish a new event', async () => {
@@ -1174,7 +1176,7 @@ describe('eventstore', () => {
 
             var es = eventstore()
             await es.init()
-            expect(es.publisher).not.toBeTruthy()
+            expect(es.publisher.isSome()).not.toBeTruthy()
         })
     })
 })
