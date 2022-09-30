@@ -418,6 +418,7 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                             aggregate: event1.aggregate,
                             context: event1.context,
                         })
+
                         await store.events.deleteMany({
                             $or: [{ _id: event2.id }, { _id: event3.id }],
                         })
@@ -2032,7 +2033,7 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
                     beforeEach(async () => store.clear().then(() => store.addEvents(stream)))
 
                     it('and requesting all undispatched events it should return the correct events', async () => {
-                        const evts = await store.getUndispatchedEvents(null)
+                        const evts = await store.getUndispatchedEvents()
                         expect(evts.length).toEqual(2)
                         expect(evts[0].id).toEqual(stream[0].id)
                         expect(evts[0].commitId).toEqual(stream[0].commitId)
@@ -2048,13 +2049,13 @@ describe.each(types)('"%s" store implementation', (type, options, ClassName) => 
 
                     describe('calling setEventToDispatched', () => {
                         beforeEach(async () => {
-                            const evts = await store.getUndispatchedEvents(null)
+                            const evts = await store.getUndispatchedEvents()
                             expect(evts.length).toEqual(2)
                         })
 
                         it('it should work correctly', async () => {
                             await store.setEventToDispatched('119')
-                            const evts = await store.getUndispatchedEvents(null)
+                            const evts = await store.getUndispatchedEvents()
                             expect(evts.length).toEqual(1)
                             expect(evts[0].commitId).toEqual(stream[1].commitId)
                             expect(evts[0].commitStamp.getTime()).toEqual(

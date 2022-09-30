@@ -1,16 +1,52 @@
-var Store = require('../base'),
-    _ = require('lodash'),
-    async = require('async'),
-    stream = require('stream'),
-    { MongoClient, ObjectId: ObjectID } = require('mongodb'),
-    { version } = require('mongodb/package.json'),
-    semver = require('semver'),
-    debug = require('debug')('@avanzu/eventstore/database/mongodb')
+const Store = require('../base')
+const async = require('async')
+const stream = require('stream')
+const { MongoClient, ObjectId: ObjectID } = require('mongodb')
+const { Result } = require('@avanzu/std')
+const semver = require('semver')
+const { range, mergeDeepLeft, has, pick, last, propEq, defaultTo, pipe } = require('ramda')
+const { filterEmpty } = require('../util')
+const { version } = require('mongodb/package.json')
+const StoreError = require('../error')
+
+const debug = require('debug')('@avanzu/eventstore/database/mongodb')
+const major = semver.major(version)
 
 const inspect = (message) => (data) => (debug(message, data), data)
 const notice = (message) => (data) => (debug(message), data)
-const filterEmpty = (obj) =>
-    Object.fromEntries(Object.entries(obj).filter(([, value]) => Boolean(value)))
+
+const isTransactionOk = (revMax, lastEvt) =>
+    (revMax === -1 && !lastEvt.restInCommitStream) ||
+    (revMax !== -1 && (lastEvt.streamRevision === revMax - 1 || !lastEvt.restInCommitStream))
+
+const withConstraints = pipe(defaultTo({}), pick(['aggregate', 'context', 'aggregateId']))
+
+const requireAggregateId = (obj) =>
+    Result.fromPredicate(has('aggregateId'), obj).mapErr(() =>
+        StoreError.new('Missing required property "aggregateId".', obj)
+    )
+
+const requireCommitId = (obj) =>
+    Result.fromPredicate(has('commitId'), obj).mapErr(() =>
+        StoreError.new('Missing required property "commitId".', obj)
+    )
+
+const compareCommitId = (expected) => (obj) =>
+    Result.fromPredicate(propEq('commitId', expected), obj).mapErr(() =>
+        StoreError.new(`Mismatching commitId. Expected "${expected}".`, obj)
+    )
+
+const eventSort = [
+    ['commitStamp', 'asc'],
+    ['streamRevision', 'asc'],
+    ['commitSequence', 'asc'],
+]
+
+const snapSort = [
+    ['revision', 'desc'],
+    ['version', 'desc'],
+    ['commitStamp', 'desc'],
+]
 
 const streamEventsByRevision = (self, findStatement, revMin, revMax, resultStream, lastEvent) => {
     findStatement.streamRevision = revMax === -1 ? { $gte: revMin } : { $gte: revMin, $lt: revMax }
@@ -57,13 +93,14 @@ const streamEventsByRevision = (self, findStatement, revMin, revMax, resultStrea
             if (!lastEvent) {
                 return resultStream.end()
             }
-
+            /* 
             var txOk =
                 (revMax === -1 && !lastEvent.restInCommitStream) ||
                 (revMax !== -1 &&
                     (lastEvent.streamRevision === revMax - 1 || !lastEvent.restInCommitStream))
+            */
 
-            if (txOk) {
+            if (isTransactionOk(revMax, lastEvent)) {
                 // the following is usually unnecessary
                 self.removeTransactions(lastEvent)
                 resultStream.end() // lastEvent was keep duplicated from this line. We should not re-write last event into the stream when ending it. thus end() rather then end(lastEvent).
@@ -101,18 +138,10 @@ class Mongo extends Store {
             eventsCollectionName: 'events',
             snapshotsCollectionName: 'snapshots',
             transactionsCollectionName: 'transactions',
-            options: {},
+            options: { tls: false },
         }
 
-        _.defaults(options, defaults)
-
-        var defaultOpt = {
-            tls: false,
-        }
-
-        _.defaults(options.options, defaultOpt)
-
-        this.options = options
+        this.options = mergeDeepLeft(options, defaults)
     }
 
     connectionUrl() {
@@ -127,9 +156,7 @@ class Mongo extends Store {
                 ? options.servers
                 : [{ host: options.host, port: options.port }]
 
-            var memberString = _(members).map((m) => {
-                return m.host + ':' + m.port
-            })
+            var memberString = members.map(({ host, port }) => `${host}:${port}`)
             var authString =
                 options.username && options.password
                     ? options.username + ':' + options.password + '@'
@@ -171,7 +198,7 @@ class Mongo extends Store {
             .then(() => this.finish('createIndex'))
     }
 
-    async connectV4(connectionUrl, options) {
+    connectV4(connectionUrl, options) {
         debug('connectV4 using %s and %o', connectionUrl, options)
 
         this.client = new MongoClient(connectionUrl, {
@@ -191,16 +218,13 @@ class Mongo extends Store {
         return new Promise((Ok, Err) => {
             const { options } = this.options
             const connectionUrl = this.connectionUrl()
-            const method = `connectV${semver.major(version)}`
+            const method = `connectV${major}`
 
-            debug(
-                'Opening connection to mongodb version %s V%s using %s',
-                version,
-                semver.major(version),
-                method
-            )
+            debug('Opening connection to mongodb version %s V%s using %s', version, major, method)
 
-            this[method].call(this, connectionUrl, options).then(Ok, Err)
+            Result.fromNullable(this[method], `Unsupported version ${major}.`)
+                .map((fn) => fn.call(this, connectionUrl, options))
+                .fold(Err, Ok)
         })
     }
 
@@ -209,6 +233,19 @@ class Mongo extends Store {
     }
     static isDeletable() {
         return true
+    }
+
+    findEvents(query, sort = eventSort) {
+        return this.events.find(query, { sort })
+    }
+    findEvent(query, sort = eventSort) {
+        return this.events.findOne(query, { sort })
+    }
+    findSnapshots(query, sort = snapSort) {
+        return this.snapshots.find(query, { sort })
+    }
+    findSnapshot(query, sort = snapSort) {
+        return this.snapshots.findOne(query, { sort })
     }
 
     finish(ensureIndex) {
@@ -338,63 +375,16 @@ class Mongo extends Store {
                     { returnDocument: 'after', upsert: true }
                 )
                 .then(({ value }) => (value.position += 1))
-                .then((position) => _.range(position - positions, position))
+                .then((position) => range(position - positions, position))
                 .then(Ok, Err)
         })
     }
 
     addEvents(events) {
-        return new Promise((Ok, Err) => {
-            if (events.length === 0) {
-                return Ok(this)
-            }
+        const adddOneEvent = ([event]) => this.events.insertOne(event)
 
-            var commitId = events[0].commitId
-
-            var noAggregateId = false,
-                invalidCommitId = false
-
-            _.forEach(events, (evt) => {
-                if (!evt.aggregateId) {
-                    noAggregateId = true
-                }
-
-                if (!evt.commitId || evt.commitId !== commitId) {
-                    invalidCommitId = true
-                }
-
-                evt._id = evt.id
-                evt.dispatched = false
-            })
-
-            if (noAggregateId) {
-                var errMsg = 'aggregateId not defined!'
-                debug(errMsg)
-                return Err(new Error(errMsg))
-            }
-
-            if (invalidCommitId) {
-                var errMsg = 'commitId not defined or different!'
-                debug(errMsg)
-                return Err(new Error(errMsg))
-            }
-
-            if (events.length === 1) {
-                return this.events
-                    .insertOne(events[0])
-                    .then(() => this)
-                    .then(Ok, Err)
-            }
-
-            var tx = {
-                _id: commitId,
-                events: events,
-                aggregateId: events[0].aggregateId,
-                aggregate: events[0].aggregate,
-                context: events[0].context,
-            }
-
-            Promise.resolve(tx)
+        const addSomeEvents = (commitId) => (events) =>
+            Promise.resolve({ _id: commitId, events, ...withConstraints(events[0]) })
                 .then(inspect('Inserting transaction %o'))
                 .then((tx) => this.transactions.insertOne(tx))
                 .then(notice('Inserting events'))
@@ -402,6 +392,24 @@ class Mongo extends Store {
                 .then(notice('removing transation'))
                 .then(() => this.removeTransactions(events[events.length - 1]))
                 .then(notice('Resolving'))
+
+        return new Promise((Ok, Err) => {
+            if (events.length === 0) {
+                return Ok(this)
+            }
+
+            const commitId = events[0].commitId
+
+            events.forEach((evt) =>
+                requireAggregateId(evt)
+                    .chain(requireCommitId)
+                    .chain(compareCommitId(commitId))
+                    .tap((evt) => Object.assign(evt, { _id: evt.id, dispatched: false }))
+                    .unwrap()
+            )
+
+            Result.fromPredicate(propEq('length', 1), events)
+                .fold(addSomeEvents(commitId), adddOneEvent)
                 .then(() => this)
                 .then(Ok, Err)
         })
@@ -409,78 +417,29 @@ class Mongo extends Store {
 
     // streaming API
     streamEvents(query, skip, limit) {
-        var findStatement = {}
+        const findStatement = withConstraints(query)
+        const cursor = this.findEvents(findStatement)
 
-        if (query.aggregate) {
-            findStatement.aggregate = query.aggregate
-        }
+        if (skip) cursor.skip(skip)
+        if (limit && limit > 0) cursor.limit(limit)
 
-        if (query.context) {
-            findStatement.context = query.context
-        }
-
-        if (query.aggregateId) {
-            findStatement.aggregateId = query.aggregateId
-        }
-
-        var query = this.events.find(findStatement, {
-            sort: [
-                ['commitStamp', 'asc'],
-                ['streamRevision', 'asc'],
-                ['commitSequence', 'asc'],
-            ],
-        })
-
-        if (skip) {
-            query.skip(skip)
-        }
-
-        if (limit && limit > 0) {
-            query.limit(limit)
-        }
-
-        return query
+        return cursor
     }
 
     streamEventsSince(date, skip, limit) {
-        var findStatement = { commitStamp: { $gte: date } }
+        const findStatement = { commitStamp: { $gte: date } }
 
-        var query = this.events.find(findStatement, {
-            sort: [
-                ['commitStamp', 'asc'],
-                ['streamRevision', 'asc'],
-                ['commitSequence', 'asc'],
-            ],
-        })
+        const cursor = this.findEvents(findStatement)
 
-        if (skip) query.skip(skip)
+        if (skip) cursor.skip(skip)
 
-        if (limit && limit > 0) query.limit(limit)
+        if (limit && limit > 0) cursor.limit(limit)
 
-        return query
+        return cursor
     }
 
     streamEventsByRevision(query, revMin, revMax) {
-        if (!query.aggregateId) {
-            var errMsg = 'aggregateId not defined!'
-            debug(errMsg)
-            // FIXME: where does that callback come from?
-            // if (callback) callback(new Error(errMsg))
-            return
-        }
-
-        var findStatement = {
-            aggregateId: query.aggregateId,
-        }
-
-        if (query.aggregate) {
-            findStatement.aggregate = query.aggregate
-        }
-
-        if (query.context) {
-            findStatement.context = query.context
-        }
-
+        const findStatement = requireAggregateId(query).map(withConstraints).unwrap()
         var resultStream = new stream.PassThrough({ objectMode: true, highWaterMark: 1 })
         streamEventsByRevision(this, findStatement, revMin, revMax, resultStream)
         return resultStream
@@ -506,51 +465,24 @@ class Mongo extends Store {
                 this.getEventsByRevision(query, revMin, revMax)
             )
 
-        const evaluatTransaction = (res) => {
-            const lastEvt = res[res.length - 1]
-
-            const txOk =
-                (revMax === -1 && !lastEvt.restInCommitStream) ||
-                (revMax !== -1 &&
-                    (lastEvt.streamRevision === revMax - 1 || !lastEvt.restInCommitStream))
-
-            return txOk ? removeAndResolve(lastEvt, res) : repairAndRetry(lastEvt)
+        const evaluatTransaction = (events) => {
+            const lastEvent = last(events)
+            return isTransactionOk(revMax, lastEvent)
+                ? removeAndResolve(lastEvent, events)
+                : repairAndRetry(lastEvent)
         }
 
         return new Promise((Ok, Err) => {
             debug('getEventsByRevision(%s, %s, %s)', query, revMin, revMax)
-            if (!query.aggregateId) {
-                var errMsg = 'aggregateId not defined!'
-                debug(errMsg)
-                return Err(new Error(errMsg))
-            }
 
-            var streamRevOptions = { $gte: revMin, $lt: revMax }
-            if (revMax === -1) {
-                streamRevOptions = { $gte: revMin }
-            }
+            const streamRevision = revMax === -1 ? { $gte: revMin } : { $gte: revMin, $lt: revMax }
 
-            var findStatement = {
-                aggregateId: query.aggregateId,
-                streamRevision: streamRevOptions,
-            }
+            const findStatement = requireAggregateId(query)
+                .map(withConstraints)
+                .map((constraints) => ({ ...constraints, streamRevision }))
+                .unwrap()
 
-            if (query.aggregate) {
-                findStatement.aggregate = query.aggregate
-            }
-
-            if (query.context) {
-                findStatement.context = query.context
-            }
-
-            this.events
-                .find(findStatement, {
-                    sort: [
-                        ['commitStamp', 'asc'],
-                        ['streamRevision', 'asc'],
-                        ['commitSequence', 'asc'],
-                    ],
-                })
+            this.findEvents(findStatement)
                 .toArray()
                 .then((res) => (!res || res.length === 0 ? [] : evaluatTransaction(res)))
                 .then(Ok, Err)
@@ -559,26 +491,9 @@ class Mongo extends Store {
 
     getUndispatchedEvents(query) {
         return new Promise((Ok, Err) => {
-            query || (query = {})
-            var findStatement = {
-                dispatched: false,
-                ...filterEmpty({
-                    aggregate: query.aggregate,
-                    context: query.context,
-                    aggregateId: query.aggregateId,
-                }),
-            }
+            const findStatement = { dispatched: false, ...withConstraints(query) }
 
-            this.events
-                .find(findStatement, {
-                    sort: [
-                        ['commitStamp', 'asc'],
-                        ['streamRevision', 'asc'],
-                        ['commitSequence', 'asc'],
-                    ],
-                })
-                .toArray()
-                .then(Ok, Err)
+            this.findEvents(findStatement).toArray().then(Ok, Err)
         })
     }
 
@@ -595,15 +510,11 @@ class Mongo extends Store {
     addSnapshot(snap) {
         return new Promise((Ok, Err) => {
             debug('Adding snapshot %o', snap)
-            if (!snap.aggregateId) {
-                var errMsg = 'aggregateId not defined!'
-                debug(errMsg)
-                return Err(new Error(errMsg))
-            }
 
-            snap._id = snap.id
-            this.snapshots
-                .insertOne(snap)
+            requireAggregateId(snap)
+                .map(({ id, ...snap }) => ({ _id: id, id, ...snap }))
+                .promise()
+                .then((snap) => this.snapshots.insertOne(snap))
                 .then(() => this)
                 .then(Ok, Err)
         })
@@ -611,17 +522,7 @@ class Mongo extends Store {
 
     cleanSnapshots(query) {
         return new Promise((Ok, Err) => {
-            if (!query.aggregateId) {
-                var errMsg = 'aggregateId not defined!'
-                debug(errMsg)
-                return Err(new Error(errMsg))
-            }
-
-            var findStatement = filterEmpty({
-                aggregateId: query.aggregateId,
-                aggregate: query.aggregate,
-                context: query.context,
-            })
+            const findStatement = requireAggregateId(query).map(withConstraints).unwrap()
 
             const remove = (elements) =>
                 Promise.all(elements.map(({ _id }) => this.snapshots.deleteOne({ _id })))
@@ -631,14 +532,7 @@ class Mongo extends Store {
                     ? this.snapshots.count(findStatement)
                     : this.snapshots.countDocuments(findStatement)
 
-            this.snapshots
-                .find(findStatement, {
-                    sort: [
-                        ['revision', 'desc'],
-                        ['version', 'desc'],
-                        ['commitStamp', 'desc'],
-                    ],
-                })
+            this.findSnapshots(findStatement)
                 .skip(this.options.maxSnapshotsCount | 0)
                 .toArray()
                 .then(remove)
@@ -649,48 +543,21 @@ class Mongo extends Store {
 
     getSnapshot(query, revMax) {
         return new Promise((Ok, Err) => {
-            if (!query.aggregateId) {
-                var errMsg = 'aggregateId not defined!'
-                debug(errMsg)
-                return Err(new Error(errMsg))
-            }
+            const revision = revMax > -1 ? { $lte: revMax } : null
 
-            // var findStatement = filterEmpty()
-            Promise.resolve({
-                aggregateId: query.aggregateId,
-                aggregate: query.aggregate,
-                context: query.context,
-                revision: revMax > -1 ? { $lte: revMax } : null,
-            })
-                .then(filterEmpty)
-                .then(inspect('Trying to load snapshot using %o'))
-                .then((findStatement) =>
-                    this.snapshots.findOne(findStatement, {
-                        sort: [
-                            ['revision', 'desc'],
-                            ['version', 'desc'],
-                            ['commitStamp', 'desc'],
-                        ],
-                    })
-                )
-                .then(inspect('snapshot result %o'))
-                .then(Ok, Err)
+            const findStatement = requireAggregateId(query)
+                .map(withConstraints)
+                .map((query) => ({ ...query, revision }))
+                .map(filterEmpty)
+                .unwrap()
+
+            this.findSnapshot(findStatement).then(Ok, Err)
         })
     }
 
     removeTransactions(evt) {
         return new Promise((Ok, Err) => {
-            if (!evt.aggregateId) {
-                var errMsg = 'aggregateId not defined!'
-                debug(errMsg)
-                return Err(new Error(errMsg))
-            }
-
-            var findStatement = filterEmpty({
-                aggregateId: evt.aggregateId,
-                aggregate: evt.aggregate,
-                context: evt.context,
-            })
+            const findStatement = requireAggregateId(evt).map(withConstraints).unwrap()
 
             // the following is usually unnecessary
             this.transactions
@@ -742,50 +609,33 @@ class Mongo extends Store {
 
     getLastEvent(query) {
         return new Promise((Ok, Err) => {
-            if (!query.aggregateId) {
-                var errMsg = 'aggregateId not defined!'
-                debug(errMsg)
-                return Err(new Error(errMsg))
-            }
+            const findStatement = requireAggregateId(query).map(withConstraints).unwrap()
 
-            var findStatement = { aggregateId: query.aggregateId }
-
-            if (query.aggregate) {
-                findStatement.aggregate = query.aggregate
-            }
-
-            if (query.context) {
-                findStatement.context = query.context
-            }
-
-            this.events
-                .findOne(findStatement, {
-                    sort: [
-                        ['commitStamp', 'desc'],
-                        ['streamRevision', 'desc'],
-                        ['commitSequence', 'desc'],
-                    ],
-                })
-                .then(Ok, Err)
+            this.findEvent(findStatement, [
+                ['commitStamp', 'desc'],
+                ['streamRevision', 'desc'],
+                ['commitSequence', 'desc'],
+            ]).then(Ok, Err)
         })
     }
 
     repairFailedTransaction(lastEvt) {
         return new Promise((Ok, Err) => {
             debug('repairFailedTransaction with %o', lastEvt)
+
+            const eventsFromTransaction = (tx) =>
+                Result.fromNullable(tx, `missing tx entry for aggregate ${lastEvt.aggregateId}`)
+                    .map(({ events }) => events.slice(events.length - lastEvt.restInCommitStream))
+                    .unwrap()
+
+            const insertMissing = (missingEvts) => this.events.insertMany(missingEvts)
+            const removeTransaction = () => this.removeTransactions(lastEvt)
+
             this.transactions
                 .findOne({ _id: lastEvt.commitId })
-                .then((tx) => {
-                    if (!tx) {
-                        throw new Error('missing tx entry for aggregate ' + lastEvt.aggregateId)
-                    }
-
-                    return tx.events.slice(tx.events.length - lastEvt.restInCommitStream)
-                })
-                .then((missingEvts) => {
-                    return this.events.insertMany(missingEvts)
-                })
-                .then(() => this.removeTransactions(lastEvt))
+                .then(eventsFromTransaction)
+                .then(insertMissing)
+                .then(removeTransaction)
                 .then(() => this)
                 .then(Ok, Err)
         })
@@ -795,7 +645,7 @@ class Mongo extends Store {
         const deleteEvents = () => this.events.deleteMany({ aggregateId })
         const deleteSnapshots = () => this.snapshots.deleteMany({ aggregateId })
         const deleteTransactions = () => this.transactions.deleteMany({ aggregateId })
-        const loadEvents = () => this.getEvents(aggregateId)
+        const loadEvents = () => this.getEvents({ aggregateId })
 
         const deleteEntries = (events) =>
             Promise.allSettled([deleteEvents(), deleteTransactions(), deleteSnapshots()]).then(

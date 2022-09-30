@@ -77,7 +77,7 @@ describe('The mongodb backend', () => {
                 id: '111',
                 streamRevision: 0,
                 commitId: '111',
-                commitStamp: new Date(),
+                commitStamp: new Date(2022, 5, 11),
                 commitSequence: 0,
                 payload: {
                     event: 'bla',
@@ -100,7 +100,7 @@ describe('The mongodb backend', () => {
         })
 
         it('should provide stored events since ', async () => {
-            const promise = store.getEvents(Date.now(), 0, -1)
+            const promise = store.getEventsSince(new Date(2022, 5, 11), 0, -1)
 
             await expect(promise).resolves.toHaveLength(3)
         })
