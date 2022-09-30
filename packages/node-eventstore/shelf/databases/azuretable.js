@@ -94,6 +94,7 @@ _.extend(AzureTable.prototype, {
                             self.client.deleteEntity(
                                 self.options.eventsTableName,
                                 entity,
+                                // eslint-disable-next-line no-unused-vars
                                 function (error, response) {
                                     callback(error)
                                 }
@@ -120,6 +121,7 @@ _.extend(AzureTable.prototype, {
                             self.client.deleteEntity(
                                 self.options.snapshotsTableName,
                                 entity,
+                                // eslint-disable-next-line no-unused-vars
                                 function (error, response) {
                                     callback(error)
                                 }
@@ -146,6 +148,7 @@ _.extend(AzureTable.prototype, {
                             self.client.deleteEntity(
                                 self.options.undispatchedEventsTableName,
                                 entity,
+                                // eslint-disable-next-line no-unused-vars
                                 function (error, response) {
                                     callback(error)
                                 }
@@ -173,6 +176,7 @@ _.extend(AzureTable.prototype, {
 
     addEvents: function (events, callback) {
         var self = this
+        // eslint-disable-next-line no-unused-vars
         var batch = new azure.TableBatch()
 
         var noAggId = _.every(events, function (event) {

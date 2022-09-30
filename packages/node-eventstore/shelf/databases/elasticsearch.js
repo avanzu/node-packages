@@ -3,6 +3,7 @@ var util = require('util'),
     _ = require('lodash'),
     uuid = require('uuid'),
     elasticsearch = Store.use('elasticsearch'),
+    // eslint-disable-next-line no-unused-vars
     elasticsearchVersion = Store.use('elasticsearch/package.json').version,
     debug = require('debug')('@avanzu/eventstore/store/elasticsearch')
 
@@ -100,6 +101,7 @@ _.extend(Elastic.prototype, {
             if (callback) callback(new Error(errMsg))
             return
         }
+        // eslint-disable-next-line no-unused-vars
         this.client.bulk({ body: bulkMap, refresh: true }, function (error, response) {
             if (callback) callback(error)
         })
@@ -258,6 +260,7 @@ _.extend(Elastic.prototype, {
                 },
                 refresh: true,
             },
+            // eslint-disable-next-line no-unused-vars
             function (error, response) {
                 if (callback) callback(error)
             }
@@ -280,6 +283,7 @@ _.extend(Elastic.prototype, {
                 body: snap,
                 refresh: true,
             },
+            // eslint-disable-next-line no-unused-vars
             function (error, response) {
                 if (callback) callback(error)
             }

@@ -3,6 +3,7 @@ var util = require('util'),
     _ = require('lodash'),
     async = require('async'),
     tingodb = Store.use('tingodb')(),
+    // eslint-disable-next-line no-unused-vars
     ObjectID = tingodb.ObjectID,
     debug = require('debug')('@avanzu/eventstore/store/tingodb')
 

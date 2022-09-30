@@ -141,6 +141,7 @@ _.extend(DynamoDB.prototype, {
             })
         }
 
+        // eslint-disable-next-line no-unused-vars
         async.parallel([clearEvents, clearSnapshots], function (err, data) {
             if (err) {
                 error('removeTables error: ' + err)
@@ -993,6 +994,7 @@ var deleteTableIfExists = function (client, tableName, callback) {
                 return status === 'DELETED'
             },
             function (cbUntil) {
+                // eslint-disable-next-line no-unused-vars
                 client.describeTable({ TableName: d.Table.TableName }, function (err, data) {
                     if (err) {
                         if (err.code === 'ResourceNotFoundException') {
@@ -1149,6 +1151,7 @@ var clearEventTables = function (opts, documentClient, cleared) {
                 function () {
                     return exclusiveStartKey !== null
                 },
+                // eslint-disable-next-line no-unused-vars
                 function (err, r) {
                     if (err) {
                         error('clearEvents error: ' + err)
@@ -1207,6 +1210,7 @@ var clearSnapshotsTable = function (opts, documentClient, cleared) {
                 }
                 batch.RequestItems[opts.snapshotsTableName] = keys
 
+                // eslint-disable-next-line no-unused-vars
                 documentClient.batchWrite(batch, function (err2, data) {
                     error('clearSnapshotsTable batchWrite error: ' + err2)
                     return end(err2)
@@ -1216,6 +1220,7 @@ var clearSnapshotsTable = function (opts, documentClient, cleared) {
         function () {
             return exclusiveStartKey !== null
         },
+        // eslint-disable-next-line no-unused-vars
         function (err, r) {
             if (err) {
                 error('clearSnapshotsTable error: ' + err)
