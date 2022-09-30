@@ -2,8 +2,7 @@ var debug = require('debug')('@avanzu/eventstore/eventstore'),
     EventEmitter = require('events').EventEmitter,
     { Option, Result } = require('@avanzu/std'),
     { noop, normalizeQuery, requireId } = require('./util'),
-    _ = require('lodash'),
-    { defaultTo, propOr } = require('ramda'),
+    { defaultTo, propOr, is, pick } = require('ramda'),
     EventDispatcher = require('./eventDispatcher'),
     EventStream = require('./eventStream'),
     Snapshot = require('./snapshot')
@@ -23,9 +22,7 @@ class Eventstore extends EventEmitter {
      * @returns {Eventstore}  to be able to chain...
      */
     useEventPublisher(fn) {
-        this.publisher = Result.fromPredicate((fn) => fn.length === 1, fn)
-            .map((fn) => _.wrap(fn, (func, evt, callback) => (func(evt), callback(null))))
-            .fold(Option.Some, Option.Some)
+        this.publisher = Option.Some(fn)
 
         return this
     }
@@ -59,13 +56,9 @@ class Eventstore extends EventEmitter {
      * @returns {Eventstore}  to be able to chain...
      */
     defineEventMappings(mappings) {
-        if (!mappings || !_.isObject(mappings)) {
-            var err = new Error('Please pass a valid mapping values!')
-            debug(err)
-            throw err
-        }
-
-        this.eventMappings = mappings
+        this.eventMappings = Result.fromPredicate(is(Object), mappings)
+            .mapErr(() => new Error('Please pass a valid mapping values!'))
+            .unwrap()
 
         return this
     }
@@ -312,7 +305,7 @@ class Eventstore extends EventEmitter {
 
             const cleanup = (value) =>
                 this.options.maxSnapshotsCount
-                    ? this.store.cleanSnapshots(_.pick(obj, 'aggregateId', 'aggregate', 'context'))
+                    ? this.store.cleanSnapshots(pick(['aggregateId', 'aggregate', 'context'], obj))
                     : value
 
             this.getNewId()
