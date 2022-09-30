@@ -1,5 +1,7 @@
 const { Ok, fromPredicate } = require('@avanzu/std').Result
-const { always, has, is, identity } = require('ramda')
+const { always, has, is, identity, filter, isNil, complement } = require('ramda')
+
+const filterEmpty = filter(complement(isNil))
 
 const noop = identity
 const isString = is(String)
@@ -15,4 +17,4 @@ const requireId = (query) =>
 
 const toAggregateQuery = (query) => normalizeQuery(query).unwrapWith(requireId)
 
-module.exports = { noop, toAggregateQuery, normalizeQuery, requireId }
+module.exports = { noop, toAggregateQuery, normalizeQuery, requireId, filterEmpty }
