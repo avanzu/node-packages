@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.20.0](https://github.com/avanzu/node-packages/compare/@avanzu/eventstore@1.19.1...@avanzu/eventstore@1.20.0) (2022-09-30)
+
+
+### Features
+
+* adds custom error type ([1aab296](https://github.com/avanzu/node-packages/commit/1aab2963cf9dad0fb75619f3bd56c761c905b3fa))
+
+
+
+
+
 ## [1.19.1](https://github.com/avanzu/node-packages/compare/@avanzu/eventstore@1.19.0...@avanzu/eventstore@1.19.1) (2022-09-29)
 
 **Note:** Version bump only for package @avanzu/eventstore
