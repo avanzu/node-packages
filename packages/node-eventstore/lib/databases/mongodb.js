@@ -1,11 +1,13 @@
+//prettier-ignore
+const { range, mergeDeepLeft, has, pick, last, propEq, defaultTo, pipe, prop, isNil, always, map } = require('ramda')
+
 const Store = require('../base')
 const async = require('async')
 const stream = require('stream')
 const { MongoClient, ObjectId: ObjectID } = require('mongodb')
-const { Result } = require('@avanzu/std')
+const { Result, Option } = require('@avanzu/std')
 const semver = require('semver')
-const { range, mergeDeepLeft, has, pick, last, propEq, defaultTo, pipe } = require('ramda')
-const { filterEmpty } = require('../util')
+const { filterEmpty, noopAsync, isNothing } = require('../util')
 const { version } = require('mongodb/package.json')
 const StoreError = require('../error')
 
@@ -231,6 +233,7 @@ class Mongo extends Store {
     static isStreamable() {
         return semver.satisfies(version, '<4.0.0')
     }
+
     static isDeletable() {
         return true
     }
@@ -274,7 +277,7 @@ class Mongo extends Store {
             .then(inspect('indexes %o'))
             .then(() => this.emit('connect'))
             .then(() => this.options.heartbeat && this.startHeartbeat())
-            .then(() => this)
+            .then(always(this))
     }
 
     initDb() {
@@ -362,21 +365,18 @@ class Mongo extends Store {
     }
 
     getNextPositions(positions) {
-        return new Promise((Ok, Err) => {
-            if (!this.positions) {
-                debug('Positions not present')
-                return Ok(null)
-            }
-
-            this.positions
+        const buildRange = (coll) =>
+            coll
                 .findOneAndUpdate(
                     { _id: this.positionsCounterId },
                     { $inc: { position: positions } },
                     { returnDocument: 'after', upsert: true }
                 )
                 .then(({ value }) => (value.position += 1))
-                .then((position) => range(position - positions, position))
-                .then(Ok, Err)
+                .then((pos) => range(pos - positions, pos))
+
+        return new Promise((Ok, Err) => {
+            Option.fromNullable(this.positions).fold(noopAsync, buildRange).then(Ok, Err)
         })
     }
 
@@ -410,7 +410,7 @@ class Mongo extends Store {
 
             Result.fromPredicate(propEq('length', 1), events)
                 .fold(addSomeEvents(commitId), adddOneEvent)
-                .then(() => this)
+                .then(always(this))
                 .then(Ok, Err)
         })
     }
@@ -440,25 +440,22 @@ class Mongo extends Store {
 
     streamEventsByRevision(query, revMin, revMax) {
         const findStatement = requireAggregateId(query).map(withConstraints).unwrap()
-        var resultStream = new stream.PassThrough({ objectMode: true, highWaterMark: 1 })
+        const resultStream = new stream.PassThrough({ objectMode: true, highWaterMark: 1 })
         streamEventsByRevision(this, findStatement, revMin, revMax, resultStream)
         return resultStream
     }
 
     getEvents(query, skip, limit) {
-        return new Promise((Ok, Err) => {
-            this.streamEvents(query, skip, limit).toArray().then(Ok, Err)
-        })
+        return this.streamEvents(query, skip, limit).toArray()
     }
 
     getEventsSince(date, skip, limit) {
-        return new Promise((Ok, Err) => {
-            this.streamEventsSince(date, skip, limit).toArray().then(Ok, Err)
-        })
+        return this.streamEventsSince(date, skip, limit).toArray()
     }
 
     getEventsByRevision(query, revMin, revMax) {
-        const removeAndResolve = (lastEvt, res) => this.removeTransactions(lastEvt).then(() => res)
+        const removeAndResolve = (lastEvt, res) =>
+            this.removeTransactions(lastEvt).then(always(res))
 
         const repairAndRetry = (lastEvt) =>
             this.repairFailedTransaction(lastEvt).then(() =>
@@ -472,6 +469,9 @@ class Mongo extends Store {
                 : repairAndRetry(lastEvent)
         }
 
+        const processEvents = (events) =>
+            Result.fromPredicate(isNothing, events).fold(evaluatTransaction, always([]))
+
         return new Promise((Ok, Err) => {
             debug('getEventsByRevision(%s, %s, %s)', query, revMin, revMax)
 
@@ -482,10 +482,7 @@ class Mongo extends Store {
                 .map((constraints) => ({ ...constraints, streamRevision }))
                 .unwrap()
 
-            this.findEvents(findStatement)
-                .toArray()
-                .then((res) => (!res || res.length === 0 ? [] : evaluatTransaction(res)))
-                .then(Ok, Err)
+            this.findEvents(findStatement).toArray().then(processEvents).then(Ok, Err)
         })
     }
 
@@ -498,13 +495,9 @@ class Mongo extends Store {
     }
 
     setEventToDispatched(id) {
-        return new Promise((Ok, Err) => {
-            var updateCommand = { $unset: { dispatched: null } }
-            this.events
-                .updateOne({ _id: id }, updateCommand)
-                .then(() => this)
-                .then(Ok, Err)
-        })
+        return this.events
+            .updateOne({ _id: id }, { $unset: { dispatched: null } })
+            .then(always(this))
     }
 
     addSnapshot(snap) {
@@ -515,7 +508,7 @@ class Mongo extends Store {
                 .map(({ id, ...snap }) => ({ _id: id, id, ...snap }))
                 .promise()
                 .then((snap) => this.snapshots.insertOne(snap))
-                .then(() => this)
+                .then(always(this))
                 .then(Ok, Err)
         })
     }
@@ -568,11 +561,10 @@ class Mongo extends Store {
     }
 
     getPendingTransactions() {
-        const isFulfilled = ({ status }) => status === 'fulfilled'
-        const eventNotPresent = ({ event }) => !Boolean(event)
-        const eventPresent = ({ event }) => Boolean(event)
-        const takeValue = ({ value }) => value
-        const takeFulfilledValues = (results) => results.filter(isFulfilled).map(takeValue)
+        const eventAbsent = ({ event }) => isNil(event)
+        const eventPresent = ({ event }) => !isNil(event)
+        const takeFulfilledValues = (results) =>
+            results.filter(propEq('status', 'fulfilled')).map(prop('value'))
 
         const findEvent = ({ _id, aggregateId, aggregate, context }) =>
             Promise.resolve({ commitId: _id, aggregateId, aggregate, context })
@@ -590,7 +582,7 @@ class Mongo extends Store {
             this.transactions.deleteOne({ _id: transaction })
 
         const removeTransactionsWithoutEvent = (xs) =>
-            Promise.all(xs.filter(eventNotPresent).map(removeTransaction))
+            Promise.all(xs.filter(eventAbsent).map(removeTransaction))
 
         const removeEmptyTransactions = (xs) =>
             removeTransactionsWithoutEvent(xs).then(() => xs.filter(eventPresent))
@@ -599,9 +591,9 @@ class Mongo extends Store {
             this.transactions
                 .find({})
                 .toArray()
-                .then((transactions) => findEvents(transactions))
+                .then(findEvents)
                 .then(removeEmptyTransactions)
-                .then((xs) => xs.map(({ event }) => event))
+                .then(map(prop('event')))
                 .then(inspect('pending events %o'))
                 .then(Ok, Err)
         })
@@ -636,7 +628,7 @@ class Mongo extends Store {
                 .then(eventsFromTransaction)
                 .then(insertMissing)
                 .then(removeTransaction)
-                .then(() => this)
+                .then(always(this))
                 .then(Ok, Err)
         })
     }

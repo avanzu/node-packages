@@ -1,10 +1,13 @@
 const { Ok, fromPredicate } = require('@avanzu/std').Result
-const { always, has, is, identity, filter, isNil, complement } = require('ramda')
-
-const filterEmpty = filter(complement(isNil))
+// prettier-ignore
+const { always, has, is, identity, filter, isNil, complement, anyPass, isEmpty } = require('ramda')
 
 const noop = identity
 const isString = is(String)
+const isNothing = anyPass([isNil, isEmpty])
+const filterEmpty = filter(complement(isNil))
+const noopAsync = () => Promise.resolve()
+
 const toQuery = (aggregateId) => ({ aggregateId })
 
 const normalizeQuery = (query) =>
@@ -17,4 +20,12 @@ const requireId = (query) =>
 
 const toAggregateQuery = (query) => normalizeQuery(query).unwrapWith(requireId)
 
-module.exports = { noop, toAggregateQuery, normalizeQuery, requireId, filterEmpty }
+module.exports = {
+    noop,
+    noopAsync,
+    toAggregateQuery,
+    normalizeQuery,
+    requireId,
+    filterEmpty,
+    isNothing,
+}
