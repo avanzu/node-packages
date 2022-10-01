@@ -224,6 +224,16 @@ describe('Type "Result"', () => {
 
             expect(() => result.unwrap()).toThrow(new Error('ERR'))
         })
+
+        test('Result.tryAsync (OK)', async () => {
+            const safe = Result.tryAsync(() => Promise.resolve('OK'))
+            expect((await safe('foo')).unwrap()).toBe('OK')
+        })
+        test('Result.tryAsync (Err)', async () => {
+            const safe = Result.tryAsync(() => Promise.reject('Err'))
+            const result = await safe('foo')
+            expect(() => result.unwrap()).toThrow('Err')
+        })
     })
     describe('boolean combining', () => {
         test('Ok and Ok -> Ok', () => {
