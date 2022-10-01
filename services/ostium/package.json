@@ -41,6 +41,7 @@
     "dependencies": {
         "@avanzu/redis-composable": "^1.2.4",
         "@avanzu/rhea-composable": "^1.8.5",
+        "@avanzu/std": "^1.1.1",
         "@feathersjs/authentication": "^4.5.12",
         "@feathersjs/authentication-local": "^4.5.12",
         "@feathersjs/authentication-oauth": "^4.5.12",
@@ -53,6 +54,7 @@
         "cors": "^2.8.5",
         "feathers-memory": "^4.1.0",
         "helmet": "^4.6.0",
+        "piscina": "^3.2.0",
         "serve-favicon": "^2.5.0",
         "winston": "^3.7.2"
     },
