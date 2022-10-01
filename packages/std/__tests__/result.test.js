@@ -22,6 +22,21 @@ describe('Type "Result"', () => {
             expect(() => Result.err(message).unwrap()).toThrow(message)
         })
 
+        test('fromNullable(null)', () => expect(Result.fromNullable(null).isErr()).toBe(true))
+        test('fromNullable(undefined)', () => expect(Result.fromNullable().isErr()).toBe(true))
+        test('fromNullable(value)', () => expect(Result.fromNullable('foo').isOk()).toBe(true))
+
+        test('fromPredicate (true)', () => {
+            const predicate = jest.fn(() => true)
+            expect(Result.fromPredicate(predicate, 'foo').isOk()).toBe(true)
+            expect(predicate).toHaveBeenCalledWith('foo')
+        })
+        test('fromPredicate (false)', () => {
+            const predicate = jest.fn(() => false)
+            expect(Result.fromPredicate(predicate, 'foo').isErr()).toBe(true)
+            expect(predicate).toHaveBeenCalledWith('foo')
+        })
+
         test('Result.try (Err)', () => {
             const unsafe = jest.fn().mockImplementation(() => {
                 throw new Error('SOxNUZyscb')
@@ -53,6 +68,11 @@ describe('Type "Result"', () => {
             expect(val.unwrapOrElse(() => 'something else')).toBe('something')
         })
         test('unwrapAlways', () => expect(val.unwrapAlways('const')).toBe('const'))
+        test('unwrapWith', () => {
+            const fn = jest.fn(() => 'OK')
+            expect(val.unwrapWith(fn)).toBe('OK')
+            expect(fn).toHaveBeenCalledWith('something')
+        })
 
         test('fold', () => {
             const onOk = jest.fn().mockReturnValue('onOk')
@@ -70,6 +90,14 @@ describe('Type "Result"', () => {
             expect(result.isOk()).toBe(true)
             expect(result.unwrap()).toBe('mapped')
             expect(mapping).toHaveBeenCalledWith('something')
+        })
+        test('mapErr', () => {
+            const mapping = jest.fn().mockReturnValue('mapped')
+            const result = val.mapErr(mapping)
+
+            expect(result.isOk()).toBe(true)
+            expect(result.unwrap()).toBe('something')
+            expect(mapping).not.toHaveBeenCalled()
         })
 
         test('chain', () => {
@@ -135,6 +163,15 @@ describe('Type "Result"', () => {
             expect(result.isErr()).toBe(true)
             expect(() => result.unwrap()).toThrow()
             expect(mapping).not.toHaveBeenCalled()
+        })
+
+        test('mapErr', () => {
+            const mapping = jest.fn().mockReturnValue('mapped')
+            const result = val.mapErr(mapping)
+
+            expect(result.isErr()).toBe(true)
+            expect(() => result.unwrap()).toThrow('mapped')
+            expect(mapping).toHaveBeenCalledWith(Result.ERROR)
         })
 
         test('chain', () => {

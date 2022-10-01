@@ -58,6 +58,7 @@ const all = (results) =>
 
 const fromPredicate = (pred, x) => (pred(x) ? Ok(x) : Err(x))
 const fromNullable = (x, message) => (x != null ? Ok(x) : Err(message))
+const fromBoolean = (x, message) => (Boolean(x) ? Ok(x) : Err(message))
 const promised = (p) => p.then(Ok, Err)
 
 const Result = {
@@ -71,6 +72,7 @@ const Result = {
     ERROR,
     fromPredicate,
     fromNullable,
+    fromBoolean,
 }
 
 module.exports = Result

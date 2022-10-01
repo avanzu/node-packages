@@ -13,6 +13,9 @@ describe('Type "Option"', () => {
         test('none', () => {
             expect(Option.none().isNone()).toBe(true)
         })
+        test('fromNullable(null)', () => expect(Option.fromNullable(null).isNone()).toBe(true))
+        test('fromNullable(undefined)', () => expect(Option.fromNullable().isNone()).toBe(true))
+        test('fromNullable(value)', () => expect(Option.fromNullable('foo').isSome()).toBe(true))
     })
 
     describe('Variant "Some"', () => {
@@ -28,6 +31,11 @@ describe('Type "Option"', () => {
         })
 
         test('unwrapAlways', () => expect(val.unwrapAlways('const')).toBe('const'))
+        test('unwrapWith', () => {
+            const fn = jest.fn(() => 'OK')
+            expect(val.unwrapWith(fn)).toBe('OK')
+            expect(fn).toHaveBeenCalledWith('something')
+        })
 
         test('fold', () => {
             const onOk = jest.fn().mockReturnValue('onOk')
@@ -92,6 +100,11 @@ describe('Type "Option"', () => {
             expect(val.unwrapOrElse(() => 'something else')).toBe('something else')
         })
         test('unwrapAlways', () => expect(val.unwrapAlways('const')).toBe('const'))
+        test('unwrapWith', () => {
+            const fn = jest.fn(() => 'OK')
+            expect(val.unwrapWith(fn)).toBe('OK')
+            expect(fn).toHaveBeenCalled()
+        })
 
         test('fold', () => {
             const onOk = jest.fn().mockReturnValue('onOk')
