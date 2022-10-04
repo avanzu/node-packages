@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0](https://github.com/avanzu/node-packages/compare/@avanzu/std@1.2.0...@avanzu/std@1.3.0) (2022-10-04)
+
+
+### Features
+
+* adds custom inspect symbol ([77fe7bd](https://github.com/avanzu/node-packages/commit/77fe7bdbd191cd0b62603c61eeeb3172d2172295))
+
+
+
+
+
 # [1.2.0](https://github.com/avanzu/node-packages/compare/@avanzu/std@1.1.1...@avanzu/std@1.2.0) (2022-10-01)
 
 

@@ -1,7 +1,7 @@
 {
     "name": "icy-omega",
     "description": "",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "homepage": "",
     "private": true,
     "main": "src",
@@ -41,7 +41,7 @@
     "dependencies": {
         "@avanzu/redis-composable": "*",
         "@avanzu/rhea-composable": "*",
-        "@avanzu/std": "*",
+        "@avanzu/std": "^1.3.0",
         "@feathersjs/configuration": "^4.5.15",
         "@feathersjs/errors": "^4.5.15",
         "@feathersjs/express": "^4.5.15",
@@ -51,10 +51,10 @@
         "cors": "^2.8.5",
         "helmet": "^5.1.1",
         "piscina": "^3.2.0",
+        "ramda": "^0.28.0",
         "serve-favicon": "^2.5.0",
         "winston": "^3.8.2",
-        "xml2js": "^0.4.23",
-        "ramda": "^0.28.0"
+        "xml2js": "^0.4.23"
     },
     "devDependencies": {
         "axios": "^0.26.1",
