@@ -1,4 +1,5 @@
 const { promiseOk } = require('./util')
+const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom')
 
 const Identity = (x) => ({
     fold: (fn) => fn(x),
@@ -12,6 +13,7 @@ const Identity = (x) => ({
     promise: () => promiseOk(x),
     and: (id) => id.fold((v) => Identity([x].concat([v]))),
     concat: (id) => id.fold((v) => Identity(x.concat(v))),
+    [customInspectSymbol]: () => `Identity(${x})`,
 })
 
 const all = (opts) =>

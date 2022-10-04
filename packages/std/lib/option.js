@@ -1,4 +1,5 @@
 const { promiseErr, promiseOk, panic } = require('./util')
+const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom')
 
 const ERROR = 'Unable to unwrap Option<None>.'
 
@@ -24,6 +25,7 @@ const Some = (x) => ({
             () => Some(x),
             (v) => Some(x.concat(v))
         ),
+    [customInspectSymbol]: () => `Some(${x})`,
 })
 
 const None = () => ({
@@ -44,6 +46,7 @@ const None = () => ({
     promise: () => promiseErr(ERROR),
     and: () => None(),
     concat: (opt) => opt.fold(None, Some),
+    [customInspectSymbol]: () => `None()`,
 })
 
 const all = (opts) =>

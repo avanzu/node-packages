@@ -1,5 +1,6 @@
 const { promiseErr, promiseOk, panic } = require('./util')
 const ERROR = 'Unable to unwrap Result<Err>.'
+const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom')
 
 const Ok = (x) => ({
     isOk: () => true,
@@ -22,6 +23,7 @@ const Ok = (x) => ({
     promise: () => promiseOk(x),
     and: (res) => res.fold(Err, (v) => Ok([x].concat([v]))),
     concat: (res) => res.fold(Err, (v) => Ok(x.concat(v))),
+    [customInspectSymbol]: () => `Ok(${x})`,
 })
 
 const Err = (e = ERROR) => ({
@@ -45,6 +47,7 @@ const Err = (e = ERROR) => ({
     promise: () => promiseErr(e),
     and: () => Err(e),
     concat: () => Err(e),
+    [customInspectSymbol]: () => `Err(${e})`,
 })
 
 // prettier-ignore
