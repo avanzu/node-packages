@@ -10,7 +10,8 @@
     "lerna": "^5.5.1",
     "prettier": "^2.6.2",
     "testcontainers": "^8.13.1",
-    "trace-unhandled": "^2.0.1"
+    "trace-unhandled": "^2.0.1",
+    "axios": "^0.27.2"
   },
   "scripts": {
     "version": "lerna version  -y --conventional-commits --loglevel verbose",

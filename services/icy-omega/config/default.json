@@ -1,0 +1,11 @@
+{
+    "host": "localhost",
+    "port": 3030,
+    "redis": "redis://localhost:6397",
+    "amqp": "amqp10://admin@localhost:5672",
+    "public": "../public/",
+    "paginate": {
+        "default": 10,
+        "max": 50
+    }
+}

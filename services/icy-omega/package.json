@@ -1,17 +1,28 @@
 {
     "name": "icy-omega",
     "description": "",
-    "version": "0.1.5",
+    "version": "0.0.0",
     "homepage": "",
     "private": true,
     "main": "src",
-    "keywords": [],
+    "keywords": [
+        "feathers"
+    ],
     "author": {
         "name": "Marc Bach",
         "email": "mail@avanzu.de"
     },
     "contributors": [],
     "bugs": {},
+    "directories": {
+        "lib": "src",
+        "test": "test/",
+        "config": "config/"
+    },
+    "engines": {
+        "node": "^16.0.0",
+        "npm": ">= 3.0.0"
+    },
     "scripts": {
         "test": "npm run lint && npm run jest",
         "lint": "eslint src/. __tests__/. --fix",
@@ -28,8 +39,22 @@
         "ignore": []
     },
     "dependencies": {
-        "@avanzu/redis-composable": "^1.2.4",
-        "@avanzu/rhea-composable": "^1.8.5"
+        "@avanzu/redis-composable": "*",
+        "@avanzu/rhea-composable": "*",
+        "@avanzu/std": "*",
+        "@feathersjs/configuration": "^4.5.15",
+        "@feathersjs/errors": "^4.5.15",
+        "@feathersjs/express": "^4.5.15",
+        "@feathersjs/feathers": "^4.5.15",
+        "@feathersjs/transport-commons": "^4.5.15",
+        "compression": "^1.7.4",
+        "cors": "^2.8.5",
+        "helmet": "^5.1.1",
+        "piscina": "^3.2.0",
+        "serve-favicon": "^2.5.0",
+        "winston": "^3.8.2",
+        "xml2js": "^0.4.23",
+        "ramda": "^0.28.0"
     },
     "devDependencies": {
         "axios": "^0.26.1",

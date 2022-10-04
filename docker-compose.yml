@@ -48,8 +48,26 @@ services:
       - './node_modules:/opt/app/node_modules:ro'
       - './packages:/opt/app/packages:ro'
       - './services/celtic-sun:/opt/app/services/celtic-sun:ro'
+  icy-omega:
+    build:
+      context: . 
+      dockerfile: dev.dockerfile
+      args:
+        SERVICE: icy-omega
+    command: ['npm', '--prefix', 'services/icy-omega', 'run', 'dev:debug']  
+    env_file: '.env'
+    environment:
+      PORT: 3033
+      DEBUG_PORT: 9033
+    ports:
+      - '3033:3033'
+      - '9033:9033'
+    volumes:
+      - './node_modules:/opt/app/node_modules:ro'
+      - './packages:/opt/app/packages:ro'
+      - './services/icy-omega:/opt/app/services/icy-omega:ro'
     deploy:
-      replicas: 3
+      replicas: 1
   lost-fox:
     build:
       context: . 
@@ -67,4 +85,4 @@ services:
       - './packages:/opt/app/packages:ro'
       - './services/lost-fox:/opt/app/services/lost-fox:ro'
     deploy:
-      replicas: 3
+      replicas: 1
