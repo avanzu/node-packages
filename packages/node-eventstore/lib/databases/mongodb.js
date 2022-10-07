@@ -252,28 +252,34 @@ class Mongo extends Store {
     }
 
     finish(ensureIndex) {
-        return Promise.all([
-            this.events[ensureIndex]({ aggregateId: 1, streamRevision: 1 }),
-            this.events[ensureIndex]({ commitStamp: 1 }),
-            this.events[ensureIndex]({ dispatched: 1 }, { sparse: true }),
-            this.events[ensureIndex]({
-                commitStamp: 1,
-                streamRevision: 1,
-                commitSequence: 1,
-            }),
-            this.events[ensureIndex]({
-                aggregate: 1,
-                aggregateId: 1,
-                commitStamp: -1,
-                streamRevision: -1,
-                commitSequence: -1,
-            }),
-            this.snapshots[ensureIndex]({ aggregateId: 1, revision: -1 }),
-            this.transactions[ensureIndex]({
-                aggregateId: 1,
-                'events.streamRevision': 1,
-            }),
-        ])
+        const calls = [
+            () => this.events[ensureIndex]({ aggregateId: 1, streamRevision: 1 }),
+            () => this.events[ensureIndex]({ commitStamp: 1 }),
+            () => this.events[ensureIndex]({ dispatched: 1 }, { sparse: true }),
+            () =>
+                this.events[ensureIndex]({
+                    commitStamp: 1,
+                    streamRevision: 1,
+                    commitSequence: 1,
+                }),
+            () =>
+                this.events[ensureIndex]({
+                    aggregate: 1,
+                    aggregateId: 1,
+                    commitStamp: -1,
+                    streamRevision: -1,
+                    commitSequence: -1,
+                }),
+            () => this.snapshots[ensureIndex]({ aggregateId: 1, revision: -1 }),
+            () =>
+                this.transactions[ensureIndex]({
+                    aggregateId: 1,
+                    'events.streamRevision': 1,
+                }),
+        ]
+
+        return calls
+            .reduce((p, fn) => p.then(fn).catch(console.error), Promise.resolve())
             .then(inspect('indexes %o'))
             .then(() => this.emit('connect'))
             .then(() => this.options.heartbeat && this.startHeartbeat())
