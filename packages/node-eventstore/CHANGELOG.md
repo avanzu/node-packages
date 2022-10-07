@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.20.3](https://github.com/avanzu/node-packages/compare/@avanzu/eventstore@1.20.2...@avanzu/eventstore@1.20.3) (2022-10-07)
+
+
+### Bug Fixes
+
+* **AWS DocumentDB:** indexes will now be created sequentially ([08f0679](https://github.com/avanzu/node-packages/commit/08f06790753c5fd90ac5b1ca6240075d41ee9885))
+
+
+
+
+
 ## [1.20.2](https://github.com/avanzu/node-packages/compare/@avanzu/eventstore@1.20.1...@avanzu/eventstore@1.20.2) (2022-10-04)
 
 **Note:** Version bump only for package @avanzu/eventstore
