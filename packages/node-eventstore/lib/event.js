@@ -1,5 +1,9 @@
-var debug = require('debug')('@avanzu/eventstore/event'),
-    dotty = require('dotty')
+const dotty = require('dotty'),
+    { fromNullable, fromBoolean } = require('@avanzu/std').Result,
+    { isArray } = require('./util'),
+    { Messages } = require('./error')
+
+const { NO_AGGREGATEID, NO_EVENT, NO_UNCOMMITTED, NO_STREAM } = Messages
 
 /**
  * Event constructor
@@ -8,37 +12,19 @@ var debug = require('debug')('@avanzu/eventstore/event'),
  * @constructor
  */
 class Event {
-    constructor(eventstream, event, eventMappings) {
-        if (!eventstream) {
-            var errStreamMsg = 'eventstream not injected!'
-            debug(errStreamMsg)
-            throw new Error(errStreamMsg)
-        }
+    constructor(stream, event, mappings) {
+        fromNullable(stream, NO_STREAM)
+            .chain(() => fromNullable(event, NO_EVENT))
+            .chain(() => fromNullable(stream.aggregateId, NO_AGGREGATEID))
+            .chain(() => fromBoolean(isArray(stream.uncommittedEvents), NO_UNCOMMITTED))
+            .unwrap()
 
-        if (!event) {
-            var errEvtMsg = 'event not injected!'
-            debug(errEvtMsg)
-            throw new Error(errEvtMsg)
-        }
+        mappings = fromNullable(mappings).unwrapOr({}) // || {}
 
-        if (!eventstream.aggregateId) {
-            var errAggIdMsg = 'eventstream.aggregateId not injected!'
-            debug(errAggIdMsg)
-            throw new Error(errAggIdMsg)
-        }
-
-        if (!Array.isArray(eventstream.uncommittedEvents)) {
-            var errAggIdMsg = 'eventstream.uncommittedEvents not injected!'
-            debug(errAggIdMsg)
-            throw new Error(errAggIdMsg)
-        }
-
-        eventMappings = eventMappings || {}
-
-        this.streamId = eventstream.aggregateId
-        this.aggregateId = eventstream.aggregateId
-        this.aggregate = eventstream.aggregate
-        this.context = eventstream.context
+        this.streamId = stream.aggregateId
+        this.aggregateId = stream.aggregateId
+        this.aggregate = stream.aggregate
+        this.context = stream.context
         this.streamRevision = null
         this.commitId = null
         this.commitSequence = null
@@ -47,16 +33,16 @@ class Event {
         this.position = null
 
         this.applyMappings = () => {
-            Object.keys(eventMappings).forEach(
+            Object.keys(mappings).forEach(
                 function (key) {
                     if (this[key] !== undefined && this[key] !== null) {
-                        dotty.put(this.payload, eventMappings[key], this[key])
+                        dotty.put(this.payload, mappings[key], this[key])
                     }
                 }.bind(this)
             )
         }
 
-        this.addToStream(eventstream)
+        this.addToStream(stream)
         //eventstream.uncommittedEvents.push(this)
     }
 

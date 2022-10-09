@@ -1,7 +1,20 @@
-var debug = require('debug')('@avanzu/eventstore/eventstream'),
-    _ = require('lodash'),
-    Event = require('./event'),
-    TombstoneEvent = require('./tombstoneEvent')
+const Event = require('./event'),
+    TombstoneEvent = require('./tombstoneEvent'),
+    { fromNullable, fromBoolean } = require('@avanzu/std').Result,
+    { isNotNil, isCallable, isArray } = require('./util'),
+    { all, pipe, prop, sortBy, max } = require('ramda'),
+    { Messages } = require('./error')
+
+const {
+    NO_STORE,
+    COMMIT_UNCALLABLE,
+    NO_QUERY,
+    NO_AGGREGATEID,
+    EVENTS_NO_ARRAY,
+    EVENTS_MISSING_REV,
+} = Messages
+
+const hasRev = pipe(prop('streamRevision'), isNotNil)
 
 /**
  * EventStream constructor
@@ -13,74 +26,40 @@ var debug = require('debug')('@avanzu/eventstore/eventstream'),
  */
 
 class EventStream {
-    constructor(eventstore, query, events) {
-        if (!eventstore) {
-            var errESMsg = 'eventstore not injected!'
-            debug(errESMsg)
-            throw new Error(errESMsg)
-        }
+    constructor(store, query, events = []) {
+        fromNullable(store, NO_STORE)
+            .chain(() => fromBoolean(isCallable(store.commit), COMMIT_UNCALLABLE))
+            .chain(() => fromNullable(query, NO_QUERY))
+            .chain(() => fromNullable(query.aggregateId, NO_AGGREGATEID))
+            .chain(() => fromBoolean(isArray(events), EVENTS_NO_ARRAY))
+            .chain(() => fromBoolean(all(hasRev, events), EVENTS_MISSING_REV))
+            .unwrap()
 
-        if (typeof eventstore.commit !== 'function') {
-            var errESfnMsg = 'eventstore.commit not injected!'
-            debug(errESfnMsg)
-            throw new Error(errESfnMsg)
-        }
-
-        if (!query) {
-            var errQryMsg = 'query not injected!'
-            debug(errQryMsg)
-            throw new Error(errQryMsg)
-        }
-
-        if (!query.aggregateId) {
-            var errAggIdMsg = 'query.aggregateId not injected!'
-            debug(errAggIdMsg)
-            throw new Error(errAggIdMsg)
-        }
-
-        if (events) {
-            if (!_.isArray(events)) {
-                var errEvtsArrMsg = 'events should be an array!'
-                debug(errEvtsArrMsg)
-                throw new Error(errEvtsArrMsg)
-            }
-
-            for (var i = 0, len = events.length; i < len; i++) {
-                var evt = events[i]
-                if (evt.streamRevision === undefined || evt.streamRevision === null) {
-                    var errEvtMsg = 'The events passed should all have a streamRevision!'
-                    debug(errEvtMsg)
-                    throw new Error(errEvtMsg)
-                }
-            }
-        }
-
-        this.eventstore = eventstore
+        this.eventstore = store
         this.streamId = query.aggregateId
         this.aggregateId = query.aggregateId
         this.aggregate = query.aggregate
         this.context = query.context
-        this.events = events || []
         this.uncommittedEvents = []
         this.eventsToDispatch = []
         this.lastRevision = -1
 
-        this.events = _.sortBy(this.events, 'streamRevision')
+        this.events = sortBy(prop('streamRevision'), events)
 
         // to update lastRevision...
         this.currentRevision()
     }
+
+    get eventMappings() {
+        return this.eventstore.eventMappings
+    }
+
     /**
      * This helper function calculates and returns the current stream revision.
      * @returns {Number} lastRevision
      */
     currentRevision() {
-        for (var i = 0, len = this.events.length; i < len; i++) {
-            if (this.events[i].streamRevision > this.lastRevision) {
-                this.lastRevision = this.events[i].streamRevision
-            }
-        }
-
+        this.lastRevision = this.events.reduce((cur, x) => max(cur, x.streamRevision), -1)
         return this.lastRevision
     }
 
@@ -89,12 +68,12 @@ class EventStream {
      * @param {Object} event
      */
     addEvent(event) {
-        new Event(this, event, this.eventstore.eventMappings)
+        new Event(this, event, this.eventMappings)
         return this
     }
 
     addTombstoneEvent() {
-        new TombstoneEvent(this, this, this.eventstore.eventMappings)
+        new TombstoneEvent(this, this, this.eventMappings)
         return this
     }
 
@@ -103,15 +82,9 @@ class EventStream {
      * @param {Array} events
      */
     addEvents(events) {
-        if (!_.isArray(events)) {
-            var errEvtsArrMsg = 'events should be an array!'
-            debug(errEvtsArrMsg)
-            throw new Error(errEvtsArrMsg)
-        }
+        fromBoolean(isArray(events), EVENTS_NO_ARRAY).unwrap()
+        events.forEach((e) => this.addEvent(e))
 
-        _.each(events, (evt) => {
-            this.addEvent(evt)
-        })
         return this
     }
 
@@ -120,18 +93,7 @@ class EventStream {
      * @param {Function} callback the function that will be called when this action has finished [optional]
      */
     commit() {
-        return new Promise((Ok, Err) => {
-            this.eventstore
-                .commit(this)
-                .then((res) => {
-                    // callback(null, res)
-                    Ok(res)
-                })
-                .catch((err) => {
-                    // callback(err)
-                    Err(err)
-                })
-        })
+        return this.eventstore.commit(this)
     }
 }
 
