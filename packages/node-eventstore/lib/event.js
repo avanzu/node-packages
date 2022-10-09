@@ -1,6 +1,6 @@
 const dotty = require('dotty'),
     { fromNullable, fromBoolean } = require('@avanzu/std').Result,
-    { isArray } = require('./util'),
+    { isArray, isNotNil } = require('./util'),
     { Messages } = require('./error')
 
 const { NO_AGGREGATEID, NO_EVENT, NO_UNCOMMITTED, NO_STREAM } = Messages
@@ -19,8 +19,6 @@ class Event {
             .chain(() => fromBoolean(isArray(stream.uncommittedEvents), NO_UNCOMMITTED))
             .unwrap()
 
-        mappings = fromNullable(mappings).unwrapOr({}) // || {}
-
         this.streamId = stream.aggregateId
         this.aggregateId = stream.aggregateId
         this.aggregate = stream.aggregate
@@ -29,25 +27,21 @@ class Event {
         this.commitId = null
         this.commitSequence = null
         this.commitStamp = null
-        this.payload = event || null
+        this.payload = event
         this.position = null
 
-        this.applyMappings = () => {
-            Object.keys(mappings).forEach(
-                function (key) {
-                    if (this[key] !== undefined && this[key] !== null) {
-                        dotty.put(this.payload, mappings[key], this[key])
-                    }
-                }.bind(this)
-            )
-        }
+        const mappingEntries = fromNullable(mappings).map(Object.entries).unwrapOr([])
 
-        this.addToStream(stream)
-        //eventstream.uncommittedEvents.push(this)
+        this.applyMappings = () =>
+            mappingEntries
+                .filter(([key]) => isNotNil(this[key]))
+                .forEach(([key, value]) => dotty.put(this.payload, value, this[key]))
+
+        this.enterStream(stream)
     }
 
-    addToStream(eventstream) {
-        eventstream.uncommittedEvents.push(this)
+    enterStream(stream) {
+        stream.uncommittedEvents.push(this)
     }
 }
 

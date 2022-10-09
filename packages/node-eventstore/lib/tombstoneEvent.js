@@ -7,7 +7,7 @@ const Event = require('./event')
  * @constructor
  */
 class TombstoneEvent extends Event {
-    addToStream(eventstream) {
+    enterStream(eventstream) {
         debug('Adding tombstone event to eventstream')
         eventstream.eventsToDispatch.push(this)
     }

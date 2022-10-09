@@ -1,8 +1,8 @@
 var debug = require('debug')('@avanzu/eventstore/eventstore'),
     EventEmitter = require('events').EventEmitter,
     { Option, Result } = require('@avanzu/std'),
-    { noop, normalizeQuery, requireId } = require('./util'),
-    { defaultTo, propOr, is, pick } = require('ramda'),
+    { noop, normalizeQuery, requireId, isString } = require('./util'),
+    { defaultTo, propOr, is, pick, add, inc, subtract } = require('ramda'),
     EventDispatcher = require('./eventDispatcher'),
     EventStream = require('./eventStream'),
     Snapshot = require('./snapshot')
@@ -41,6 +41,10 @@ class Eventstore extends EventEmitter {
         return Result.fromPredicate((store) => store.deleteStream, this.store)
             .mapErr(() => new Error(`Deletion API is not suppoted by ${this.dbType}.`))
             .unwrap()
+    }
+
+    get maxSnapshots() {
+        return Result.fromPredicate(Boolean, this.options.maxSnapshotsCount)
     }
 
     /**
@@ -288,25 +292,20 @@ class Eventstore extends EventEmitter {
                 obj.aggregateId = obj.streamId
             }
 
-            requireId(obj).unwrap()
+            requireId(obj).unwrapWith(() => (obj.streamId = obj.aggregateId))
 
-            obj.streamId = obj.aggregateId
-
-            if (obj.revision) {
-                if (typeof obj.revision === 'string') {
-                    const castedRevision = parseFloat(obj.revision)
-
-                    if (castedRevision && castedRevision.toString() === obj.revision) {
-                        // Determines if the revision was parsed correctly, for the cases where user using custom typed revisions that's not in valid float format like: obj.revision = '1,2,3'
-                        obj.revision = castedRevision
-                    }
-                }
-            }
+            Result.fromNullable(obj.revision)
+                .chain((rev) => Result.fromPredicate(isString, rev))
+                .map(parseFloat)
+                .chain((rev) => Result.fromPredicate((r) => r.toString() === obj.revision, rev))
+                .tap((rev) => (obj.revision = rev))
+                .unwrapOr(null)
 
             const cleanup = (value) =>
-                this.options.maxSnapshotsCount
-                    ? this.store.cleanSnapshots(pick(['aggregateId', 'aggregate', 'context'], obj))
-                    : value
+                this.maxSnapshots
+                    .map(() => pick(['aggregateId', 'aggregate', 'context'], obj))
+                    .map((query) => this.store.cleanSnapshots(query))
+                    .unwrapOr(value)
 
             this.getNewId()
                 .then((id) => new Snapshot(id, obj))
@@ -324,8 +323,8 @@ class Eventstore extends EventEmitter {
      *                             `function(err, eventstream){}` (hint: eventstream.eventsToDispatch)
      */
     commit(eventstream) {
-        let currentRevision = eventstream.currentRevision(),
-            uncommittedEvents = [].concat(eventstream.uncommittedEvents)
+        const currentRevision = eventstream.currentRevision()
+        const uncommittedEvents = [].concat(eventstream.uncommittedEvents)
         eventstream.uncommittedEvents = []
 
         const newId = () => this.getNewId()
@@ -336,16 +335,14 @@ class Eventstore extends EventEmitter {
                 event.id = id + i.toString()
                 event.commitId = id
                 event.commitSequence = i
-                event.restInCommitStream = uncommittedEvents.length - 1 - i
+                event.restInCommitStream = subtract(uncommittedEvents.length, inc(i))
                 event.commitStamp = new Date()
-                currentRevision++
-                event.streamRevision = currentRevision
+                event.streamRevision = add(currentRevision, inc(i))
                 if (positions) event.position = positions[i]
 
                 event.applyMappings()
             })
             return uncommittedEvents
-            // for (var i = 0, len = uncommittedEvents.length; i < len; i++) {}
         }
         const addEvents = (newEvents) =>
             this.store
