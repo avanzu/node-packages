@@ -2,7 +2,7 @@ var debug = require('debug')('@avanzu/eventstore/eventstore'),
     EventEmitter = require('events').EventEmitter,
     { Option, Result } = require('@avanzu/std'),
     { noop, normalizeQuery, requireId, isString } = require('./util'),
-    { defaultTo, propOr, is, pick, add, inc, subtract } = require('ramda'),
+    { defaultTo, propOr, is, pick, add, inc, subtract, prop, or } = require('ramda'),
     EventDispatcher = require('./eventDispatcher'),
     EventStream = require('./eventStream'),
     Snapshot = require('./snapshot')
@@ -288,18 +288,13 @@ class Eventstore extends EventEmitter {
      */
     createSnapshot(obj) {
         return new Promise((Ok, Err) => {
-            if (obj.streamId && !obj.aggregateId) {
-                obj.aggregateId = obj.streamId
-            }
-
-            requireId(obj).unwrapWith(() => (obj.streamId = obj.aggregateId))
-
-            Result.fromNullable(obj.revision)
+            obj.aggregateId = Option.fromNullable(obj.streamId).unwrapOr(obj.aggregateId)
+            obj.streamId = requireId(obj).map(prop('aggregateId')).unwrap()
+            obj.revision = Result.fromNullable(obj.revision)
                 .chain((rev) => Result.fromPredicate(isString, rev))
-                .map(parseFloat)
+                .chain((rev) => Result.fromBoolean(parseFloat(rev)))
                 .chain((rev) => Result.fromPredicate((r) => r.toString() === obj.revision, rev))
-                .tap((rev) => (obj.revision = rev))
-                .unwrapOr(null)
+                .unwrapOr(obj.revision)
 
             const cleanup = (value) =>
                 this.maxSnapshots

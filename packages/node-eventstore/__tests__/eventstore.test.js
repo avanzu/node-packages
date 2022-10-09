@@ -367,6 +367,33 @@ describe('eventstore', () => {
 
                     await expect(es.createSnapshot(obj)).rejects.toBeInstanceOf(Error)
                 })
+
+                it('with revision it should pass them correctly', async () => {
+                    var obj = {
+                        streamId: 'myAggId',
+                        data: { snap: 'data' },
+                        revision: '1.9',
+                    }
+
+                    es.store.addSnapshot = jest.fn().mockResolvedValue()
+
+                    await es.createSnapshot(obj, () => {})
+                    expect(es.store.addSnapshot).toHaveBeenCalledWith(
+                        expect.objectContaining({ ...obj, revision: 1.9 })
+                    )
+                })
+                it('with invalid revision it should pass them correctly', async () => {
+                    var obj = {
+                        streamId: 'myAggId',
+                        data: { snap: 'data' },
+                        revision: 'foobar',
+                    }
+
+                    es.store.addSnapshot = jest.fn().mockResolvedValue()
+
+                    await es.createSnapshot(obj, () => {})
+                    expect(es.store.addSnapshot).toHaveBeenCalledWith(expect.objectContaining(obj))
+                })
             })
 
             describe('cleanSnapshots', () => {
