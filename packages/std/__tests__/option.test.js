@@ -202,6 +202,21 @@ describe('Type "Option"', () => {
             const result = Option.all([Option.None(), Option.Some('val1'), Option.Some('val2')])
             expect(result.isNone()).toBe(true)
         })
+
+        test('Some(a) or Some(b) -> Some(a)', () => {
+            const result = Option.Some('foo').or(Option.Some('bar'))
+            expect(result.unwrap()).toEqual('foo')
+        })
+
+        test('Some(a) or None -> Some(a)', () => {
+            const result = Option.Some('foo').or(Option.None())
+            expect(result.unwrap()).toEqual('foo')
+        })
+
+        test('None or Some(a) -> Some(a)', () => {
+            const result = Option.None().or(Option.Some('foo'))
+            expect(result.unwrap()).toEqual('foo')
+        })
     })
 
     describe('Semigroup', () => {

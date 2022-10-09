@@ -20,6 +20,7 @@ const Some = (x) => ({
     unwrapWith: (fn) => fn(x),
     promise: () => promiseOk(x),
     and: (opt) => opt.fold(None, (v) => Some([x].concat([v]))),
+    or: () => Some(x),
     concat: (opt) =>
         opt.fold(
             () => Some(x),
@@ -45,6 +46,7 @@ const None = () => ({
     unwrapWith: (fn) => fn(ERROR),
     promise: () => promiseErr(ERROR),
     and: () => None(),
+    or: (opt) => opt.fold(None, Some),
     concat: (opt) => opt.fold(None, Some),
     [customInspectSymbol]: () => `None()`,
 })
