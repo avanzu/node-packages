@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.21.0](https://github.com/avanzu/node-packages/compare/@avanzu/eventstore@1.20.5...@avanzu/eventstore@1.21.0) (2022-10-09)
+
+
+### Features
+
+* switches from positional to dictionary based arguments ([7a32d3c](https://github.com/avanzu/node-packages/commit/7a32d3c53e1fd6838e6ffd8b43268b42ba83d62a))
+
+
+
+
+
 ## [1.20.5](https://github.com/avanzu/node-packages/compare/@avanzu/eventstore@1.20.4...@avanzu/eventstore@1.20.5) (2022-10-09)
 
 **Note:** Version bump only for package @avanzu/eventstore
