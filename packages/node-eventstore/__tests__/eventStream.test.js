@@ -1,12 +1,11 @@
 const EventStream = require('../lib/eventStream')
-
+const { Messages } = require('../lib/error')
 describe('EventStream', () => {
     describe('creating an instance', () => {
         describe('without passing an eventstore', () => {
             it('it should throw an error', () => {
-                expect(() => {
-                    new EventStream({})
-                }).toThrowError(/eventstore/)
+                expect(() => new EventStream()).toThrowError(Messages.NO_STORE)
+                expect(() => new EventStream({})).toThrowError(Messages.COMMIT_UNCALLABLE)
             })
         })
 
@@ -14,7 +13,7 @@ describe('EventStream', () => {
             it('it should throw an error', () => {
                 expect(() => {
                     new EventStream({ commit: () => {} })
-                }).toThrowError(/query/)
+                }).toThrowError(Messages.NO_QUERY)
             })
         })
 
@@ -22,7 +21,7 @@ describe('EventStream', () => {
             it('it should throw an error', () => {
                 expect(() => {
                     new EventStream({ commit: () => {} }, {})
-                }).toThrowError(/query.aggregateId/)
+                }).toThrowError(Messages.NO_AGGREGATEID)
             })
         })
 
@@ -33,7 +32,7 @@ describe('EventStream', () => {
                         { streamRevision: 0 },
                         {},
                     ])
-                }).toThrowError(/streamRevision/)
+                }).toThrowError(Messages.EVENTS_MISSING_REV)
             })
         })
 

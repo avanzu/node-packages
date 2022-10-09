@@ -1,4 +1,5 @@
 const Event = require('../lib/event')
+const { Messages } = require('../lib/error')
 
 describe('Event', () => {
     describe('creating an instance', () => {
@@ -6,7 +7,7 @@ describe('Event', () => {
             it('it should throw an error', () => {
                 expect(() => {
                     new Event()
-                }).toThrowError(/eventstream/)
+                }).toThrowError(Messages.NO_STREAM)
             })
         })
 
@@ -14,7 +15,7 @@ describe('Event', () => {
             it('it should throw an error', () => {
                 expect(() => {
                     new Event({})
-                }).toThrowError(/event/)
+                }).toThrowError(Messages.NO_EVENT)
             })
         })
 
@@ -22,7 +23,7 @@ describe('Event', () => {
             it('it should throw an error', () => {
                 expect(() => {
                     new Event({}, {})
-                }).toThrowError(/eventstream.aggregateId/)
+                }).toThrowError(Messages.NO_AGGREGATEID)
             })
         })
 
@@ -30,7 +31,7 @@ describe('Event', () => {
             it('it should throw an error', () => {
                 expect(() => {
                     new Event({ aggregateId: 'myAggId' }, {})
-                }).toThrowError(/eventstream.uncommittedEvents/)
+                }).toThrowError(Messages.NO_UNCOMMITTED)
             })
         })
 
