@@ -9,7 +9,7 @@ const { Result, Option } = require('@avanzu/std')
 const semver = require('semver')
 const { filterEmpty, noopAsync, isNothing } = require('../util')
 const { version } = require('mongodb/package.json')
-const StoreError = require('../error')
+const { StoreError } = require('../error')
 
 const debug = require('debug')('@avanzu/eventstore/database/mongodb')
 const major = semver.major(version)
