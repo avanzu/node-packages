@@ -55,7 +55,6 @@
         "uuid": "^9.0.0"
     },
     "devDependencies": {
-        "cradle": ">=0.7.1",
         "eslint": ">=1.0.0",
         "mongodb": "^3.7.3",
         "redis": ">=0.10.1"
