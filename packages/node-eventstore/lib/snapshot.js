@@ -1,5 +1,5 @@
-var debug = require('debug')('@avanzu/eventstore/snapshot')
-
+// var debug = require('debug')('@avanzu/eventstore/snapshot')
+const { fromNullable } = require('@avanzu/std').Result
 /**
  * Snapshot constructor
  * The snapshot object will be persisted to the store.
@@ -9,29 +9,11 @@ var debug = require('debug')('@avanzu/eventstore/snapshot')
  */
 class Snapshot {
     constructor(id, obj) {
-        if (!id) {
-            var errIdMsg = 'id not injected!'
-            debug(errIdMsg)
-            throw new Error(errIdMsg)
-        }
-
-        if (!obj) {
-            var errObjMsg = 'object not injected!'
-            debug(errObjMsg)
-            throw new Error(errObjMsg)
-        }
-
-        if (!obj.aggregateId) {
-            var errAggIdMsg = 'object.aggregateId not injected!'
-            debug(errAggIdMsg)
-            throw new Error(errAggIdMsg)
-        }
-
-        if (!obj.data) {
-            var errDataMsg = 'object.data not injected!'
-            debug(errDataMsg)
-            throw new Error(errDataMsg)
-        }
+        fromNullable(id, 'id not injected!')
+            .chain(() => fromNullable(obj, 'object not injected!'))
+            .chain(() => fromNullable(obj.aggregateId, 'object.aggregateId not injected!'))
+            .chain(() => fromNullable(obj.data, 'object.data not injected!'))
+            .unwrap()
 
         this.id = id
         this.streamId = obj.aggregateId
