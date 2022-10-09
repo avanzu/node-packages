@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.1](https://github.com/avanzu/node-packages/compare/@avanzu/eventstore@1.21.0...@avanzu/eventstore@2.0.1) (2022-10-09)
+
+**Note:** Version bump only for package @avanzu/eventstore
+
+
+
+
+
 # [1.21.0](https://github.com/avanzu/node-packages/compare/@avanzu/eventstore@1.20.5...@avanzu/eventstore@1.21.0) (2022-10-09)
 
 
