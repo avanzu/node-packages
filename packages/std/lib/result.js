@@ -61,6 +61,14 @@ const tryAsync = (fn) => async (...args) => {
     catch (e) { return Err(e) }
 }
 
+const tryNow = (fn, ...args) => {
+    try {
+        return Ok(fn(...args))
+    } catch (e) {
+        return Err(e)
+    }
+}
+
 const all = (results) =>
     results.reduce((acc, cur) => acc.fold(Err, (xs) => cur.map((x) => xs.concat([x]))), Ok([]))
 
@@ -75,6 +83,7 @@ const Result = {
     of: Ok,
     err: Err,
     try: tryCatch,
+    tryNow,
     tryAsync,
     promised,
     all,
