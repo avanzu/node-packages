@@ -94,7 +94,7 @@ describe('eventstore', () => {
                         skip = 2,
                         limit = 32
 
-                    await es.getEvents(query, skip, limit)
+                    await es.getEvents({ query, skip, limit })
                     expect(mockFn).toHaveBeenCalledWith(query, skip, limit)
                 })
 
@@ -106,12 +106,12 @@ describe('eventstore', () => {
                 it('with query and callback it should pass them correctly', async () => {
                     const query = { aggregateId: 'myAggId', aggregate: 'myAgg', context: 'myCont' }
 
-                    await es.getEvents(query)
+                    await es.getEvents({ query })
                     expect(mockFn).toHaveBeenCalledWith(query, 0, -1)
                 })
 
                 it('with skip and callback it should pass them correctly', async () => {
-                    await es.getEvents(3)
+                    await es.getEvents({ skip: 3 })
                     expect(mockFn).toHaveBeenCalledWith({}, 3, -1)
                 })
 
@@ -119,7 +119,7 @@ describe('eventstore', () => {
                     const query = { aggregateId: 'myAggId', aggregate: 'myAgg', context: 'myCont' },
                         skip = 3
 
-                    await es.getEvents(query, skip)
+                    await es.getEvents({ query, skip })
                     expect(mockFn).toHaveBeenCalledWith(query, skip, -1)
                 })
 
@@ -127,7 +127,7 @@ describe('eventstore', () => {
                     const skip = 3,
                         limit = 50
 
-                    await es.getEvents(skip, limit)
+                    await es.getEvents({ skip, limit })
                     expect(mockFn).toHaveBeenCalledWith({}, skip, limit)
                 })
 
@@ -136,7 +136,7 @@ describe('eventstore', () => {
                         skip = 3,
                         limit = 50
 
-                    await es.getEvents(query, skip, limit)
+                    await es.getEvents({ query, skip, limit })
                     expect(mockFn).toHaveBeenCalledWith({ aggregateId: 'myAggId' }, skip, limit)
                 })
             })
@@ -162,14 +162,14 @@ describe('eventstore', () => {
                         revMin = 2,
                         revMax = 32
 
-                    await es.getEventsByRevision(query, revMin, revMax)
+                    await es.getEventsByRevision({ query, revMin, revMax })
                     expect(mockFn).toHaveBeenCalledWith(query, revMin, revMax)
                 })
 
                 it('with query and callback it should pass them correctly', async () => {
                     const query = { aggregateId: 'myAggId', aggregate: 'myAgg', context: 'myCont' }
 
-                    await es.getEventsByRevision(query)
+                    await es.getEventsByRevision({ query })
                     expect(mockFn).toHaveBeenCalledWith(query, 0, -1)
                 })
 
@@ -177,7 +177,7 @@ describe('eventstore', () => {
                     const query = { aggregateId: 'myAggId', aggregate: 'myAgg', context: 'myCont' },
                         revMin = 2
 
-                    await es.getEventsByRevision(query, revMin)
+                    await es.getEventsByRevision({ query, revMin })
                     expect(mockFn).toHaveBeenCalledWith(query, revMin, -1)
                 })
 
@@ -186,13 +186,13 @@ describe('eventstore', () => {
                         revMin = 2,
                         revMax = 4
 
-                    await es.getEventsByRevision(query, revMin, revMax)
+                    await es.getEventsByRevision({ query, revMin, revMax })
                     expect(mockFn).toHaveBeenCalledWith({ aggregateId: 'myAggId' }, revMin, revMax)
                 })
 
                 it('with wrong query it should pass them correctly', async () => {
                     es.getEventsByRevision = orgFunc
-                    const promise = es.getEventsByRevision(123, 3, 100)
+                    const promise = es.getEventsByRevision({ query: 123, revMin: 3, revMax: 100 })
 
                     await expect(promise).rejects.toBeInstanceOf(Error)
                 })
@@ -219,14 +219,14 @@ describe('eventstore', () => {
                         revMin = 2,
                         revMax = 32
 
-                    await es.getEventStream(query, revMin, revMax)
+                    await es.getEventStream({ query, revMin, revMax })
                     expect(mockFn).toHaveBeenCalledWith(query, revMin, revMax)
                 })
 
                 it('with query and callback it should pass them correctly', async () => {
                     const query = { aggregateId: 'myAggId', aggregate: 'myAgg', context: 'myCont' }
 
-                    await es.getEventStream(query)
+                    await es.getEventStream({ query })
                     expect(mockFn).toHaveBeenCalledWith(query, 0, -1)
                 })
 
@@ -234,7 +234,7 @@ describe('eventstore', () => {
                     const query = { aggregateId: 'myAggId', aggregate: 'myAgg', context: 'myCont' },
                         revMin = 2
 
-                    await es.getEventStream(query, revMin)
+                    await es.getEventStream({ query, revMin })
                     expect(mockFn).toHaveBeenCalledWith(query, revMin, -1)
                 })
 
@@ -243,13 +243,15 @@ describe('eventstore', () => {
                         revMin = 2,
                         revMax = 4
 
-                    await es.getEventStream(query, revMin, revMax)
+                    await es.getEventStream({ query, revMin, revMax })
                     expect(mockFn).toHaveBeenCalledWith({ aggregateId: 'myAggId' }, revMin, revMax)
                 })
 
                 it('with wrong query it should pass them correctly', async () => {
                     es.store.getEventsByRevision = orgFunc
-                    await expect(es.getEventStream(123, 3, 100)).rejects.toBeInstanceOf(Error)
+                    await expect(
+                        es.getEventStream({ query: 123, revMin: 3, revMax: 100 })
+                    ).rejects.toBeInstanceOf(Error)
                 })
             })
 
@@ -275,7 +277,7 @@ describe('eventstore', () => {
 
                     es.store.getSnapshot = jest.fn().mockResolvedValue()
 
-                    await es.getFromSnapshot(given.query, given.revMax)
+                    await es.getFromSnapshot(given)
                     expect(es.store.getSnapshot).toHaveBeenCalledWith(given.query, given.revMax)
                 })
 
@@ -290,7 +292,7 @@ describe('eventstore', () => {
 
                     es.store.getSnapshot = jest.fn().mockResolvedValue()
 
-                    await es.getFromSnapshot(given.query)
+                    await es.getFromSnapshot(given)
                     expect(es.store.getSnapshot).toHaveBeenCalledWith(given.query, -1)
                 })
 
@@ -302,7 +304,7 @@ describe('eventstore', () => {
 
                     es.store.getSnapshot = jest.fn().mockResolvedValue()
 
-                    await es.getFromSnapshot(given.query, given.revMax)
+                    await es.getFromSnapshot(given)
                     expect(es.store.getSnapshot).toHaveBeenCalledWith(
                         { aggregateId: 'myAggId' },
                         given.revMax
@@ -573,9 +575,11 @@ describe('eventstore', () => {
                         debug('it should work as expected')
 
                         const stream = await es.getEventStream({
-                            aggregateId: 'myAggId',
-                            aggregate: 'myAgg',
-                            context: 'myCont',
+                            query: {
+                                aggregateId: 'myAggId',
+                                aggregate: 'myAgg',
+                                context: 'myCont',
+                            },
                         })
                         expect(stream.lastRevision).toEqual(-1)
 
@@ -611,9 +615,11 @@ describe('eventstore', () => {
                     describe('requesting an existing eventstream and committing some new events', () => {
                         beforeEach(async () => {
                             const stream = await es.getEventStream({
-                                aggregateId: 'myAggId2',
-                                aggregate: 'myAgg',
-                                context: 'myCont',
+                                query: {
+                                    aggregateId: 'myAggId2',
+                                    aggregate: 'myAgg',
+                                    context: 'myCont',
+                                },
                             })
 
                             stream.addEvents([
@@ -629,9 +635,11 @@ describe('eventstore', () => {
                             debug('it should work as expected')
 
                             const stream = await es.getEventStream({
-                                aggregateId: 'myAggId2',
-                                aggregate: 'myAgg',
-                                context: 'myCont',
+                                query: {
+                                    aggregateId: 'myAggId2',
+                                    aggregate: 'myAgg',
+                                    context: 'myCont',
+                                },
                             })
                             expect(stream.lastRevision).toEqual(2)
 
@@ -662,9 +670,11 @@ describe('eventstore', () => {
                             debug('it should be able to retrieve them')
 
                             const evts = await es.getEvents({
-                                aggregateId: 'myAggId2',
-                                aggregate: 'myAgg',
-                                context: 'myCont',
+                                query: {
+                                    aggregateId: 'myAggId2',
+                                    aggregate: 'myAgg',
+                                    context: 'myCont',
+                                },
                             })
                             expect(evts.length).toEqual(8)
                         })
@@ -680,11 +690,10 @@ describe('eventstore', () => {
                     it('requesting existing events and using next function and committing some new events it should work as expected', async () => {
                         debug('it should work as expected')
 
-                        const evts = await es.getEvents(
-                            { aggregate: 'myAgg', context: 'myCont' },
-                            0,
-                            3
-                        )
+                        const evts = await es.getEvents({
+                            query: { aggregate: 'myAgg', context: 'myCont' },
+                            limit: 3,
+                        })
                         expect(evts.length).toEqual(3)
 
                         expect(evts.next).toBeInstanceOf(Function)
@@ -703,7 +712,7 @@ describe('eventstore', () => {
                     it('requesting all existing events, without query argument and using next function and committing some new events it should work as expected', async () => {
                         debug('it should work as expected')
 
-                        const evts = await es.getEvents(0, 3)
+                        const evts = await es.getEvents({ limit: 3 })
                         expect(evts.length).toEqual(3)
 
                         expect(evts.next).toBeInstanceOf(Function)
@@ -722,7 +731,10 @@ describe('eventstore', () => {
                     it('requesting existing events since a date and using next function and committing some new events it should work as expected', async () => {
                         debug('it should work as expected')
 
-                        const evts = await es.getEventsSince(new Date(2000, 1, 1), 0, 3)
+                        const evts = await es.getEventsSince({
+                            commitStamp: new Date(2000, 1, 1),
+                            limit: 3,
+                        })
                         expect(evts.length).toEqual(3)
 
                         expect(evts.next).toBeInstanceOf(Function)
@@ -797,9 +809,11 @@ describe('eventstore', () => {
                             debug('it should callback without error')
 
                             const stream = await es.getEventStream({
-                                aggregateId: 'myAggIdOfSnap',
-                                aggregate: 'myAgg',
-                                context: 'myCont',
+                                query: {
+                                    aggregateId: 'myAggIdOfSnap',
+                                    aggregate: 'myAgg',
+                                    context: 'myCont',
+                                },
                             })
 
                             expect(stream.lastRevision).toEqual(-1)
@@ -854,9 +868,11 @@ describe('eventstore', () => {
                             debug('it should callback without error with no additional events')
 
                             const stream = await es.getEventStream({
-                                aggregateId: 'myAggIdOfSnap2',
-                                aggregate: 'myAgg',
-                                context: 'myCont',
+                                query: {
+                                    aggregateId: 'myAggIdOfSnap2',
+                                    aggregate: 'myAgg',
+                                    context: 'myCont',
+                                },
                             })
                             expect(stream.lastRevision).toEqual(-1)
 
@@ -902,10 +918,9 @@ describe('eventstore', () => {
                             it('it should retrieve it and the missing events', async () => {
                                 debug('it should retrieve it and the missing events')
 
-                                const [snap, stream] = await es.getFromSnapshot(
-                                    { aggregateId: 'myAggIdOfSnap' },
-                                    -1
-                                )
+                                const [snap, stream] = await es.getFromSnapshot({
+                                    query: { aggregateId: 'myAggIdOfSnap' },
+                                })
                                 expect(snap.aggregateId).toEqual('myAggIdOfSnap')
                                 expect(snap.revision).toEqual(2)
                                 expect(snap.version).toEqual(1)
@@ -918,10 +933,9 @@ describe('eventstore', () => {
                                 debug(
                                     'it should set the lastRevision of an empty event stream to the snapshot revision'
                                 )
-                                const [snap, stream] = await es.getFromSnapshot(
-                                    { aggregateId: 'myAggIdOfSnap2' },
-                                    -1
-                                )
+                                const [snap, stream] = await es.getFromSnapshot({
+                                    query: { aggregateId: 'myAggIdOfSnap2' },
+                                })
                                 expect(stream.lastRevision).toEqual(snap.revision)
                             })
                         })
@@ -933,9 +947,11 @@ describe('eventstore', () => {
                                 const id = await es.getNewId()
 
                                 const stream = await es.getEventStream({
-                                    aggregateId: id,
-                                    aggregate: 'myStreamableAgg',
-                                    context: 'myCont',
+                                    query: {
+                                        aggregateId: id,
+                                        aggregate: 'myStreamableAgg',
+                                        context: 'myCont',
+                                    },
                                 })
 
                                 stream.addEvents([
@@ -949,11 +965,10 @@ describe('eventstore', () => {
 
                             it('and committing some new events it should work as expected', async () => {
                                 var evts = []
-                                var stream = es.streamEvents(
-                                    { aggregate: 'myStreamableAgg', context: 'myCont' },
-                                    0,
-                                    3
-                                )
+                                var stream = es.streamEvents({
+                                    query: { aggregate: 'myStreamableAgg', context: 'myCont' },
+                                    limit: 3,
+                                })
 
                                 stream.on('data', (e) => evts.push(e))
                                 stream.on('end', () => {})
@@ -964,7 +979,7 @@ describe('eventstore', () => {
 
                             it('streaming all existing events, without query argument and committing some new events it should work as expected', async () => {
                                 var evts = []
-                                var stream = es.streamEvents(0, 3)
+                                var stream = es.streamEvents({ limit: 3 })
                                 stream.on('data', (e) => evts.push(e))
                                 stream.on('end', () => {})
 
@@ -974,7 +989,10 @@ describe('eventstore', () => {
 
                             it('requesting existing events since a date and committing some new events it should work as expected', async () => {
                                 var evts = []
-                                var stream = es.streamEventsSince(new Date(2000, 1, 1), 0, 3)
+                                var stream = es.streamEventsSince({
+                                    commitStamp: new Date(2000, 1, 1),
+                                    limit: 3,
+                                })
                                 stream.on('data', (e) => evts.push(e))
                                 stream.on('end', () => {})
                                 await idle(250)
@@ -983,7 +1001,10 @@ describe('eventstore', () => {
 
                             it('requesting existing events by revision and committing some new events it should work as expected', async () => {
                                 var evts = []
-                                var stream = es.streamEventsByRevision('myAggId2', 0, 3)
+                                var stream = es.streamEventsByRevision({
+                                    query: 'myAggId2',
+                                    revMax: 3,
+                                })
                                 stream.on('data', (e) => evts.push(e))
                                 stream.on('end', () => {})
                                 await idle(250)
@@ -1010,7 +1031,9 @@ describe('eventstore', () => {
                             it('it should save the event with position', async () => {
                                 debug('it should save the event with position')
 
-                                const stream = await es.getEventStream('streamIdWithPosition')
+                                const stream = await es.getEventStream({
+                                    query: 'streamIdWithPosition',
+                                })
                                 stream.addEvent({ one: 'event' })
                                 stream.addEvent({ one: 'event-other' })
 
@@ -1023,7 +1046,9 @@ describe('eventstore', () => {
                             it('it should map position to payload', async () => {
                                 debug('it should map position to payload')
 
-                                const stream = await es.getEventStream('streamIdWithPosition')
+                                const stream = await es.getEventStream({
+                                    query: 'streamIdWithPosition',
+                                })
 
                                 stream.addEvent({ one: 'event' })
                                 stream.addEvent({ one: 'event-other' })
@@ -1040,7 +1065,9 @@ describe('eventstore', () => {
                         describe('Deleting a stream', () => {
                             beforeEach(async () => {
                                 const deletable = await es.getEventStream({
-                                    aggregateId: 'myDeletableAggregate',
+                                    query: {
+                                        aggregateId: 'myDeletableAggregate',
+                                    },
                                 })
 
                                 deletable.addEvent({ foo: 'foo' })
@@ -1053,7 +1080,9 @@ describe('eventstore', () => {
                                 })
 
                                 const unDeletable = await es.getEventStream({
-                                    aggregateId: 'myUnDeletableAggregate',
+                                    query: {
+                                        aggregateId: 'myUnDeletableAggregate',
+                                    },
                                 })
 
                                 unDeletable.addEvent({ foo: 'foo' })
@@ -1101,7 +1130,7 @@ describe('eventstore', () => {
             var es = eventstore()
             es.defineEventMappings({ commitStamp: 'head.date' })
             await es.init()
-            const stream = await es.getEventStream('streamIdWithDate')
+            const stream = await es.getEventStream({ query: 'streamIdWithDate' })
             stream.addEvent({ one: 'event' })
 
             const st = await stream.commit()
@@ -1114,7 +1143,7 @@ describe('eventstore', () => {
 
             var es = eventstore({})
             await es.init()
-            const stream = await es.getEventStream('streamIdWithoutDate')
+            const stream = await es.getEventStream({ query: 'streamIdWithoutDate' })
             stream.addEvent({ one: 'event' })
 
             const st = await stream.commit()
@@ -1129,7 +1158,7 @@ describe('eventstore', () => {
             var es = eventstore()
             es.defineEventMappings({ streamRevision: 'version' })
             await es.init()
-            const stream = await es.getEventStream('streamIdWithDate')
+            const stream = await es.getEventStream({ query: 'streamIdWithDate' })
             stream.addEvent({ one: 'event' })
 
             const st = await stream.commit()
@@ -1160,7 +1189,7 @@ describe('eventstore', () => {
                 var es = eventstore()
                 es.useEventPublisher(publish)
                 await es.init()
-                const stream = await es.getEventStream('streamId')
+                const stream = await es.getEventStream({ query: 'streamId' })
                 stream.addEvent({ one: 'event' })
 
                 await stream.commit()
@@ -1187,7 +1216,7 @@ describe('eventstore', () => {
                 var es = eventstore()
                 es.useEventPublisher(publish)
                 await es.init()
-                const stream = await es.getEventStream('streamId')
+                const stream = await es.getEventStream({ query: 'streamId' })
                 stream.addEvent({ one: 'event' })
 
                 await stream.commit()

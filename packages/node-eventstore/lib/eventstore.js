@@ -1,16 +1,18 @@
-var debug = require('debug')('@avanzu/eventstore/eventstore'),
+const debug = require('debug')('@avanzu/eventstore/eventstore'),
     EventEmitter = require('events').EventEmitter,
     { Option, Result } = require('@avanzu/std'),
-    { noop, normalizeQuery, requireId, isString } = require('./util'),
-    { defaultTo, propOr, is, pick, add, inc, subtract, prop, or } = require('ramda'),
+    { normalizeQuery, requireId, isString } = require('./util'),
+    { defaultTo, propOr, is, pick, add, inc, subtract, prop, mergeRight } = require('ramda'),
     EventDispatcher = require('./eventDispatcher'),
     EventStream = require('./eventStream'),
     Snapshot = require('./snapshot')
 
+const contextOf = mergeRight({ query: {}, revMin: 0, revMax: -1, skip: 0, limit: -1 })
+
 class Eventstore extends EventEmitter {
     constructor(options, store) {
         super(options)
-        this.options = options || {}
+        this.options = defaultTo({}, options)
         this.store = store
         this.eventMappings = {}
         this.publisher = Option.None()
@@ -104,14 +106,9 @@ class Eventstore extends EventEmitter {
      * @param {Number}           limit    how many events do you want in the result? [optional]
      * @returns {Stream} a stream with the events
      */
-    streamEvents(query, skip, limit) {
-        if (typeof query === 'number') {
-            limit = skip
-            skip = query
-            query = {}
-        }
-
-        const q = normalizeQuery(query).unwrap()
+    streamEvents(params = {}) {
+        const { query, skip, limit } = contextOf(params)
+        const q = normalizeQuery(query).unwrapOr(query)
         return this.streamableStore.streamEvents(q, skip, limit)
     }
 
@@ -122,7 +119,8 @@ class Eventstore extends EventEmitter {
      * @param {Number}   limit       how many events do you want in the result? [optional]
      * @returns {Stream} a stream with the events
      */
-    streamEventsSince(commitStamp, skip, limit) {
+    streamEventsSince(params = {}) {
+        const { commitStamp, skip, limit } = contextOf(params)
         const stamp = Result.fromNullable(commitStamp, 'Please pass in a date object!')
             .map((stamp) => new Date(stamp))
             .unwrap()
@@ -137,7 +135,8 @@ class Eventstore extends EventEmitter {
      * @param {Number}           revMax   revision end point (hint: -1 = to end) [optional]
      * @returns {Stream} a stream with the events
      */
-    streamEventsByRevision(query, revMin, revMax) {
+    streamEventsByRevision(params = {}) {
+        const { query, revMin, revMax } = contextOf(params)
         return normalizeQuery(query)
             .unwrapWith(requireId)
             .map((query) => this.store.streamEventsByRevision(query, revMin, revMax))
@@ -152,35 +151,15 @@ class Eventstore extends EventEmitter {
      * @param {Function}         callback the function that will be called when this action has finished
      *                                    `function(err, events){}`
      */
-    getEvents(query = noop, skip = noop, limit = noop) {
+    getEvents(params = {}) {
         return new Promise((Ok, Err) => {
-            if (typeof query === 'function') {
-                skip = 0
-                limit = -1
-                query = {}
-            } else if (typeof skip === 'function') {
-                skip = 0
-                limit = -1
-                if (typeof query === 'number') {
-                    skip = query
-                    query = {}
-                }
-            } else if (typeof limit === 'function') {
-                limit = -1
-                if (typeof query === 'number') {
-                    limit = skip
-                    skip = query
-                    query = {}
-                }
-            }
-            if (typeof query === 'string') {
-                query = { aggregateId: query }
-            }
+            const { query, skip, limit } = contextOf(params)
+            const q = normalizeQuery(query).unwrapOr(query)
 
-            const next = () => this.getEvents(query, skip + limit, limit)
+            const next = () => this.getEvents({ query: q, skip: skip + limit, limit })
 
             return this.store
-                .getEvents(query, skip, limit)
+                .getEvents(q, skip, limit)
                 .then(defaultTo({}))
                 .then((res) => Object.assign(res, { next }))
                 .then(Ok, Err)
@@ -195,14 +174,15 @@ class Eventstore extends EventEmitter {
      * @param {Function} callback    the function that will be called when this action has finished
      *                               `function(err, events){}`
      */
-    getEventsSince(commitStamp, skip = 0, limit = -1) {
+    getEventsSince(params = {}) {
         return new Promise((Ok, Err) => {
+            const { commitStamp, skip, limit } = contextOf(params)
+
             const [stamp, $skip] = Result.fromNullable(commitStamp, 'Please pass in a date object!')
-                .map((stamp) => new Date(stamp))
-                .map((stamp) => [stamp, skip + limit])
+                .map((stamp) => [new Date(stamp), skip + limit])
                 .unwrap()
 
-            const next = () => this.getEventsSince(stamp, $skip, limit)
+            const next = () => this.getEventsSince({ commitStamp: stamp, skip: $skip, limit })
 
             return this.store
                 .getEventsSince(stamp, skip, limit)
@@ -220,8 +200,9 @@ class Eventstore extends EventEmitter {
      * @param {Function}         callback the function that will be called when this action has finished
      *                                    `function(err, events){}`
      */
-    getEventsByRevision(query, revMin = 0, revMax = -1) {
+    getEventsByRevision(params = {}) {
         return new Promise((Ok, Err) => {
+            const { query, revMin, revMax } = contextOf(params)
             normalizeQuery(query)
                 .unwrapWith(requireId)
                 .promise()
@@ -238,8 +219,9 @@ class Eventstore extends EventEmitter {
      * @param {Function}         callback the function that will be called when this action has finished
      *                                    `function(err, eventstream){}`
      */
-    getEventStream(query, revMin = 0, revMax = -1) {
+    getEventStream(params = {}) {
         return new Promise((Ok, Err) => {
+            const { query, revMin, revMax } = contextOf(params)
             const q = normalizeQuery(query).unwrapWith(requireId).unwrap()
             this.store
                 .getEventsByRevision(q, revMin, revMax)
@@ -255,24 +237,22 @@ class Eventstore extends EventEmitter {
      * @param {Function}         callback the function that will be called when this action has finished
      *                                    `function(err, snapshot, eventstream){}`
      */
-    getFromSnapshot(query, revMax = -1) {
+    getFromSnapshot(params = {}) {
         return new Promise((Ok, Err) => {
+            const { query, revMax } = contextOf(params)
             const q = normalizeQuery(query).unwrapWith(requireId).unwrap()
 
-            const getStream = (snap) =>
+            const getStream = (snap = {}) =>
                 new Promise((Ok, Err) => {
-                    var rev = 0
+                    const rev = Option.fromNullable(snap.revision).map(inc).unwrapOr(0)
+                    const isSnapWithRev = (stream) => rev > 0 && stream.lastRevision == -1
+                    const adjustRevision = (stream) =>
+                        Result.fromPredicate(isSnapWithRev, stream)
+                            .tap((stream) => (stream.lastRevision = snap.revision))
+                            .unwrapOr(stream)
 
-                    if (snap && snap.revision !== undefined && snap.revision !== null) {
-                        rev = snap.revision + 1
-                    }
-                    this.getEventStream(q, rev, revMax)
-                        .then((stream) => {
-                            if (rev > 0 && stream.lastRevision == -1) {
-                                stream.lastRevision = snap.revision
-                            }
-                            return stream
-                        })
+                    this.getEventStream({ query: q, rev, revMax })
+                        .then(adjustRevision)
                         .then((stream) => Ok([snap, stream]))
                         .catch((err) => Err(err))
                 })

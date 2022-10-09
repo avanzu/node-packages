@@ -3,8 +3,6 @@
 
 **This is a heavily modified version of the original [node-eventstore](https://github.com/thenativeweb/node-eventstore) by Adriano Raiano.**
 
-
-
 The project goal is to provide an eventstore implementation for node.js:
 
 -   load and store events via EventStream object
@@ -13,13 +11,14 @@ The project goal is to provide an eventstore implementation for node.js:
 -   snapshot support
 -   query your events
 
-
+# Upgrade instructions 
+ - [upgrading from 1.x.x to 2.x.x](#from-1xx-to-2xx)
 # Installation
 
     npm install @avanzu/eventstore
 
-# Usage
 
+# Usage
 ## Require the module and init the eventstore:
 
 ```javascript
@@ -245,16 +244,18 @@ await es.init()
 ### get the eventhistory (of an aggregate)
 
 ```javascript
-const { events } = await es.getEventStream('streamId')
+const { events } = await es.getEventStream({ query: 'streamId' })
 ```
 
 or
 
 ```javascript
-const { events } = await es.getEventStream({
+const { events } = await es.getEventStream({ 
+    query: {
         aggregateId: 'myAggregateId',
         aggregate: 'person', // optional
         context: 'hr', // optional
+    }
 })
 ```
 
@@ -266,20 +267,17 @@ So you can have 2 complete different aggregate instances of 2 complete different
 you can request an eventstream even by limit the query with a 'minimum revision number' and a 'maximum revision number'
 
 ```javascript
-var revMin = 5,
-    revMax = 8 // if you omit revMax or you define it as -1 it will retrieve until the end
-
-const {events} = await es.getEventStream(
-    'streamId' || {/* query */ },
-    revMin,
-    revMax
-)
+const {events} = await es.getEventStream({
+    query: 'streamId' || {/* query */ },
+    revMin: 5,
+    revMax: 8
+})
 ```
 
 store a new event and commit it to store
 
 ```javascript
-const stream = await es.getEventStream('streamId')
+const stream = await es.getEventStream({ query: 'streamId' })
 
 stream.addEvent({ my: 'event' })
 stream.addEvents([{ my: 'event2' }])
@@ -298,28 +296,28 @@ if you just want to load the last event as stream you can call getLastEventAsStr
 get snapshot and eventhistory from the snapshot point
 
 ```javascript
-const [snapshot, stream] = await es.getFromSnapshot('streamId')
+const [snapshot, stream] = await es.getFromSnapshot({query: 'streamId'})
 ```
 
 or
 
 ```javascript
 const [snapshot, stream] = await es.getFromSnapshot({
-        aggregateId: 'myAggregateId',
-        aggregate: 'person', // optional
-        context: 'hr', // optional
+        query: {
+            aggregateId: 'myAggregateId',
+            aggregate: 'person', // optional
+            context: 'hr', // optional
+        }
     })
 ```
 
 you can request a snapshot and an eventstream even by limit the query with a 'maximum revision number'
 
 ```javascript
-var revMax = 8 // if you omit revMax or you define it as -1 it will retrieve until the end
-
-const [snapshot, stream] = es.getFromSnapshot(
-    'streamId' || { /* query */ },
-    revMax
-)
+const [snapshot, stream] = es.getFromSnapshot({
+    query: 'streamId' || { /* query */ },
+    revMax: 8 // if you omit revMax or you define it as -1 it will retrieve until the end
+})
 ```
 
 create a snapshot point
@@ -392,16 +390,16 @@ skip, limit always optional
 var skip = 0,
     limit = 100 // if you omit limit or you define it as -1 it will retrieve until the end
 
-const events = await es.getEvents(skip, limit)
+const events = await es.getEvents({skip, limit})
 
 // or
 
-const events = await es.getEvents('streamId', skip, limit)
+const events = await es.getEvents({query: 'streamId', skip, limit})
 
 // or
 
-const events = await es.getEvents(
-    {
+const events = await es.getEvents({
+    query: {
         // free choice (all, only context, only aggregate, only aggregateId...)
         context: 'hr',
         aggregate: 'person',
@@ -409,7 +407,7 @@ const events = await es.getEvents(
     },
     skip,
     limit
-)
+})
 ```
 
 by revision
@@ -417,21 +415,23 @@ by revision
 revMin, revMax always optional
 
 ```javascript
-var revMin = 5,
-    revMax = 8 // if you omit revMax or you define it as -1 it will retrieve until the end
 
-const events = await es.getEventsByRevision('streamId', revMin, revMax)
+const events = await es.getEventsByRevision({ 
+    query: 'streamId', 
+    revMin: 5, 
+    revMax: 8  // if you omit revMax or you define it as -1 it will retrieve until the end
+})
 // or
 
-const events = await es.getEventsByRevision(
-    {
+const events = await es.getEventsByRevision({
+    query: {
         aggregateId: 'myAggregateId',
         aggregate: 'person', // optional
         context: 'hr', // optional
     },
-    revMin,
-    revMax
-)
+    revMin: 5, 
+    revMax: 8  // if you omit revMax or you define it as -1 it will retrieve until the end
+})
 ```
 
 by commitStamp
@@ -439,18 +439,26 @@ by commitStamp
 skip, limit always optional
 
 ```javascript
-var skip = 0,
-    limit = 100 // if you omit limit or you define it as -1 it will retrieve until the end
 
-const events = await es.getEventsSince(new Date(2015, 5, 23), skip, limit)
-
-// or
-
-const events = await es.getEventsSince(new Date(2015, 5, 23), limit)
+const events = await es.getEventsSince({
+    commitStamp: new Date(2015, 5, 23), 
+    skip: 10,
+    limit: 100 // if you omit limit or you define it as -1 it will retrieve until the end
+})
 
 // or
 
-const events = await es.getEventsSince(new Date(2015, 5, 23))
+const events = await es.getEventsSince({
+    commitStamp: new Date(2015, 5, 23), 
+    limit: 50
+})
+
+// or
+
+const events = await es.getEventsSince({
+    commitStamp: new Date(2015, 5, 23) 
+})
+
 ```
 
 ## streaming your events
@@ -463,16 +471,18 @@ skip, limit always optional
 var skip = 0,
     limit = 100 // if you omit limit or you define it as -1 it will retrieve until the end
 
-var stream = es.streamEvents(skip, limit)
+var stream = es.streamEvents({skip, limit})
 // or
-var stream = es.streamEvents('streamId', skip, limit)
+var stream = es.streamEvents({query: 'streamId', skip, limit})
 // or by commitstamp
-var stream = es.streamEventsSince(new Date(2015, 5, 23), skip, limit)
+var stream = es.streamEventsSince({commitStamp: new Date(2015, 5, 23), skip, limit })
 // or by revision
 var stream = es.streamEventsByRevision({
-    aggregateId: 'myAggregateId',
-    aggregate: 'person',
-    context: 'hr',
+    query: {
+        aggregateId: 'myAggregateId',
+        aggregate: 'person',
+        context: 'hr',
+    }
 })
 
 stream.on('data', function (e) {
@@ -540,6 +550,26 @@ const lastEvent = await es.store.getLastEvent({
 await es.store.repairFailedTransaction(lastEvent)    
 
 ```
+# Upgrade instructions 
+## From 1.x.x to 2.x.x
+Starting from version 2.0.0 the eventstore does not longer support multiple positional arguments. Instead, you have to pass in a params object.
+The general idea, that you only have to specify the arguments that deviate from the defaults remains. 
+
+Please refer to the following table to see how the signatures have changed
+
+| 1.x.x                                           | 2.x.x                                             |
+| ----------------------------------------------- | ------------------------------------------------- |
+| `streamEvents(query, skip, limit)`              | `streamEvents({query, skip, limit})`              |
+| `streamEventsSince(commitStamp, skip, limit)`   | `streamEvents({commitStamp, skip, limit})`        |
+| `streamEventsSince(commitStamp, skip, limit)`   | `streamEventsSince({commitStamp, skip, limit})`   |
+| `streamEventsByRevision(query, revMin, revMax)` | `streamEventsByRevision({query, revMin, revMax})` |
+| `getEvents(query, skip, limit)`                 | `getEvents({query, skip, limit})`                 |
+| `getEventsSince(commitStamp, skip, limit)`      | `getEventsSince({commitStamp, skip, limit})`      |
+| `getEventsByRevision(query, revMin, revMax)`    | `getEventsByRevision({query, revMin, revMax})`    |
+| `getEventStream(query, revMin, revMax)`         | `getEventStream({query, revMin, revMax})`         |
+| `getFromSnapshot(query, revMax)`                | `getFromSnapshot({query, revMax})`                |
+
+
 # Inspiration
 
 -   Jonathan Oliver's [EventStore](https://github.com/joliver/EventStore) for .net.
