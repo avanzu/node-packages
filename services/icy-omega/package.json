@@ -1,7 +1,7 @@
 {
     "name": "icy-omega",
     "description": "",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "homepage": "",
     "private": true,
     "main": "src",
@@ -41,7 +41,7 @@
     "dependencies": {
         "@avanzu/redis-composable": "*",
         "@avanzu/rhea-composable": "*",
-        "@avanzu/std": "^1.3.0",
+        "@avanzu/std": "^1.4.0",
         "@feathersjs/configuration": "^4.5.15",
         "@feathersjs/errors": "^4.5.15",
         "@feathersjs/express": "^4.5.15",

@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.4.0](https://github.com/avanzu/node-packages/compare/@avanzu/std@1.3.0...@avanzu/std@1.4.0) (2022-10-09)
+
+
+### Features
+
+* adds "or" combinator to option type ([55dc685](https://github.com/avanzu/node-packages/commit/55dc685fd848ad26e754ef78fe0c040c27190eda))
+* adds uncurried "tryNow" method to result type ([d191c7d](https://github.com/avanzu/node-packages/commit/d191c7de8caab27c884db65c83791ca7c32281cd))
+
+
+
+
+
 # [1.3.0](https://github.com/avanzu/node-packages/compare/@avanzu/std@1.2.0...@avanzu/std@1.3.0) (2022-10-04)
 
 
