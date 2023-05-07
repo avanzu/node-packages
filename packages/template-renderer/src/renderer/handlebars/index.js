@@ -1,10 +1,9 @@
-const { Renderer } = require("..");
-const HBS = require('handlebars');
-const { RenderJob } = require("../../job");
+// eslint-disable-next-line no-unused-vars
+const { Renderer, RenderJob } = require('..')
+const HBS = require('handlebars')
 
 exports.HBSRenderer = class HBSRenderer extends Renderer {
-
-    constructor(){
+    constructor() {
         super()
     }
 
@@ -18,10 +17,7 @@ exports.HBSRenderer = class HBSRenderer extends Renderer {
      * @returns {Promise<string>}
      */
     async render(job) {
-
         const template = HBS.compile(job.template)
         return template(job.vars)
-
     }
-
 }

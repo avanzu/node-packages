@@ -1,10 +1,10 @@
 const { Storage } = require('.')
 const { CacheMiss } = require('../errors')
+// eslint-disable-next-line no-unused-vars
 const { RenderJob } = require('../job')
 const { LRUCache } = require('lru-cache')
 
 exports.LRUStorage = class LRUStorage extends Storage {
-
     constructor({ maxEntries = 1000, ttl = 5000 } = {}) {
         super()
         this.entries = new LRUCache({ max: maxEntries, ttl })
@@ -27,7 +27,7 @@ exports.LRUStorage = class LRUStorage extends Storage {
      * @returns {RenderJob}
      */
     async hydrate(job) {
-        if(! this.entries.has(job.hash)) {
+        if (!this.entries.has(job.hash)) {
             throw CacheMiss.fromJob(job)
         }
 
@@ -46,6 +46,5 @@ exports.LRUStorage = class LRUStorage extends Storage {
         const entry = { content: job.content, timestamp: Date.now(), ttl: job.ttl }
         this.entries.set(job.hash, entry)
         return job
-
     }
 }
