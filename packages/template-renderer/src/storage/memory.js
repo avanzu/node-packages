@@ -1,9 +1,9 @@
 const { Storage } = require('.')
 const { CacheMiss } = require('../errors')
+// eslint-disable-next-line no-unused-vars
 const { RenderJob } = require('../job')
 
 exports.MemoryStorage = class MemoryStorage extends Storage {
-
     constructor({ maxEntries = 1000 } = {}) {
         super()
         this.entries = new Map()
@@ -25,7 +25,7 @@ exports.MemoryStorage = class MemoryStorage extends Storage {
      * @returns {RenderJob}
      */
     async hydrate(job) {
-        if(! this.entries.has(job.hash)) {
+        if (!this.entries.has(job.hash)) {
             throw CacheMiss.fromJob(job)
         }
 
@@ -44,6 +44,5 @@ exports.MemoryStorage = class MemoryStorage extends Storage {
         const entry = { content: job.content, timestamp: Date.now(), ttl: job.ttl }
         this.entries.set(job.hash, entry)
         return job
-
     }
 }

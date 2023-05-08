@@ -14,16 +14,12 @@ const { MarkdownRenderer } = require('@avanzu/template-renderer/renderers')
 // setup the rendering engine
 const engine = new Engine({
     renderer: new MarkdownRenderer(),
-    storage: new LRUStorage({ maxEntries: 100, ttl: 3_600_000 })
+    storage: new LRUStorage({ maxEntries: 100, ttl: 3_600_000 }),
 })
 
 // render your template(s)
-const output = await engine.render(
-    RenderJob.markdown('***hello world***')
-    )
+const output = await engine.render(RenderJob.markdown('***hello world***'))
 ```
-
-
 
 ## Extend
 
@@ -33,7 +29,6 @@ const output = await engine.render(
 const { Renderer, RenderJob } = require('@avanzu/template-renderer')
 
 exports.CustomRenderer = class CustomRenderer extends Renderer {
-
     supports(syntax) {
         return syntax.includes('custom-template')
     }
@@ -46,10 +41,8 @@ exports.CustomRenderer = class CustomRenderer extends Renderer {
     async render(job) {
         const { template, vars } = job
         // do your rendering, return the rendered string
-
     }
 }
-
 ```
 
 ### storage
@@ -58,7 +51,6 @@ exports.CustomRenderer = class CustomRenderer extends Renderer {
 const { Storage, CacheMiss } = require('@avanzu/template-renderer')
 
 exports.CustomStorage = class CustomStorage extends Storage {
-
     constructor(options) {
         super(options)
     }

@@ -1,13 +1,13 @@
 const EventEmitter = require('node:events')
+// eslint-disable-next-line no-unused-vars
 const { RenderJob } = require('.')
 
 exports.Engine = class Engine extends EventEmitter {
-
     /**
      *
      * @param {{storage: Storage, renderer: Renderer }} param0
      */
-    constructor({ renderer, storage }){
+    constructor({ renderer, storage }) {
         super()
         this.renderer = renderer
         this.storage = storage
@@ -19,9 +19,7 @@ exports.Engine = class Engine extends EventEmitter {
      * @returns string
      */
     async render(renderJob) {
-
-
-        if(await this.storage.has(renderJob)) {
+        if (await this.storage.has(renderJob)) {
             return await this.storage.hydrate(renderJob)
         }
 
@@ -30,7 +28,5 @@ exports.Engine = class Engine extends EventEmitter {
         await this.storage.store(renderJob)
 
         return renderJob
-
     }
-
 }

@@ -1,11 +1,10 @@
-
 exports.Storage = class Storage {
-
     /**
      *
      * @param {RenderJob} job
      * @returns {RenderJob}
      */
+    // eslint-disable-next-line no-unused-vars
     async has(job) {
         return false
     }
@@ -27,4 +26,3 @@ exports.Storage = class Storage {
         return job
     }
 }
-

@@ -5,7 +5,7 @@ exports.CacheMiss = class CacheMiss extends Error {
 }
 
 exports.UnsupportedSyntax = class UnsupportedSyntax extends Error {
-    constructor(message){
+    constructor(message) {
         super(message)
     }
 

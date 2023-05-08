@@ -11,12 +11,10 @@ exports.ChainRenderer = class ChainRenderer extends Renderer {
     }
 
     async render(job) {
-
         for (const curr of this.suitable(job)) {
             job.update(await curr.render(job))
         }
 
         return job.content
     }
-
 }

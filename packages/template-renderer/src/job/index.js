@@ -1,18 +1,18 @@
 const { createHash } = require('node:crypto')
 
 exports.RenderJob = class RenderJob {
-
     constructor({ syntax, template, ttl = Infinity, variables = {} }) {
-
         this.syntax = syntax
         this.variables = new URLSearchParams(variables)
         this.variables.sort()
         this.content = null
-        this.hash = createHash('md5').update(this.variables.toString().concat(template)).digest('hex')
         this.ttl = ttl
         this.age = 0
         this.template = template
         this.cached = false
+        this.hash = createHash('md5')
+            .update(this.variables.toString().concat(template))
+            .digest('hex')
     }
 
     update(content, age = 0, cached = false) {

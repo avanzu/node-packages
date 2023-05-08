@@ -5,7 +5,8 @@
     "main": "index.js",
     "scripts": {
         "test": "jest",
-        "jest": "jest"
+        "jest": "jest",
+        "format": "prettier --write ."
     },
     "publishConfig": {
         "access": "public"
