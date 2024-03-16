@@ -19,10 +19,6 @@
         "test": "test/",
         "config": "config/"
     },
-    "engines": {
-        "node": "^16.0.0",
-        "npm": ">= 3.0.0"
-    },
     "scripts": {
         "test": "npm run lint && npm run jest",
         "lint": "eslint src/. __tests__/. --fix",

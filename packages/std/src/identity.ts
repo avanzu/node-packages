@@ -1,12 +1,12 @@
 const { promiseOk } = require('./util')
 const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom')
 
-const Identity = (x) => ({
+export const Identity = (x) => ({
     fold: (fn) => fn(x),
     map: (fn) => Identity(fn(x)),
     tap: (fn) => (fn(x), Identity(x)),
     chain: (fn) => fn(x),
-    ap: (id) => id.map(x),
+    ap:(id) => id.map(x),
     unwrap: () => x,
     unwrapAlways: (value) => value,
     unwrapWith: (fn) => fn(x),
@@ -16,11 +16,10 @@ const Identity = (x) => ({
     [customInspectSymbol]: () => `Identity(${x})`,
 })
 
-const all = (opts) =>
+Identity.all = (opts) =>
     opts.reduce((acc, cur) => acc.fold((xs) => cur.map((x) => xs.concat([x]))), Identity([]))
 
-module.exports = {
-    of: Identity,
-    Identity,
-    all,
-}
+Identity.of = Identity
+
+// export const of = Identity
+

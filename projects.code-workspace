@@ -1,0 +1,79 @@
+{
+	"folders": [
+		{
+			"name": "✨ root",
+			"path": "."
+		},
+		{
+			"name": "📦 @avanzu/cqrs-composable",
+			"path": "packages/cqrs-composable"
+		},
+		{
+			"name": "📦 @avanzu/eventstore",
+			"path": "packages/node-eventstore"
+		},
+		{
+			"name": "📦 @avanzu/oas-builder",
+			"path": "packages/oas-builder"
+		},
+		{
+			"name": "📦 @avanzu/redis-composable",
+			"path": "packages/redis-composable"
+		},
+		{
+			"name": "📦 @avanzu/std",
+			"path": "packages/std"
+		},
+		{
+			"name": "📦 @avanzu/template-renderer",
+			"path": "packages/template-renderer"
+		},
+		{
+			"name": "celtic-sun",
+			"path": "services/celtic-sun"
+		},
+		{
+			"name": "icy-omega",
+			"path": "services/icy-omega"
+		},
+		{
+			"name": "lost-fox",
+			"path": "services/lost-fox"
+		},
+		{
+			"name": "ostium",
+			"path": "services/ostium"
+		}
+	],
+	"settings": {
+		"testing.openTesting": "neverOpen",
+		"jest.runMode": "deferred",
+		"jest.disabledWorkspaceFolders": [
+			"✨ root"
+		],
+		"jest.outputConfig": {
+			"revealOn": "run",
+			"revealWithFocus": "none",
+			"clearOnRun": "none"
+		},
+		"npm.packageManager": "npm",
+		"todohighlight.keywords": [
+			"TODO:",
+			"FIXME:",
+			"INFO:"
+		],
+		"typescript.preferences.importModuleSpecifier": "non-relative",
+
+	},
+	"extensions": {
+		"recommendations": [
+			"eliostruyf.vscode-typescript-exportallmodules",
+			"eamodio.gitlens",
+			"christian-kohler.npm-intellisense",
+			"yoavbls.pretty-ts-errors",
+			"esbenp.prettier-vscode",
+			"nicoespeon.abracadabra",
+			"humao.rest-client"
+		]
+	}
+}

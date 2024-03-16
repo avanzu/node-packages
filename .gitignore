@@ -12,3 +12,4 @@ certs
 tinker.js
 **/coverage
 **/junit.xml
+.nx/cache

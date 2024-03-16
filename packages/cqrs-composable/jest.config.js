@@ -3,4 +3,6 @@
  * https://jestjs.io/docs/en/configuration.html
  */
 const suiteName = require('./package.json').name
-module.exports = require('../../jest.base')(suiteName)
+module.exports = {
+    ...require('../../jest.base')(suiteName)
+}

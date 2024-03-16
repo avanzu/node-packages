@@ -1,4 +1,5 @@
-const { Result } = require('..')
+import { Result } from "~/src"
+
 describe('Type "Result"', () => {
     describe('factories', () => {
         test('Ok', () => {

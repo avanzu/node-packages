@@ -1,4 +1,4 @@
-const { nanoid } = require('nanoid/index.cjs')
+const { uid } = require('uid/secure')
 const { init } = require('./state')
 
 const useEntity = (initializer = init) => {
@@ -14,7 +14,7 @@ const useEntity = (initializer = init) => {
         state: makeState(snapshot),
     })
 
-    const create = (snapshot) => fromSnapshot({ id: nanoid(), ...snapshot })
+    const create = (snapshot) => fromSnapshot({ id: uid(), ...snapshot })
 
     const generate = (snapshot = {}) => new Promise((Ok) => Ok(create(snapshot)))
 

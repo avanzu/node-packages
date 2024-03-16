@@ -2,12 +2,12 @@ const { promiseErr, promiseOk, panic } = require('./util')
 const ERROR = 'Unable to unwrap Result<Err>.'
 const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom')
 
-const Ok = (x) => ({
+export const Ok = (x) => ({
     isOk: () => true,
     isErr: () => false,
     fold: (_, onOk) => onOk(x),
     map: (fn) => Ok(fn(x)),
-    mapErr: () => Ok(x),
+    mapErr: (_) => Ok(x),
     tap: (fn) => (fn(x), Ok(x)),
     tapErr: () => Ok(x),
     chain: (fn) => fn(x),
@@ -15,9 +15,9 @@ const Ok = (x) => ({
     bimap: (_, onOk) => Ok(onOk(x)),
     inspect: (_, onOk) => (onOk(x), Ok(x)),
     swap: () => Err(x),
-    unwrap: () => x,
-    unwrapOrElse: () => x,
-    unwrapOr: () => x,
+    unwrap: (_?) => x,
+    unwrapOrElse: (_) => x,
+    unwrapOr: (_) => x,
     unwrapAlways: (value) => value,
     unwrapWith: (fn) => fn(x),
     promise: () => promiseOk(x),
@@ -26,18 +26,18 @@ const Ok = (x) => ({
     [customInspectSymbol]: () => `Ok(${x})`,
 })
 
-const Err = (e = ERROR) => ({
+export const Err = (e: string|unknown = ERROR) => ({
     isOk: () => false,
     isErr: () => true,
-    fold: (onErr) => onErr(e),
-    map: () => Err(e),
+    fold: (onErr, _) => onErr(e),
+    map: (_) => Err(e),
     mapErr: (fn) => Err(fn(e)),
-    tap: () => Err(e),
+    tap: (_) => Err(e),
     tapErr: (fn) => (fn(e), Err(e)),
-    chain: () => Err(e),
-    ap: () => Err(e),
-    bimap: (onErr) => Err(onErr(e)),
-    inspect: (onErr) => (onErr(e), Err(e)),
+    chain: (_) => Err(e),
+    ap: (_) => Err(e),
+    bimap: (onErr, _) => Err(onErr(e)),
+    inspect: (onErr, _) => (onErr(e), Err(e)),
     swap: () => Ok(e),
     unwrap: () => panic(e),
     unwrapOrElse: (fn) => fn(),
@@ -45,38 +45,51 @@ const Err = (e = ERROR) => ({
     unwrapAlways: (value) => value,
     unwrapWith: (fn) => fn(e),
     promise: () => promiseErr(e),
-    and: () => Err(e),
-    concat: () => Err(e),
+    and: (_) => Err(e),
+    concat: (_) => Err(e),
     [customInspectSymbol]: () => `Err(${e})`,
 })
 
-// prettier-ignore
 const tryCatch = (fn) => (...args) => {
-    try { return Ok(fn(...args)) } 
-    catch (e) { return Err(e) }
-}
-// prettier-ignore
-const tryAsync = (fn) => async (...args) => {
-    try { return Ok(await fn(...args)) } 
+    try { return Ok(fn(...args)) }
     catch (e) { return Err(e) }
 }
 
-const tryNow = (fn, ...args) => {
-    try {
-        return Ok(fn(...args))
-    } catch (e) {
-        return Err(e)
-    }
+export const Result = {
+    all: (results) =>
+    results.reduce((acc, cur) => acc.fold(Err, (xs) => cur.map((x) => xs.concat([x]))), Ok([])),
+    fromPredicate : (pred, x) => (pred(x) ? Ok(x) : Err(x)),
+    fromNullable : (x?, message?) => (x != null ? Ok(x) : Err(message)),
+    fromBoolean : (x?, message?) => (Boolean(x) ? Ok(x) : Err(message)),
+    promised : (p) => p.then(Ok, Err),
+    of : Ok,
+    err : Err,
+    Ok: Ok,
+    Err: Err,
+    try: tryCatch,
+    tryCatch,
+    tryAsync: (fn) => async (...args) => {
+        try { return Ok(await fn(...args)) }
+        catch (e) { return Err(e) }
+    },
+    tryNow: (fn, ...args) => {
+        try {
+            return Ok(fn(...args))
+        } catch (e) {
+            return Err(e)
+        }
+    },
+    ERROR
 }
 
-const all = (results) =>
-    results.reduce((acc, cur) => acc.fold(Err, (xs) => cur.map((x) => xs.concat([x]))), Ok([]))
 
-const fromPredicate = (pred, x) => (pred(x) ? Ok(x) : Err(x))
-const fromNullable = (x, message) => (x != null ? Ok(x) : Err(message))
-const fromBoolean = (x, message) => (Boolean(x) ? Ok(x) : Err(message))
-const promised = (p) => p.then(Ok, Err)
 
+
+
+
+
+
+/*
 const Result = {
     Ok,
     Err,
@@ -94,3 +107,4 @@ const Result = {
 }
 
 module.exports = Result
+*/

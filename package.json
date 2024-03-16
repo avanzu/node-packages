@@ -2,26 +2,34 @@
   "name": "root",
   "private": true,
   "devDependencies": {
+    "axios": "^0.27.2",
     "eslint": "^8.12.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
-    "jest": "^27.5.1",
+    "jest": "^29.7.0",
     "jest-junit": "^13.1.0",
-    "lerna": "^5.5.1",
+    "lerna": "^8.1.2",
     "prettier": "^2.6.2",
+    "rimraf": "^5.0.5",
     "testcontainers": "^8.13.1",
     "trace-unhandled": "^2.0.1",
-    "axios": "^0.27.2"
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.2"
   },
   "scripts": {
     "version": "lerna version  -y --conventional-commits --loglevel verbose",
     "publish": "lerna publish from-package -y --loglevel verbose -- --access public",
     "test": "lerna run test",
-    "postinstall": "npm run bootstrap",
-    "bootstrap": "lerna bootstrap  --concurrency 2"
+    "_postinstall": "npm run bootstrap",
+    "_bootstrap": "lerna bootstrap  --concurrency 2"
   },
   "dependencies": {
     "nanoid": "^3.3.2",
     "nx": "^14.7.3"
-  }
+  },
+  "workspaces": [
+    "packages/*",
+    "services/*"
+  ]
 }

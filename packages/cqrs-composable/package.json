@@ -21,7 +21,7 @@
     "url": "git+https://github.com/avanzu/node-packages.git"
   },
   "scripts": {
-    "test": "npm run lint && npm run jest",
+    "test": "npm run jest",
     "lint": "eslint . ",
     "jest": "jest --forceExit",
     "format": "prettier --write ."
@@ -30,7 +30,7 @@
     "url": "https://github.com/avanzu/node-packages/issues"
   },
   "dependencies": {
-    "nanoid": "^4.0.0",
-    "ramda": "^0.28.0"
+    "ramda": "^0.28.0",
+    "uid": "^2.0.2"
   }
 }

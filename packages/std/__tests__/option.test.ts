@@ -1,4 +1,6 @@
-const { Option } = require('..')
+import { Option } from "~/src"
+
+
 describe('Type "Option"', () => {
     describe('factories', () => {
         test('Some', () => {

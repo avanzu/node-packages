@@ -1,4 +1,5 @@
-const { Identity } = require('..')
+import { Identity } from "~/src"
+
 describe('Type "Identity"', () => {
     const val = Identity.of('something')
 
