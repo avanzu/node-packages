@@ -29,20 +29,8 @@
 			"path": "packages/template-renderer"
 		},
 		{
-			"name": "celtic-sun",
-			"path": "services/celtic-sun"
-		},
-		{
-			"name": "icy-omega",
-			"path": "services/icy-omega"
-		},
-		{
-			"name": "lost-fox",
-			"path": "services/lost-fox"
-		},
-		{
-			"name": "ostium",
-			"path": "services/ostium"
+			"name": "🚀 @service/authentication",
+			"path": "services/authentication"
 		}
 	],
 	"settings": {

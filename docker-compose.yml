@@ -1,88 +1,28 @@
 version: '3'
-services: 
-  activemq:
-    image: rmohr/activemq:latest
-    ports:
-      - '61616:61616'
-      - '8161:8161'
-      - '5672:5672'
-  redis:
-    image: bitnami/redis:latest
-    environment:
-      ALLOW_EMPTY_PASSWORD: 'yes'
-    ports:
-      - '6379:6379'
+services:
+  base:
+    image: node-packages:latest
+    pull_policy: never
+    build:
+      context: .
+      dockerfile: ${DOCKERFILE:-Dockerfile}
 
-  ostium:
-    build:
-      context: . 
-      dockerfile: dev.dockerfile
-      args:
-        SERVICE: ostium
-    command: ['npm', '--prefix', 'services/ostium', 'run', 'dev:debug']  
-    env_file: '.env'
+
+  authentication:
+    extends: { service: base }
+    command: ['dev:debug']
     environment:
-      PORT: 3030
-      DEBUG_PORT: 9030
-    ports:
-      - '3030:3030'
-      - '9030:9030'
-    volumes:
-      - './node_modules:/opt/app/node_modules:ro'
-      - './packages:/opt/app/packages:ro'
-      - './services/ostium:/opt/app/services/ostium:ro'
-      - './docker/volumes/users.json:/opt/app/fixtures/users.json'
-  celtic-sun:
-    build:
-      context: . 
-      dockerfile: dev.dockerfile
-      args:
-        SERVICE: celtic-sun
-    command: ['npm', '--prefix', 'services/celtic-sun', 'run', 'dev:debug']  
-    env_file: '.env'
-    environment:
-      DEBUG_PORT: 9040
-    # ports:
-    #   - '9040:9040'
-    volumes:
-      - './node_modules:/opt/app/node_modules:ro'
-      - './packages:/opt/app/packages:ro'
-      - './services/celtic-sun:/opt/app/services/celtic-sun:ro'
-  icy-omega:
-    build:
-      context: . 
-      dockerfile: dev.dockerfile
-      args:
-        SERVICE: icy-omega
-    command: ['npm', '--prefix', 'services/icy-omega', 'run', 'dev:debug']  
-    env_file: '.env'
-    environment:
-      PORT: 3033
+      PORT: 3333
       DEBUG_PORT: 9033
-    ports:
-      - '3033:3033'
-      - '9033:9033'
+      HOST: authentication
+      SERVICE: authentication
     volumes:
-      - './node_modules:/opt/app/node_modules:ro'
-      - './packages:/opt/app/packages:ro'
-      - './services/icy-omega:/opt/app/services/icy-omega:ro'
+      - ./node_modules:/opt/app/node_modules
+      - ./packages:/opt/app/packages
+      - ./services/authentication:/opt/app/services/authentication
     deploy:
-      replicas: 1
-  lost-fox:
-    build:
-      context: . 
-      dockerfile: dev.dockerfile
-      args:
-        SERVICE: lost-fox
-    command: ['npm', '--prefix', 'services/lost-fox', 'run', 'dev:debug']  
-    env_file: '.env'
-    environment:
-      DEBUG_PORT: 9050
-    # ports:
-    #   - '9040:9040'
-    volumes:
-      - './node_modules:/opt/app/node_modules:ro'
-      - './packages:/opt/app/packages:ro'
-      - './services/lost-fox:/opt/app/services/lost-fox:ro'
-    deploy:
-      replicas: 1
+      replicas: 0
+    depends_on:
+      - mongo
+      - redis
+

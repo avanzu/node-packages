@@ -24,7 +24,7 @@
     "url": "git+https://github.com/avanzu/node-packages.git"
   },
   "scripts": {
-    "prebuild": "rimraf ./lib",
+    "prebuild": "rimraf ./dist",
     "build": "tsc --project tsconfig.build.json",
     "postbuild": "tsc-alias tsconfig.build.json",
     "test": "jest",

@@ -1,1 +1,10 @@
 **/node_modules
+.nx/
+.vscode/
+decommisssioned/
+docker/
+tinker/
+.env
+Dockerfile
+*.dockerfile
+*.code-workspace

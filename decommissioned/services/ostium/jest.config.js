@@ -5,7 +5,7 @@
 const suiteName = require('./package.json').name
 
 module.exports = {
-    ...require('../../jest.base')(suiteName),
+    ...require('../../../jest.base')(suiteName),
     globalSetup: '<rootDir>/test/__init__/setup.js',
     globalTeardown: '<rootDir>/test/__init__/teardown.js',
 }
