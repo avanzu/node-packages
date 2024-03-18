@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.1.1](https://github.com/avanzu/node-packages/compare/@avanzu/eventstore@2.1.0...@avanzu/eventstore@2.1.1) (2024-03-18)
+
+
+### Bug Fixes
+
+* rearranges mongodb connection options ([540c8bf](https://github.com/avanzu/node-packages/commit/540c8bf1cb515d104b9d8634711361ced7095bf2))
+
+
+
+
+
 # [2.1.0](https://github.com/avanzu/node-packages/compare/@avanzu/eventstore@2.0.1...@avanzu/eventstore@2.1.0) (2023-05-07)
 
 ### Features
