@@ -1,27 +1,18 @@
+import { Server } from 'http'
 import { Container } from 'inversify'
 import { InversifyKoaServer } from 'inversify-koa-utils'
 import Koa from 'koa'
 import koaQS from 'koa-qs'
-import * as Routing from 'koa-router'
-import { promisify } from 'util'
-import { Config, ConfigOptions } from './common/configuration'
-import { TYPES } from './common/types'
-import { Tenant } from './multitenancy/tenant'
 import pino, { Logger } from 'pino'
-import {Server} from 'http'
-import { monitoringModule } from './monitoring/dependencyInjection/module'
-import { multitenancyModule } from './multitenancy/dependencyInjection/module'
-import { persistenceModule } from './persistence/dependencyInjection/module'
-export interface State extends Koa.DefaultState {
-    tenant: Tenant
-}
-
-export interface Context extends Routing.RouterContext<State> {}
-export interface KoaKernel extends Koa<State, Context> {}
-export interface Middleware extends Routing.IMiddleware<State, Context> {}
+import { promisify } from 'util'
+import { Config, ConfigOptions, KoaKernel, State, Context, TYPES } from './common'
+import { rootModule } from './dependencyInjection'
+import { errorHandler } from './common/errorHandler'
+import { monitoringModule } from './monitoring'
+import { multitenancyModule } from './multitenancy'
+import { persistenceModule } from './persistence'
 
 export class Kernel extends Koa<State, Context> implements KoaKernel {
-
     server: InversifyKoaServer
     container: Container
     httpServer: Server
@@ -32,26 +23,22 @@ export class Kernel extends Koa<State, Context> implements KoaKernel {
         this.onServing = this.onServing.bind(this)
         this.shutdown = this.shutdown.bind(this)
         this.container = this.createContainer()
-
-    }
-
-    protected createLogger() : Logger {
-        const logger = pino()
-        return logger
     }
 
     protected createContainer(): Container {
         const container = new Container()
 
-        container.bind<Config>(TYPES.Config).toConstantValue(this.options)
-        container.bind<Logger>(TYPES.Logger).toConstantValue(this.createLogger())
-
-        container.load(monitoringModule, persistenceModule, multitenancyModule)
+        container.load(
+            rootModule(this, this.options),
+            monitoringModule,
+            persistenceModule,
+            multitenancyModule
+        )
 
         return container
     }
 
-    protected createServer() : InversifyKoaServer {
+    protected createServer(): InversifyKoaServer {
         const app = this as unknown as Koa
         const server = new InversifyKoaServer(this.container, null, null, app)
 
@@ -59,16 +46,25 @@ export class Kernel extends Koa<State, Context> implements KoaKernel {
     }
 
     protected onServing() {
-        console.log('server started')
+        this.getLogger().info({ address: this.getAddress() }, 'Server started')
     }
 
     async initialize() {
+        this.use(errorHandler)
         process.on('SIGINT', this.shutdown)
         process.on('SIGTERM', this.shutdown)
     }
 
     getOption<T extends keyof ConfigOptions>(name: T, orElse?: ConfigOptions[T]): ConfigOptions[T] {
         return this.options.get<T>(name) ?? orElse
+    }
+
+    getAddress() {
+        return `http://${this.getOption('host')}:${this.getOption('port')}`
+    }
+
+    getLogger() {
+        return this.container.get<Logger>(TYPES.Logger)
     }
 
     async serve() {
@@ -80,15 +76,15 @@ export class Kernel extends Koa<State, Context> implements KoaKernel {
     }
 
     async shutdown() {
-        console.log('Shutting down')
+        this.getLogger().info('Shutting down')
         if (true === Boolean(this.httpServer)) {
             await promisify(this.httpServer.close).call(this.httpServer)
             this.httpServer = null
         }
-        if(true === Boolean(this.server)) {
+        if (true === Boolean(this.server)) {
             this.server = null
         }
 
-        console.log('shutdown complete')
+        this.getLogger().info('shutdown complete')
     }
 }

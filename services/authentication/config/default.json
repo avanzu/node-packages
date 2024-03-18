@@ -8,5 +8,8 @@
         "options": {
             "authSource": "admin"
         }
+    },
+    "logger": {
+
     }
 }

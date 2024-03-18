@@ -1,6 +1,6 @@
 import { Context, Middleware, Next } from 'koa'
 import { StatusCodes, getReasonPhrase } from 'http-status-codes'
-import { TYPES } from './common/types'
+import { TYPES } from './types'
 
 export const errorHandler: Middleware = async (context: Context, next: Next) => {
     const started: number = Date.now()

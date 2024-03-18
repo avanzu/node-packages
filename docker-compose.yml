@@ -6,6 +6,8 @@ services:
     build:
       context: .
       dockerfile: ${DOCKERFILE:-Dockerfile}
+    deploy:
+      replicas: 0
 
 
   authentication:
@@ -21,7 +23,7 @@ services:
       - ./packages:/opt/app/packages
       - ./services/authentication:/opt/app/services/authentication
     deploy:
-      replicas: 0
+      replicas: 1
     depends_on:
       - mongo
       - redis
