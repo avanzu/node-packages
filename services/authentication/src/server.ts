@@ -4,6 +4,21 @@ import { Config } from './common/configuration'
 import { TYPES } from './common/types'
 import { container } from './dependencyInjection/container'
 import { errorHandler } from './errorHandler'
+
+import config from 'config'
+import { Kernel } from './kernel'
+
+;(async () => {
+    const kernel = new Kernel(config)
+    try {
+        await kernel.serve()
+    } catch (error) {
+        console.error('Server crashed', error)
+        process.exit(1)
+    }
+})()
+
+/*
 (async () => {
     const server = new InversifyKoaServer(container)
     const config = container.get<Config>(TYPES.Config)
@@ -24,3 +39,4 @@ import { errorHandler } from './errorHandler'
         process.exit(1)
     }
 })()
+*/
