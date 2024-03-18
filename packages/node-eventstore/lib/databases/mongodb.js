@@ -95,7 +95,7 @@ const streamEventsByRevision = (self, findStatement, revMin, revMax, resultStrea
             if (!lastEvent) {
                 return resultStream.end()
             }
-            /* 
+            /*
             var txOk =
                 (revMax === -1 && !lastEvent.restInCommitStream) ||
                 (revMax !== -1 &&
@@ -187,9 +187,9 @@ class Mongo extends Store {
     connectV3(connectionUrl, options) {
         debug('connectV3 using %s and %o', connectionUrl, options)
         this.client = new MongoClient(connectionUrl, {
-            ...options,
             useNewUrlParser: true,
             useUnifiedTopology: true,
+            ...options,
         })
 
         return this.client
@@ -204,9 +204,9 @@ class Mongo extends Store {
         debug('connectV4 using %s and %o', connectionUrl, options)
 
         this.client = new MongoClient(connectionUrl, {
-            ...options,
-            appName: 'node-eventstore',
             directConnection: true,
+            appName: 'node-eventstore',
+            ...options,
         })
         return this.client
             .connect()
