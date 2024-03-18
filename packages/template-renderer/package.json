@@ -28,5 +28,6 @@
         "lru-cache": "^9.1.1",
         "markdown-it": "^13.0.1",
         "piscina": "^3.2.0"
-    }
+    },
+    "gitHead": "f5fc121607537beac2502adcafcab3f97285e65a"
 }

@@ -3,6 +3,7 @@
     "version": "1.0.1",
     "description": "",
     "main": "dist/index.js",
+    "private": true,
     "scripts": {
         "prebuild": "rimraf ./dist",
         "build": "tsc --project tsconfig.build.json",
@@ -43,5 +44,6 @@
         "pino": "^8.19.0",
         "reflect-metadata": "^0.2.1",
         "uid": "^2.0.2"
-    }
+    },
+    "gitHead": "f5fc121607537beac2502adcafcab3f97285e65a"
 }

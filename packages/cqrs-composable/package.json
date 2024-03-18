@@ -32,5 +32,6 @@
     "dependencies": {
         "ramda": "^0.28.0",
         "uid": "^2.0.2"
-    }
+    },
+    "gitHead": "f5fc121607537beac2502adcafcab3f97285e65a"
 }
