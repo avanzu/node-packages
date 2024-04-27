@@ -1,4 +1,4 @@
-import { Context, Middleware, Next } from 'koa'
+import type { Context, Middleware, Next } from 'koa'
 import { StatusCodes, getReasonPhrase } from 'http-status-codes'
 import { TYPES } from './types'
 

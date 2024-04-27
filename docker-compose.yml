@@ -27,4 +27,20 @@ services:
     depends_on:
       - mongo
       - redis
-
+  foundation:
+    extends: { service: base }
+    image: node-packages.bun:latest
+    command: ["--watch", "src/index.ts"]
+    build:
+      dockerfile: Dockerfile.bun
+    environment:
+      PORT: 3334
+      DEBUG_PORT: 9334
+      HOST: foundation
+      SERVICE: foundation
+    volumes:
+      - ./node_modules:/opt/app/node_modules
+      - ./packages:/opt/app/packages
+      - ./services/foundation:/opt/app/services/foundation
+    deploy:
+      replicas: 1
