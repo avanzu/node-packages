@@ -1,4 +1,4 @@
-import { LogBox, Logger, Log, LogAsync } from '~/logging'
+import { LogBox, Logger, Log, LogAsync } from '~/index'
 
 describe('The LogBox', () => {
     class LogTest {

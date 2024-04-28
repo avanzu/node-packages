@@ -1,4 +1,4 @@
-import { ExecutionContext, Pluggable, Plugin, PluginAware, Plugins } from '~/plugins'
+import { ExecutionContext, Pluggable, Plugin, PluginAware, Plugins } from '~/index'
 
 describe('Plugin system', () => {
     @PluginAware()
