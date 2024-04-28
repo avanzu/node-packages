@@ -1,6 +1,6 @@
 {
     "name": "@avanzu/oas-builder",
-    "version": "1.4.2",
+    "version": "1.4.3",
     "description": "Code your openapi specifications using a fluent interface that integrates seamlessly with fluent-json-schema",
     "author": "Marc Bach <mail@avanzu.de>",
     "keywords": [
