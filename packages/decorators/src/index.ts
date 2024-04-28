@@ -1,1 +1,2 @@
-export const name = '@avanzu/decorators'
+export * from './logging'
+export * from './plugins'
