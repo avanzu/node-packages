@@ -2,6 +2,15 @@
 
 > Decorators allowing to extend and alter behavior of methods
 
+- [`@avanzu/decorators`](#avanzudecorators)
+  - [Attach logging to class methods](#attach-logging-to-class-methods)
+    - [Decorator options](#decorator-options)
+    - [Global configuration](#global-configuration)
+    - [Change the logger](#change-the-logger)
+  - [Attach plugin capabilities to classes](#attach-plugin-capabilities-to-classes)
+    - [Using symbols or strings](#using-symbols-or-strings)
+    - [Limitations](#limitations)
+
 
 ## Attach logging to class methods
 
