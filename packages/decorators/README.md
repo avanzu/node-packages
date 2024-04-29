@@ -87,7 +87,7 @@ import { myLogger } from './logger'
 
 LogBox.use(myLogger)
 ```
-## Attach plguin capabilities to classes
+## Attach plugin capabilities to classes
 
 Make your class `PluginAware`, decorate the methods as `Pluggable` that should allow plugins.
 ```ts

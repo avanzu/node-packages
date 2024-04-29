@@ -20,7 +20,8 @@
         "test": "jest",
         "build": "tsc -p tsconfig.build.json",
         "postbuild": "tsc-alias -p tsconfig.build.json",
-        "prebuild": "rimraf ./dist"
+        "prebuild": "rimraf ./dist",
+        "prepublish": "npm run build"
     },
     "bugs": {
         "url": "https://github.com/avanzu/node-packages/issues"
