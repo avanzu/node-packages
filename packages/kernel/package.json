@@ -1,0 +1,57 @@
+{
+    "name": "@avanzu/kernel",
+    "version": "1.0.0",
+    "description": "> TODO: description",
+    "author": "Marc Bach <mail@avanzu.de>",
+    "homepage": "https://github.com/avanzu/node-packages#readme",
+    "license": "ISC",
+    "main": "dist/index.js",
+    "files": [
+        "dist"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/avanzu/node-packages.git"
+    },
+    "scripts": {
+        "test": "jest",
+        "build": "tsc -p tsconfig.build.json",
+        "postbuild": "tsc-alias -p tsconfig.build.json",
+        "prebuild": "rimraf ./dist",
+        "prepublish": "npm run build"
+    },
+    "bugs": {
+        "url": "https://github.com/avanzu/node-packages/issues"
+    },
+    "devDependencies": {
+        "tsc-alias": "^1.8.8",
+        "typedoc": "^0.25.13"
+    },
+    "dependencies": {
+        "@avanzu/decorators": "^1.1.2",
+        "@koa/bodyparser": "^5.1.0",
+        "@koa/cors": "^5.0.0",
+        "awilix": "^10.0.2",
+        "awilix-koa": "^10.1.0",
+        "awilix-manager": "^5.2.1",
+        "http-status-codes": "^2.3.0",
+        "koa": "^2.15.2",
+        "koa-helmet": "^7.0.2",
+        "koa-qs": "^3.0.0"
+    },
+    "peerDependencies": {
+        "config": "^3.3.11",
+        "pino": "^8.21.0"
+    },
+    "peerDependenciesMeta": {
+        "pino": {
+            "optional": true
+        },
+        "config": {
+            "optional": true
+        }
+    }
+}
