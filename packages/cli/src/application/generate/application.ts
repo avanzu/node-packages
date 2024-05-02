@@ -6,6 +6,9 @@ type GenerateApplicationOptions = {
     author?: string
     description?: string
     license?: string
+    port?: number
+    host?: string
+    logLevel?: string
 }
 
 export class GenerateApplication extends CliCommand<GenerateApplicationOptions> {
@@ -21,7 +24,10 @@ export class GenerateApplication extends CliCommand<GenerateApplicationOptions> 
         return [
             new Option('--author <author>', 'The author'),
             new Option('--description <description>', 'A short description'),
-            new Option('--license <license>', 'The license')
+            new Option('--license <license>', 'The license'),
+            new Option('--port <port>', 'The port number').default(9001),
+            new Option('--log-level <level>', 'The default log level'),
+            new Option('--host <host>', 'the hostname')
         ]
     }
 
@@ -31,7 +37,10 @@ export class GenerateApplication extends CliCommand<GenerateApplicationOptions> 
             packageName,
             author: options.author,
             description: options.description,
-            license: options.license
+            license: options.license,
+            port: options.port,
+            host: options.host,
+            logLevel: options.logLevel
         })
 
         await bundle.generate()

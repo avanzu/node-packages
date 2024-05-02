@@ -2,7 +2,7 @@ import { GeneratorArguments, GeneratorContext } from './context'
 import { Template } from './template'
 import { writeFile, mkdir } from 'node:fs/promises'
 import path from 'node:path'
-
+import * as prettier from 'prettier'
 export class Bundle<Args extends GeneratorArguments> {
     bundleName: string = ''
 
@@ -28,6 +28,8 @@ export class Bundle<Args extends GeneratorArguments> {
         for (let template of this.getTemplates()) {
             let contents = await template.render(context)
             let filePath = path.join(context.cwd, template.directory, template.filename)
+            if(template.filename.endsWith('ts'))
+                contents = await prettier.format(contents, { parser: 'typescript', semi: false, singleQuote: true })
             await writeFile(filePath, contents, 'utf-8')
         }
     }

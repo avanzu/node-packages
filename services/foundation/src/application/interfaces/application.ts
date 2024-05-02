@@ -1,9 +1,15 @@
-import { Container } from './container'
-import { App, AppState, AppContext, AppMiddleware  } from '@avanzu/kernel'
+import * as Avanzu from '@avanzu/kernel'
+import { Services } from './services';
+import { ConfigValues } from './configuration'
 
-export interface State extends AppState<Container> {}
+export type Config = Avanzu.Configuration<ConfigValues>
 
-export interface Context extends AppContext<Container, State> {}
-export interface Middleware extends AppMiddleware<Container, State, Context> {}
+export interface Container extends Avanzu.Container<Services> {}
 
-export interface Application extends App<Container, State, Context> {}
+export interface State extends Avanzu.AppState<Container> {}
+
+export interface Context extends Avanzu.AppContext<Container, State> {}
+
+export interface Middleware extends Avanzu.AppMiddleware<Container, State, Context> {}
+
+export interface Application extends Avanzu.App<Container, State, Context> {}

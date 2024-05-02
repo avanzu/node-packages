@@ -30,12 +30,14 @@
         "url": "https://github.com/avanzu/node-packages/issues"
     },
     "devDependencies": {
+        "@types/prettier": "^3.0.0",
         "tsc-alias": "^1.8.8",
         "typedoc": "^0.25.13"
     },
     "dependencies": {
         "chalk": "^4.1.2",
         "dotenv": "^16.4.5",
+        "prettier": "^3.2.5",
         "reflect-metadata": "^0.2.2"
     },
     "gitHead": "9ebffa16391c453c9494aaf6057d1b856d3de614"

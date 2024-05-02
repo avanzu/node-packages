@@ -6,6 +6,10 @@ import { Application, Config, Container, Middleware } from './interfaces'
 
 export class AppKernel extends Kernel<Config, Application, Container> {
 
+    get httpServer() {
+        return this.server
+    }
+
     protected createLogger(): Logger {
         return new PinoLogger(this.options.get('logger'))
     }
