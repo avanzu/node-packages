@@ -3,8 +3,10 @@
  * https://jestjs.io/docs/en/configuration.html
  */
 
-module.exports = {
-    ...require('./jest.config'),
+import jestConfig from './jest.config'
+
+export default {
+    ...jestConfig,
     testMatch: ['<rootDir>/**/*.test.[jt]s?(x)'],
     globalSetup: '<rootDir>/__tests__/__init__/setup.ts',
 }

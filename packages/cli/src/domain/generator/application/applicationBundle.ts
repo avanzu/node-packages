@@ -5,6 +5,7 @@ import { AppContainerBuilder } from "./templates/appContainerBuilder.tpl";
 import { AppController } from "./templates/appController.tpl";
 import { AppKernel } from "./templates/appKernel.tpl";
 import { AppService } from "./templates/appService.tpl";
+import { AppTest } from "./templates/appTest.tpl";
 import { DefaultConfig, DefaultConfigArguments } from "./templates/defaultConfig.tpl";
 import { ApplicationInterface } from "./templates/interfaces/application.tpl";
 import { InterfacesBarrel } from "./templates/interfaces/barrel.tpl";
@@ -36,6 +37,7 @@ export class ApplicationBundle extends Bundle<ApplicationBundleArgs> {
             new ConfigurationInterface(),
             new ServicesInterface(),
             new DefaultConfig(),
+            new AppTest()
 
         ]
     }

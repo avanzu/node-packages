@@ -6,12 +6,9 @@ import { Application, Config, Container, Middleware } from './interfaces'
 
 export class AppKernel extends Kernel<Config, Application, Container> {
 
-    get httpServer() {
-        return this.server
-    }
-
     protected createLogger(): Logger {
-        return new PinoLogger(this.options.get('logger'))
+        let loggerOptions = this.options.get('logger')
+        return new PinoLogger(loggerOptions)
     }
 
     protected createContainerBuilder(): ContainerBuilder {
@@ -22,8 +19,6 @@ export class AppKernel extends Kernel<Config, Application, Container> {
         return [ koaHelmet(), bodyParser() ]
     }
 
-    protected getCWD() {
-        return __dirname
-    }
+
 
 }

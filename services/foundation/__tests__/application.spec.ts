@@ -1,19 +1,14 @@
 import config from 'config'
-import { ReasonPhrases, StatusCodes } from "http-status-codes"
+import { ReasonPhrases, StatusCodes } from 'http-status-codes'
 import request from 'supertest'
-import { AppKernel } from "~/application/appKernel"
-import { Server } from 'node:net'
+import { AppKernel } from '~/application/appKernel'
 describe('@avanzu/foundation', () => {
-
     let app: AppKernel
-    let server: Server
 
     beforeAll(async () => {
-
         app = new AppKernel(config)
         await app.boot()
         await app.serve()
-        server = app.httpServer!
     })
 
     afterAll(async () => {
@@ -21,9 +16,8 @@ describe('@avanzu/foundation', () => {
     })
 
     test('sanity', async () => {
-        let response = await request(server).get('/health')
+        let response = await request(app.server).get('/health')
         expect(response.status).toBe(StatusCodes.OK)
-        expect(response.body).toBe(ReasonPhrases.OK)
+        expect(response.text).toBe(ReasonPhrases.OK)
     })
-
 })

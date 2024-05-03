@@ -3,11 +3,12 @@ import { GET, route } from 'awilix-koa'
 import { AppService } from '../services/appService'
 import { Context } from '../interfaces'
 
-@route('')
+
 export class AppController {
     private service: AppService
 
     constructor(appService: AppService) {
+        console.log('AppController initialized')
         this.service = appService
     }
 
