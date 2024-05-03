@@ -1,4 +1,4 @@
-import { AwilixContainer } from "awilix";
+import { AwilixContainer, asFunction } from "awilix";
 import { Context, Middleware, Next } from "koa";
 
 export function containerScope(container: AwilixContainer) : Middleware {
@@ -6,6 +6,9 @@ export function containerScope(container: AwilixContainer) : Middleware {
         let scope = container.createScope()
         context.scope = scope
         context.state.container = scope
+        scope.register('authUser', asFunction(() => context.user, { lifetime: 'TRANSIENT' }))
+
+
         return next()
 
     }

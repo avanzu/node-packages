@@ -1,5 +1,6 @@
 import { LogAsync } from '@avanzu/decorators'
 import { readFile } from 'fs/promises'
+import { User } from '../interfaces'
 
 export type AppInfo = {
     name: string
@@ -10,6 +11,7 @@ export type AppInfo = {
 
 export class AppService {
     protected appInfo?: AppInfo
+
 
     @LogAsync()
     protected async buildInfo() {

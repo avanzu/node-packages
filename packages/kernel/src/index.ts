@@ -1,3 +1,4 @@
+export * from './decorators'
 export * from './interfaces'
 export * from './kernel'
 export * from './middleware'

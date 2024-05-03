@@ -5,6 +5,7 @@
     "version": "0.2.0",
     "configurations": [
 
+
         {
             "command": "npm  --prefix=packages/rhea-composable test",
             "name": "rhea-composable [TEST]",
@@ -77,5 +78,23 @@
             "type": "node-terminal",
             "localRoot": "${workspaceFolder}/services/icy-omega"
         },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Foundation",
+            "localRoot": "${workspaceFolder}/services/foundation",
+            "port": 44177
+        },
+        {
+            "type": "node-terminal",
+            "request": "launch",
+            "name": "Foundation (Launch)",
+            "localRoot": "${workspaceFolder}/services/foundation",
+            "cwd": "${workspaceFolder}/services/foundation",
+            "command" : "npm run dev:debug",
+            "env": {
+                "DEBUG_PORT": "9901"
+            }
+        }
     ]
 }

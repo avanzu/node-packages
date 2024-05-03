@@ -1,27 +1,30 @@
 import { ReasonPhrases, StatusCodes } from 'http-status-codes'
-import { GET, route } from 'awilix-koa'
 import { AppService } from '../services/appService'
-import { Context } from '../interfaces'
+import { Context, User } from '../interfaces'
+import { Controller, Get } from '@avanzu/kernel'
+import { authenticate } from '../middleware/authenticate'
 
 
+@Controller()
 export class AppController {
     private service: AppService
-
-    constructor(appService: AppService) {
-        console.log('AppController initialized')
+    private authUser: User
+    constructor(appService: AppService, authUser: User) {
         this.service = appService
+        this.authUser = authUser
     }
 
-    @GET()
-    @route('/health')
+    @Get('/health')
     async health(context: Context) {
+
         context.body = ReasonPhrases.OK
         context.status = StatusCodes.OK
     }
 
-    @GET()
-    @route('/info')
+    @Get('/info', authenticate())
     async info(context: Context) {
-        context.body = await this.service.info()
+        let service = await this.service.info()
+
+        context.body = { service, authUser: this.authUser }
     }
 }

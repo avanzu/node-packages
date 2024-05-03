@@ -7,6 +7,8 @@ import * as Types from './interfaces'
 import { containerScope, errorHandler } from './middleware'
 import { promisify } from 'node:util'
 import { asyncDispose, asyncInit } from 'awilix-manager'
+import { mountControllers } from './decorators/routing'
+import { authenticateAnonymous } from './middleware/authenticateAnonymous'
 
 export abstract class Kernel<
     Config extends Types.Configuration,
@@ -74,6 +76,7 @@ export abstract class Kernel<
 
     protected addMiddlewares() {
         this.app.use(errorHandler(this.logger))
+        this.app.use(authenticateAnonymous())
         this.app.use(containerScope(this.container))
         for (let middleware of this.middlewares()) {
             this.app.use(middleware)
@@ -95,7 +98,9 @@ export abstract class Kernel<
     protected abstract createLogger(): Types.Logger
 
     protected loadControllers() {
-        let controllers = loadControllers(this.getControllerPaths())
-        this.app.use(controllers)
+        let router = mountControllers()
+        this.app.use(router.routes())
+        // let controllers = loadControllers(this.getControllerPaths())
+        // this.app.use(controllers)
     }
 }

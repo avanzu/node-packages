@@ -1,7 +1,8 @@
-import { ContainerBuilder } from "@avanzu/kernel";
-import { asClass } from "awilix";
-import { Config, Container } from "../interfaces";
-import { AppService } from "../services/appService";
+import { ContainerBuilder } from '@avanzu/kernel'
+import { asClass } from 'awilix'
+import { Config, Container } from '../interfaces'
+import { AppService } from '../services/appService'
+import  '../controllers'
 
 export class AppContainerBuilder implements ContainerBuilder {
     protected options: Config

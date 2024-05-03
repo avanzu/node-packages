@@ -6,22 +6,24 @@ export class AppContainerBuilder implements Template {
     filename: string = 'appContainerBuilder.ts';
     async render(context: GeneratorContext<GeneratorArguments>): Promise<string> {
         return `
-            import { ContainerBuilder } from "@avanzu/kernel";
-            import { asClass } from "awilix";
-            import { Config, Container } from "../interfaces";
-            import { AppService } from "../services/appService";
+        import { ContainerBuilder } from '@avanzu/kernel'
+        import { asClass } from 'awilix'
+        import { Config, Container } from '../interfaces'
+        import { AppService } from '../services/appService'
+        import  '../controllers'
 
-            export class AppContainerBuilder implements ContainerBuilder {
-                protected options: Config
+        export class AppContainerBuilder implements ContainerBuilder {
+            protected options: Config
 
-                constructor(options: Config) {
-                    this.options = options
-                }
-
-                public async build(container: Container): Promise<void> {
-                    container.register('appService', asClass(AppService, { lifetime: 'SINGLETON' }))
-                }
+            constructor(options: Config) {
+                this.options = options
             }
+
+            public async build(container: Container): Promise<void> {
+                container.register('appService', asClass(AppService, { lifetime: 'SINGLETON' }))
+            }
+        }
+
 
         `
     }

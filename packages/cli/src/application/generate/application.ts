@@ -1,6 +1,8 @@
-import { Argument, Option } from "commander";
-import { CliCommand } from "~/application/command";
-import { ApplicationBundle } from "~/domain/generator/application/applicationBundle";
+import { Argument, Option } from 'commander'
+import { CliCommand } from '~/application/command'
+import { ApplicationBundle } from '~/domain/generator/application/applicationBundle'
+import { spawn } from 'node:child_process'
+import chalk from 'chalk'
 
 type GenerateApplicationOptions = {
     author?: string
@@ -12,12 +14,10 @@ type GenerateApplicationOptions = {
 }
 
 export class GenerateApplication extends CliCommand<GenerateApplicationOptions> {
-    name: string = 'application';
+    name: string = 'application'
 
     arguments(): Argument[] {
-        return [
-            new Argument('<packageName>', 'The package name')
-        ]
+        return [new Argument('<packageName>', 'The package name')]
     }
 
     options(): Option[] {
@@ -27,7 +27,7 @@ export class GenerateApplication extends CliCommand<GenerateApplicationOptions> 
             new Option('--license <license>', 'The license'),
             new Option('--port <port>', 'The port number').default(9001),
             new Option('--log-level <level>', 'The default log level'),
-            new Option('--host <host>', 'the hostname')
+            new Option('--host <host>', 'the hostname'),
         ]
     }
 
@@ -40,10 +40,23 @@ export class GenerateApplication extends CliCommand<GenerateApplicationOptions> 
             license: options.license,
             port: options.port,
             host: options.host,
-            logLevel: options.logLevel
+            logLevel: options.logLevel,
         })
 
         await bundle.generate()
-    }
 
+        await new Promise((Ok, Err) => {
+            console.info('[%s] %s', chalk.grey(new Date().toTimeString()), chalk.white('Installing packages...'))
+            let install = spawn('npm', ['install'], { cwd: process.cwd() })
+            install.stdout.on('data', (buffer) => {
+                let lines = buffer.toLocaleString().trim().split('\n')
+                lines.forEach((line) =>
+                    console.info('[%s] %s', chalk.grey(new Date().toTimeString()), chalk.cyan(line))
+                )
+            })
+            install.once('exit', (code, signal: NodeJS.Signals) => {
+                0 === code ? Ok(code) : Err(code)
+            })
+        })
+    }
 }
