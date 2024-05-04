@@ -1,6 +1,7 @@
 import { LogAsync } from '@avanzu/decorators'
 import { readFile } from 'fs/promises'
 import { User } from '../interfaces'
+import { Cache } from '~/domain/interfaces'
 
 export type AppInfo = {
     name: string
@@ -12,6 +13,7 @@ export type AppInfo = {
 export class AppService {
     protected appInfo?: AppInfo
 
+    constructor(protected cache: Cache) {}
 
     @LogAsync()
     protected async buildInfo() {

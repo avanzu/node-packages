@@ -3,5 +3,14 @@
     "port": 9001,
     "logger": {
         "level": "debug"
+    },
+    "redis": {
+        "connectionName" : "foundation-cache",
+        "port": 6379,
+        "host": "127.0.0.1",
+        "username": "default",
+        "password": "",
+        "db": 0,
+        "lazyConnect": true
     }
 }

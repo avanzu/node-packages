@@ -3,6 +3,7 @@ import { CliCommand } from '~/application/command'
 import { ApplicationBundle } from '~/domain/generator/application/applicationBundle'
 import { spawn } from 'node:child_process'
 import chalk from 'chalk'
+import { formatISO } from 'date-fns'
 
 type GenerateApplicationOptions = {
     author?: string
@@ -31,6 +32,37 @@ export class GenerateApplication extends CliCommand<GenerateApplicationOptions> 
         ]
     }
 
+    protected now() {
+        return formatISO(new Date(), { representation: 'complete' })
+    }
+
+    protected printBuffer(buffer: Buffer) {
+        let lines = buffer.toLocaleString().trim().split('\n')
+        for (let line of lines) {
+            console.info('[%s] %s', chalk.grey(this.now()), chalk.cyan(line))
+        }
+    }
+
+    protected inform(message: string) {
+        console.info('[%s] %s', chalk.grey(this.now()), chalk.white(message))
+    }
+
+    protected async spawnCommand(name: string, args: string[] = []) {
+        let cmd = spawn(name, args, { cwd: process.cwd() })
+        cmd.stdout.on('data', this.printBuffer.bind(this))
+
+        let exitCode = await new Promise((Ok) => cmd.once('exit', Ok))
+        return exitCode
+    }
+
+    protected async install() {
+        await this.spawnCommand('npm', ['install'])
+    }
+
+    protected async update() {
+        await this.spawnCommand('npm', ['update'])
+    }
+
     async execute(options: GenerateApplicationOptions, packageName: string): Promise<void> {
         let bundle = new ApplicationBundle({
             cwd: process.cwd(),
@@ -43,20 +75,10 @@ export class GenerateApplication extends CliCommand<GenerateApplicationOptions> 
             logLevel: options.logLevel,
         })
 
+        this.inform('Generating files')
         await bundle.generate()
-
-        await new Promise((Ok, Err) => {
-            console.info('[%s] %s', chalk.grey(new Date().toTimeString()), chalk.white('Installing packages...'))
-            let install = spawn('npm', ['install'], { cwd: process.cwd() })
-            install.stdout.on('data', (buffer) => {
-                let lines = buffer.toLocaleString().trim().split('\n')
-                lines.forEach((line) =>
-                    console.info('[%s] %s', chalk.grey(new Date().toTimeString()), chalk.cyan(line))
-                )
-            })
-            install.once('exit', (code, signal: NodeJS.Signals) => {
-                0 === code ? Ok(code) : Err(code)
-            })
-        })
+        // await this.install()
+        this.inform('Installing dependencies')
+        await this.update()
     }
 }
