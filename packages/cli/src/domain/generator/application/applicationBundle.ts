@@ -1,12 +1,12 @@
 import { Bundle } from "../common/bundle";
 import { GeneratorArguments } from "../common/context";
 import { Template } from "../common/template";
-import { AppContainerBuilder } from "./templates/appContainerBuilder.tpl";
-import { AppController } from "./templates/appController.tpl";
+import { AppContainerBuilder } from "./templates/dependencyInjection/appContainerBuilder.tpl";
+import { AppController } from "./templates/controllers/appController.tpl";
 import { AppKernel } from "./templates/appKernel.tpl";
-import { AppService } from "./templates/appService.tpl";
+import { AppService } from "./templates/services/appService.tpl";
 import { AppTest } from "./templates/appTest.tpl";
-import { ControllerBarrel } from "./templates/controllerBarrel.tpl";
+import { ControllerBarrel } from "./templates/controllers/controllerBarrel.tpl";
 import { DefaultConfig, DefaultConfigArguments } from "./templates/defaultConfig.tpl";
 import { ApplicationInterface } from "./templates/interfaces/application.tpl";
 import { InterfacesBarrel } from "./templates/interfaces/barrel.tpl";

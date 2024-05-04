@@ -54,6 +54,9 @@
         "@types/koa-router": "^7.4.8",
         "@types/supertest": "^6.0.2",
         "bun-types": "latest",
-        "supertest": "^7.0.0"
+        "supertest": "^7.0.0",
+        "rimraf": "^5.0.5",
+        "typescript": "^5.4.5",
+        "tsc-alias": "^1.8.8"
     }
 }

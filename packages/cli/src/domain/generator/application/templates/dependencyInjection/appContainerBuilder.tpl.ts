@@ -1,5 +1,5 @@
-import { GeneratorContext, GeneratorArguments } from "../../common/context";
-import { Template } from "../../common/template";
+import { GeneratorContext, GeneratorArguments } from "../../../common/context";
+import { Template } from "../../../common/template";
 
 export class AppContainerBuilder implements Template {
     directory: string = './src/application/dependencyInjection';

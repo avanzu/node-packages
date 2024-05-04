@@ -1,5 +1,5 @@
-import { GeneratorContext, GeneratorArguments } from "../../common/context";
-import { Template } from "../../common/template";
+import { GeneratorContext, GeneratorArguments } from "../../../common/context";
+import { Template } from "../../../common/template";
 
 export class AppController implements Template {
     directory: string = './src/application/controllers';
