@@ -15,18 +15,19 @@ export class ApplicationInterface implements Template {
 
         export type Config = Avanzu.Configuration<ConfigValues>
 
+        export interface User extends Avanzu.AuthUser {}
+
         export interface Container extends Avanzu.Container<Services> {}
 
         export interface State extends Avanzu.AppState<Container> {}
 
-        export interface Context<Query extends {} = {}, Body = unknown> extends Avanzu.AppContext<Container, State, Body> {
+        export interface Context<Query extends {} = {}, Body = unknown> extends Avanzu.AppContext<Container, State, User, Body> {
             query: Query
         }
 
         export interface Middleware extends Avanzu.AppMiddleware<Container, State, Context> {}
 
         export interface Application extends Avanzu.App<Container, State, Context> {}
-
 
         `
     }

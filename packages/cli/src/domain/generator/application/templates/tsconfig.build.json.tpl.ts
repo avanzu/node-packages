@@ -11,6 +11,9 @@ export class TSConfigBuild implements Template {
             compilerOptions: {
                 outDir: './dist',
                 rootDir: './src',
+                incremental: false,
+                types: ['node'],
+                tsBuildInfoFile: null,
                 noEmit: false,
             },
             include: ['src'],

@@ -1,7 +1,22 @@
 {
-
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "baseUrl": "./",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "downlevelIteration": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "noImplicitThis": false,
+    "outDir": "./dist",
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "types": [
+      "node",
+      "jest"
+    ],
+    "resolveJsonModule": true,
     "noEmit": true,
     "module": "NodeNext",
     "target": "ES2020",

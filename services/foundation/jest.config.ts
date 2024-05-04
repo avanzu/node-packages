@@ -12,6 +12,7 @@ const jestConfig: JestConfigWithTsJest = {
         compilerOptions.paths , { prefix: '<rootDir>/' }
     ),
     preset: 'ts-jest',
+    setupFilesAfterEnv: ['trace-unhandled/register'],
     transform: {
         '^.+\\.tsx?$': ['ts-jest', { extends: './tsconfig.json' }],
     },

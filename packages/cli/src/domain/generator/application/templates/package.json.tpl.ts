@@ -28,9 +28,8 @@ export class PackageJSON implements Template {
                 lint: 'eslint . ',
                 jest: 'jest',
                 format: 'prettier --write .',
-                dev: "nodemon --exec 'tsc -b tsconfig.build.json && tsc-alias -p tsconfig.build.json && node ./dist/main.js'",
-                'dev:debug':
-                    "nodemon --exec 'tsc -b tsconfig.build.json && tsc-alias -p tsconfig.build.json && node --inspect=0.0.0.0:${DEBUG_PORT} ./dist/main.js'",
+                dev: 'nodemon src/main.ts',
+                debug: 'nodemon --inspect=0.0.0.0:${DEBUG_PORT} src/main.ts',
                 start: 'node dist/main.js',
             },
             author: context.author || '',
@@ -77,6 +76,7 @@ export class PackageJSON implements Template {
                 'ts-node': '^10.9.2',
                 'tsc-alias': '^1.8.8',
                 typescript: '^5.4.2',
+                'tsconfig-paths': '^4.2.0',
             },
         }
 

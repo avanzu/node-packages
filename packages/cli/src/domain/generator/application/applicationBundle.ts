@@ -17,6 +17,9 @@ import { Main } from "./templates/main.tpl";
 import { PackageJSON, PackageJSONArguments } from "./templates/package.json.tpl";
 import { TSConfigBuild } from "./templates/tsconfig.build.json.tpl";
 import { TSConfig } from "./templates/tsconfig.json.tpl";
+import { NodemonJSON } from "./templates/nodemon.json.tpl";
+import { DIBarrel } from "./templates/dependencyInjection/barrel.tpl";
+import { Dockerfile } from "./templates/docker.tpl";
 
 export type ApplicationBundleArgs = GeneratorArguments & PackageJSONArguments & DefaultConfigArguments
 
@@ -25,6 +28,7 @@ export class ApplicationBundle extends Bundle<ApplicationBundleArgs> {
     protected getTemplates(): Template[] {
         return [
             new PackageJSON(),
+            new NodemonJSON(),
             new JestConfig(),
             new TSConfig(),
             new TSConfigBuild(),
@@ -33,13 +37,15 @@ export class ApplicationBundle extends Bundle<ApplicationBundleArgs> {
             new AppService(),
             new AppController(),
             new AppContainerBuilder(),
+            new DIBarrel(),
             new InterfacesBarrel(),
             new ApplicationInterface(),
             new ConfigurationInterface(),
             new ServicesInterface(),
             new DefaultConfig(),
             new AppTest(),
-            new ControllerBarrel()
+            new ControllerBarrel(),
+            new Dockerfile()
 
         ]
     }

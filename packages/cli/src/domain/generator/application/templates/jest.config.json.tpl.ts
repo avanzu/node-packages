@@ -6,22 +6,23 @@ export class JestConfig implements Template {
     filename: string = 'jest.config.ts';
     async render(context: GeneratorContext<GeneratorArguments>): Promise<string> {
         let contents = `
-import { pathsToModuleNameMapper } from 'ts-jest'
-import { compilerOptions } from './tsconfig.json'
-import type { JestConfigWithTsJest } from 'ts-jest'
+        import { pathsToModuleNameMapper } from 'ts-jest'
+        import { compilerOptions } from './tsconfig.json'
+        import type { JestConfigWithTsJest } from 'ts-jest'
 
-const jestConfig: JestConfigWithTsJest = {
-    roots: ['<rootDir>'],
-    moduleNameMapper: pathsToModuleNameMapper(
-        compilerOptions.paths , { prefix: '<rootDir>/' }
-    ),
-    preset: 'ts-jest',
-    transform: {
-        '^.+\\.tsx?$': ['ts-jest', { extends: './tsconfig.json' }],
-    },
-}
+        const jestConfig: JestConfigWithTsJest = {
+            roots: ['<rootDir>'],
+            moduleNameMapper: pathsToModuleNameMapper(
+                compilerOptions.paths , { prefix: '<rootDir>/' }
+            ),
+            setupFilesAfterEnv: ['trace-unhandled/register'],
+            preset: 'ts-jest',
+            transform: {
+                '^.+\\.tsx?$': ['ts-jest', { extends: './tsconfig.json' }],
+            },
+        }
 
-export default jestConfig
+        export default jestConfig
         `
 
         return contents
