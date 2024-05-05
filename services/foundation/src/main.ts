@@ -1,7 +1,11 @@
 import { AppKernel } from './application/appKernel'
+import { resolveAsyncConfigs } from 'config/async'
 import config from 'config'
 
 async function main() {
+
+    await resolveAsyncConfigs(config)
+
     let kernel = new AppKernel(config)
 
     process.on('SIGTERM', kernel.shutdown.bind(kernel))

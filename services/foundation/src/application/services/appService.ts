@@ -1,7 +1,7 @@
 import { LogAsync } from '@avanzu/decorators'
 import { readFile } from 'fs/promises'
-import { User } from '../interfaces'
-import { Cache } from '~/domain/interfaces'
+import { Config } from '../interfaces'
+
 
 export type AppInfo = {
     name: string
@@ -13,7 +13,7 @@ export type AppInfo = {
 export class AppService {
     protected appInfo?: AppInfo
 
-    constructor(protected cache: Cache) {}
+    constructor(protected appConfig: Config) {}
 
     @LogAsync()
     protected async buildInfo() {
@@ -24,6 +24,7 @@ export class AppService {
             version: contents.version,
             description: contents.description,
             author: contents.author,
+            redis: this.appConfig.get('redis')
         }
         this.appInfo = appInfo
     }

@@ -1,9 +1,9 @@
-import { Cache } from "~/domain/interfaces";
+import { CacheDriver } from "~/domain/interfaces";
 import type { Redis } from 'ioredis'
 import { Packr } from "msgpackr";
 
 
-export class RedisCache implements Cache {
+export class RedisCacheDriver implements CacheDriver {
 
     protected client: Redis
     protected packr: Packr

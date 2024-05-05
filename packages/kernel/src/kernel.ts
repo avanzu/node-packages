@@ -1,13 +1,12 @@
 import { createContainer } from 'awilix'
-import { loadControllers } from 'awilix-koa'
-import Koa, { Middleware } from 'koa'
+import { asyncDispose, asyncInit } from 'awilix-manager'
+import Koa from 'koa'
 import KoaQS from 'koa-qs'
-import { Server, AddressInfo } from 'net'
+import { AddressInfo, Server } from 'net'
+import { promisify } from 'node:util'
+import { mountControllers } from './decorators/routing'
 import * as Types from './interfaces'
 import { containerScope, errorHandler } from './middleware'
-import { promisify } from 'node:util'
-import { asyncDispose, asyncInit } from 'awilix-manager'
-import { mountControllers } from './decorators/routing'
 import { authenticateAnonymous } from './middleware/authenticateAnonymous'
 
 export abstract class Kernel<
@@ -88,9 +87,7 @@ export abstract class Kernel<
     }
 
     protected abstract createContainerBuilder(): Types.ContainerBuilder
-    protected getControllerPaths(): string {
-        return '**/controllers/*.js'
-    }
+
     protected middlewares(): Types.AppMiddleware<any, any, any>[] {
         return []
     }
@@ -100,7 +97,5 @@ export abstract class Kernel<
     protected loadControllers() {
         let router = mountControllers()
         this.app.use(router.routes())
-        // let controllers = loadControllers(this.getControllerPaths())
-        // this.app.use(controllers)
     }
 }

@@ -9,16 +9,20 @@ export type DefaultConfigArguments = GeneratorArguments & {
 
 export class DefaultConfig implements Template {
     directory: string = './config'
-    filename: string = 'default.json'
+    filename: string = 'default.ts'
     async render(context: GeneratorContext<DefaultConfigArguments>): Promise<string> {
-        let contents = {
-            host: context.host || 'localhost',
-            port: context.port,
+        return `
+
+        import { deferConfig } from 'config/defer'
+
+        export default {
+            host: deferConfig(() => process.env.HOST || '${context.host || 'localhost' }'),
+            port: deferConfig(() => process.env.PORT || ${context.port}),
             logger: {
-                level: context.logLevel || 'info',
-            },
+                level: 'debug'
+            }
         }
 
-        return JSON.stringify(contents, null, 2)
+        `
     }
 }
