@@ -1,4 +1,4 @@
 {
-    "jest.enable": true,
+    "jest.enable": false,
     "jest.runMode": "on-demand"
 }

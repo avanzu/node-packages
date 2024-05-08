@@ -1,10 +1,12 @@
 {
     "watch": [ "src", "config" ],
     "ext": "js,json,ts",
-    "exec": "node -r ts-node/register -r tsconfig-paths/register",
+    "exec": "node -r ts-node/register",
+    "signal" : "SIGINT",
     "ignore": [
         "coverage/",
         "dist/",
-        "__tests/"
+        "__tests__/",
+        "nodemon.json"
     ]
   }

@@ -38,5 +38,9 @@
   "include": [
     "src",
     "__tests__"
-  ]
+  ],
+  "ts-node": {
+    "files": true,
+    "require": ["tsconfig-paths/register"]
+  }
 }

@@ -33,13 +33,13 @@ function Route(method: HTTPVerb, route: string, middlewares: Middleware[]): Meth
     }
 }
 
-export function Before(...middlewares: Middleware[]) : MethodDecorator {
+export function Before(...middlewares: Middleware[]): MethodDecorator {
     return function beforeMiddlewareDecorator(target: Object, propertyKey: string | symbol) {
         Reflect.defineMetadata(BEFORE_MIDDLEWARE_KEY, middlewares, target, propertyKey)
     }
 }
 
-export function After(...middlewares: Middleware[]) : MethodDecorator {
+export function After(...middlewares: Middleware[]): MethodDecorator {
     return function beforeMiddlewareDecorator(target: Object, propertyKey: string | symbol) {
         Reflect.defineMetadata(AFTER_MIDDLEWARE_KEY, middlewares, target, propertyKey)
     }
@@ -66,7 +66,6 @@ export function Head(route: string = '/', ...middlewares: Middleware[]): MethodD
 export function All(route: string = '/', ...middlewares: Middleware[]): MethodDecorator {
     return Route('all', route, middlewares)
 }
-
 
 export function getControllers() {
     return Array.from(controllerMap)
@@ -107,7 +106,15 @@ export function getMountPoints(target: Function) {
         }
 
         let route = Reflect.getMetadata(ROUTE_KEY, proto, method)
-        let endpoint: Endpoint = { target, route, verb: 'all', method, middlewares: [], before: [], after: [] }
+        let endpoint: Endpoint = {
+            target,
+            route,
+            verb: 'all',
+            method,
+            middlewares: [],
+            before: [],
+            after: [],
+        }
 
         if (Reflect.hasMetadata(HTTP_VERB_KEY, proto, method)) {
             endpoint.verb = Reflect.getMetadata(HTTP_VERB_KEY, proto, method)
@@ -134,13 +141,18 @@ export function mountControllers(): Router {
     for (let controller of getControllers()) {
         let mountpoints = getMountPoints(controller)
         let router = new Router({ prefix: mountpoints.prefix })
-        for(let middleware of mountpoints.middlewares) {
+        for (let middleware of mountpoints.middlewares) {
             router.use(middleware)
         }
 
         for (let endpoint of mountpoints.endpoints) {
             let handler = createHandler(endpoint)
-            let middlewares = [...endpoint.before, ...endpoint.middlewares, handler, ...endpoint.after]
+            let middlewares = [
+                ...endpoint.before,
+                ...endpoint.middlewares,
+                handler,
+                ...endpoint.after,
+            ]
             router[endpoint.verb](endpoint.route, ...middlewares)
         }
 
@@ -150,9 +162,8 @@ export function mountControllers(): Router {
 }
 
 function createHandler(endpoint: Endpoint): Middleware {
-    return async function dispatchRequest (context: Context, next: Next) {
+    return async function dispatchRequest(context: Context, next: Next) {
         let instance = context.scope.build(endpoint.target)
         await instance[endpoint.method](context, next)
     }
 }
-

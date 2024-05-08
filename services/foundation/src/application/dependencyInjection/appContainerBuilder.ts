@@ -20,6 +20,7 @@ export class AppContainerBuilder implements ContainerBuilder {
         container.register('appCache', asClass(Cache))
         container.register('cacheDriver', asClass(NoCacheDriver))
 
+
         // container.register(
         //     'redisCacheClient',
         //     asFunction(() => new Redis(this.options.get('redis')), {

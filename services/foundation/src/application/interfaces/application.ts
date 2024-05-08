@@ -1,12 +1,15 @@
 import * as Avanzu from '@avanzu/kernel'
 import { Services } from './services';
 import { ConfigValues } from './configuration'
+import { NameAndRegistrationPair, Resolver } from 'awilix';
 
 export type Config = Avanzu.Configuration<ConfigValues>
 
 export interface User extends Avanzu.AuthUser {}
 
-export interface Container extends Avanzu.Container<Services> {}
+export interface Container extends Avanzu.Container<Services> {
+
+}
 
 export interface State extends Avanzu.AppState<Container> {}
 
