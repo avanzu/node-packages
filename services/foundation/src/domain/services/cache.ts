@@ -1,4 +1,4 @@
-import { CacheDriver } from "./interfaces/CacheDriver"
+import { CacheDriver } from "../interfaces/CacheDriver"
 
 export class NoCacheDriver implements CacheDriver {
     async exists(key: string): Promise<boolean> {

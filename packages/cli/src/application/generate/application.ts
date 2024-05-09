@@ -12,6 +12,7 @@ type GenerateApplicationOptions = {
     port?: number
     host?: string
     logLevel?: string
+    install?: boolean
 }
 
 export class GenerateApplication extends CliCommand<GenerateApplicationOptions> {
@@ -29,6 +30,7 @@ export class GenerateApplication extends CliCommand<GenerateApplicationOptions> 
             new Option('--port <port>', 'The port number').default(9001),
             new Option('--log-level <level>', 'The default log level'),
             new Option('--host <host>', 'the hostname'),
+            new Option('--install', 'wether to install dependencies after files are generated')
         ]
     }
 
@@ -78,7 +80,9 @@ export class GenerateApplication extends CliCommand<GenerateApplicationOptions> 
         this.inform('Generating files')
         await bundle.generate()
         // await this.install()
-        this.inform('Installing dependencies')
-        await this.update()
+        if(true === options.install) {
+            this.inform('Installing dependencies')
+            await this.update()
+        }
     }
 }

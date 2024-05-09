@@ -2,7 +2,7 @@ import { deferConfig } from 'config/defer'
 
 export default {
     host: deferConfig(() => process.env.HOST || 'localhost'),
-    port: deferConfig(() => process.env.PORT || 9014),
+    port: deferConfig(() => process.env.PORT || 9090),
     logger: deferConfig(() => ({
         level: 'debug',
     })),

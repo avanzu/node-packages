@@ -42,7 +42,7 @@ export class Bundle<Args extends GeneratorArguments> {
         for (let template of sorted) {
             let dirname = path.normalize(path.join(cwd, template.directory))
             if (dirs.has(dirname)) continue
-            await mkdir(dirname)
+            await mkdir(dirname, { recursive: true })
             dirs.add(dirname)
         }
     }

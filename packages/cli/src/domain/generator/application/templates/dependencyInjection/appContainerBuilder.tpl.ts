@@ -20,6 +20,7 @@ export class AppContainerBuilder implements Template {
             }
 
             public async build(container: Container): Promise<void> {
+                container.register('appConfig', asValue(this.options))
                 container.register('appService', asClass(AppService, { lifetime: 'SINGLETON' }))
             }
         }

@@ -7,7 +7,7 @@ export class ControllerBarrel implements Template {
     async render(context: GeneratorContext<GeneratorArguments>): Promise<string> {
         return `
         export * from './appController'
-
+        export * from './featureController'
         `
     }
 
