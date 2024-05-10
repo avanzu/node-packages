@@ -1,15 +1,18 @@
 /// <reference types="awilix-manager" />
 
-import { ContainerBuilder, getUseCases } from '@avanzu/kernel'
-import { aliasTo, asClass, asFunction, asValue } from 'awilix'
+import { ContainerBuilder } from '@avanzu/kernel'
+import { aliasTo, asClass, asValue } from 'awilix'
+
 import '~/application/controllers'
+import '~/application/resolvers'
 import '~/domain'
+import '~/presentation'
+
 import { Cache, NoCacheDriver } from '~/domain/services/cache'
 import { Dispatcher } from '~/domain/services/dispatcher'
+import { CurrentUserAdapter } from '../adapters/CurrentUser'
 import { Config, Container } from '../interfaces'
 import { AppService } from '../services/appService'
-import { getWithTags } from 'awilix-manager'
-import { CurrentUserAdapter } from '../adapters/CurrentUser'
 
 export class AppContainerBuilder implements ContainerBuilder {
     protected options: Config

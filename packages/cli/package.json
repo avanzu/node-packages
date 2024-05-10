@@ -10,7 +10,8 @@
         "avanzu": "./dist/main.js"
     },
     "files": [
-        "dist"
+        "dist",
+        "fixtures"
     ],
     "publishConfig": {
         "access": "public"
@@ -35,8 +36,10 @@
         "typedoc": "^0.25.13"
     },
     "dependencies": {
+        "adm-zip": "^0.5.12",
         "chalk": "^4.1.2",
         "date-fns": "^3.6.0",
+        "decompress": "^4.2.1",
         "dotenv": "^16.4.5",
         "prettier": "^3.2.5",
         "reflect-metadata": "^0.2.2"

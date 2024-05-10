@@ -1,1 +1,1 @@
-export * from './fooFeature'
+export * from './demo'

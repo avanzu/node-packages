@@ -1,32 +1,26 @@
 import { ReasonPhrases, StatusCodes } from 'http-status-codes'
-import { Context, Middleware, Next } from 'koa'
-import { Logger } from '../interfaces/logger'
+import {  Next } from 'koa'
+import { Logger, AppContext, Container, AppState, AppMiddleware } from '../interfaces'
+import { getErrorView } from '..'
+import { asClass } from 'awilix'
+
+type Context = AppContext<Container, AppState<Container>>
+type Middleware = AppMiddleware<Container, AppState<Container>, Context>
 
 export function errorHandler(logger: Logger): Middleware {
     return async function errorHandlerMiddleware(context: Context, next: Next) {
         try {
             await next()
         } catch (error) {
-            let statusCode = StatusCodes.INTERNAL_SERVER_ERROR
-            let reason = ReasonPhrases.INTERNAL_SERVER_ERROR
-            let stack: string
 
-            if(error instanceof Object) {
-                if('status' in error) {
-                    statusCode = Number(error.status)
-                }
-                if('statusCode' in error) {
-                    statusCode = Number(error.statusCode)
-                }
-            }
+            let ErrorView = getErrorView()
+            let view = context.scope.build(asClass(ErrorView).inject(() => ({ error })))
 
-            if(error instanceof Error) {
-                stack = String(error.stack)
-            }
+            context.status = view.getStatus()
+            context.body = view
 
-            context.status = statusCode
-            context.body = { statusCode, reason, error }
-            logger.error(`${statusCode} ${reason}`, { error: `${error}`, stack })
+            logger.error(`${view.status} ${view.reason}`, {...view.toJSON(), stack: view.stack })
+
         }
     }
 }

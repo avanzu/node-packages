@@ -1,4 +1,4 @@
-import { InputType, KindOf, OutputTyp, Feature } from '../interfaces/foundation'
+import { InputType, KindOf, OutputType, Feature } from '../interfaces/foundation'
 
 export class Dispatcher {
     protected useCases: Map<string, Feature<any, any>> = new Map()
@@ -37,7 +37,7 @@ export class Dispatcher {
     async dispatch<U extends Feature = Feature>(
         id: KindOf<U>,
         payload: InputType<U>
-    ): Promise<OutputTyp<U>> {
+    ): Promise<OutputType<U>> {
         let useCase = this.get(id)
         let result = await useCase.invoke(payload)
 

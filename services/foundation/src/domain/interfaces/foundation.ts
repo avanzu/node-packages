@@ -16,8 +16,10 @@ export interface Feature<Input = any, Output = any> extends Discriminated {
 }
 
 export type InputType<U extends Feature<any, any>> = U extends Feature<infer Input> ? Input : never
-export type OutputTyp<U extends Feature<any, any>> = U extends Feature<any, infer Output> ? Output : never
+export type OutputType<U extends Feature<any, any>> = U extends Feature<any, infer Output> ? Output : never
 export type KindOf<U extends Discriminated> = U['kind']
 
-
+export interface PayloadResolver<Feat extends Feature = Feature, Source = any > {
+    resolve(source: Source) : Promise<InputType<Feat>>
+}
 

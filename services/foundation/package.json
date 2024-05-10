@@ -15,7 +15,8 @@
         "format": "prettier --write .",
         "dev": "nodemon src/main.ts",
         "debug": "nodemon --inspect=0.0.0.0:${DEBUG_PORT} src/main.ts",
-        "start": "node dist/main.js"
+        "start": "node dist/main.js",
+        "zip": "zip -r application.template.zip __tests__ src .dockerignore .gitignore Dockerfile jest.config.ts nodemon.json tsconfig.json tsconfig.build.json"
     },
     "author": "",
     "license": "ISC",
@@ -24,6 +25,7 @@
         "@avanzu/kernel": "^1.2.0",
         "@koa/bodyparser": "^5.1.0",
         "@koa/cors": "^5.0.0",
+        "@sinclair/typebox": "^0.32.29",
         "archiver": "^7.0.1",
         "awilix": "^10.0.2",
         "awilix-koa": "^10.1.0",

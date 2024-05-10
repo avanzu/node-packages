@@ -12,7 +12,8 @@
     "resolveJsonModule": true,
     "paths": {
       "~/tests/*": ["./__tests__/*"],
-      "~/*": ["./src/*"]
+      "~/*": ["./src/*"],
+      "~fixtures/": ["./fixtures/*"]
     }
   }
 }
