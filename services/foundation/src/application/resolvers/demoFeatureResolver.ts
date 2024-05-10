@@ -1,11 +1,11 @@
-import { DemoFeature, PayloadResolver } from "~/domain";
+import { DemoFeature, PayloadResolver, DemoPayload } from "~/domain";
 import { Context } from "../interfaces";
-import { UseCaseInputResolver } from "@avanzu/kernel";
+import { InputResolver } from "@avanzu/kernel";
 
-@UseCaseInputResolver(DemoFeature)
+@InputResolver(DemoFeature)
 export class DemoFeatureResolver implements PayloadResolver<DemoFeature, Context> {
-    async resolve(source: Context<{}, unknown>): Promise<{ name?: string | undefined; }> {
-        return source.request.body || {}
+    async resolve(source: Context<{}, { name?: string }>): Promise<DemoPayload> {
+        return (source.request.body || {}) as DemoPayload
 
     }
 

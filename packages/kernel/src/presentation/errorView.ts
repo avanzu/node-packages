@@ -1,5 +1,7 @@
-import { Axios, AxiosError } from 'axios'
+import type { AxiosError } from 'axios'
 import { ReasonPhrases, StatusCodes, getReasonPhrase } from 'http-status-codes'
+import { KernelError } from '../errors'
+import { ErrorCode } from '~/errors/errorCodes'
 
 export class ErrorView {
     public readonly status: number
@@ -7,13 +9,18 @@ export class ErrorView {
     public readonly stack?: string
     private error: Error
     private body: Record<string, any>
-
+    private code: string|number
     constructor(error: unknown) {
         this.error = this.getError(error)
         this.status = this.getStatus()
         this.reason = getReasonPhrase(this.status)
+        this.code =  this.createErrorCode()
         this.stack = this.error.stack
         this.body = this.createBody()
+    }
+    protected createErrorCode(): string | number {
+        if('code' in this.error) return String(this.error.code)
+        return ErrorCode.KERNEL
     }
 
     private isError(value: unknown): value is Error {
@@ -29,7 +36,7 @@ export class ErrorView {
     }
 
     private isAxiosError(e: Error): e is AxiosError {
-        return e instanceof AxiosError
+        return 'isAxiosError' in e && e.isAxiosError === true
     }
 
     private normalizeError(e: Error | AxiosError): Error {
@@ -63,19 +70,17 @@ export class ErrorView {
     }
 
     private createBody() {
-        let details: any
+        let details: any = {}
 
-        if ('validationErrors' in this.error) {
-            details = this.error.validationErrors
-        } else if ('details' in this.error) {
+        if ('details' in this.error) {
             details = this.error.details
-        } else {
-            details = `${this.error.message}`
         }
 
         let body = {
+            errorCode: this.code,
             statusCode: this.status,
             reason: getReasonPhrase(this.status),
+            message: this.error.message,
             details,
         }
 

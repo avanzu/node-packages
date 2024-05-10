@@ -23,7 +23,7 @@ export function UseCase(options: UseCaseOptions): ClassDecorator {
     }
 }
 
-export function UseCaseInputResolver(targetUseCase: Constructor | string ) : ClassDecorator {
+export function InputResolver(targetUseCase: Constructor | string ) : ClassDecorator {
     return function payloadResolverDecorator(target: Function) {
         resolvers.set(targetUseCase, target)
     }

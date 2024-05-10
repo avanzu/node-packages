@@ -1,5 +1,5 @@
 import { deferConfig } from 'config/defer'
-
+import { type Options as AJVOpts } from 'ajv'
 export default {
     host: deferConfig(() => process.env.HOST || 'localhost'),
     port: deferConfig(() => process.env.PORT || 9090),
@@ -15,4 +15,10 @@ export default {
         db: 0,
         lazyConnect: true,
     })),
+    validation: deferConfig(() : AJVOpts  => ({
+        allErrors: true,
+        strict: false,
+        useDefaults: true,
+        allowUnionTypes: true
+    }))
 }

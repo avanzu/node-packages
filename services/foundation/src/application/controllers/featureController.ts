@@ -1,4 +1,13 @@
-import { All, Controller, Get, UseCaseInfo, getResolver, getUseCase, getUseCases } from '@avanzu/kernel'
+import {
+    All,
+    Controller,
+    Get,
+    UseCaseInfo,
+    ValidationError,
+    getResolver,
+    getUseCase,
+    getUseCases,
+} from '@avanzu/kernel'
 import { StatusCodes } from 'http-status-codes'
 import { Feature, PayloadResolver } from '~/domain'
 import { Context } from '../interfaces'
@@ -20,9 +29,27 @@ export class FeatureController {
         let feature: Feature = context.scope.build(featureInfo.useCase)
         let payload = await this.resolvePayload(featureInfo, context)
 
+        await this.validatePayload(featureInfo, context, payload)
+
         let result = await feature.invoke(payload)
 
         context.body = result
+    }
+
+    private async validatePayload(
+        featureInfo: UseCaseInfo,
+        context: Context<{}, unknown>,
+        payload: unknown
+    ) {
+        if (false === Boolean(featureInfo.schema)) {
+            return
+        }
+        let validator = context.scope.cradle.validator
+        let result = await validator.validate(featureInfo.schema, payload)
+        if (true === result.isValid) {
+            return
+        }
+        throw new ValidationError(result.errors)
     }
 
     private async resolvePayload(useCaseInfo: UseCaseInfo, context: Context) {

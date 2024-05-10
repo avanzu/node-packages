@@ -3,12 +3,13 @@ import { resolveAsyncConfigs } from 'config/async'
 import { ReasonPhrases, StatusCodes } from 'http-status-codes'
 import request from 'supertest'
 import { AppKernel } from '~/application/appKernel'
+import { TestKernel } from '~tests/testKernel'
 describe('@avanzu/foundation', () => {
     let app: AppKernel
 
     beforeAll(async () => {
         await resolveAsyncConfigs(config)
-        app = new AppKernel(config)
+        app = new TestKernel(config)
         await app.boot()
         await app.serve()
     })

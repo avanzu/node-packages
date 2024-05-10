@@ -1,1 +1,1 @@
-export interface ErrorView {}
+export interface DisplayableError {}
