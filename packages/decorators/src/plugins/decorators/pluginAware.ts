@@ -1,3 +1,4 @@
+import 'reflect-metadata'
 import { PLUGIN_KEY } from "../types";
 
 

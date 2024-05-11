@@ -1,0 +1,85 @@
+version: '3'
+services:
+    base:
+        image: node-packages:latest
+        pull_policy: never
+        build:
+            context: .
+            dockerfile: ${DOCKERFILE:-Dockerfile}
+        deploy:
+            replicas: 0
+
+    authentication-foo:
+        extends: { service: base }
+        command: ['debug']
+        environment:
+            PORT: 3001
+            DEBUG_PORT: 9001
+            HOST: authentication-foo
+            SERVICE: authentication
+            TENANT: foo
+        volumes:
+            - ./node_modules:/opt/app/node_modules
+            - ./packages:/opt/app/packages
+            - ./services/authentication:/opt/app/services/authentication
+        deploy:
+            replicas: 1
+        depends_on:
+            - mongo
+            - redis
+
+    authentication-bar:
+        extends: { service: base }
+        command: ['debug']
+        environment:
+            PORT: 3002
+            DEBUG_PORT: 9002
+            HOST: authentication-bar
+            SERVICE: authentication
+            TENANT: bar
+        volumes:
+            - ./node_modules:/opt/app/node_modules
+            - ./packages:/opt/app/packages
+            - ./services/authentication:/opt/app/services/authentication
+        deploy:
+            replicas: 1
+        depends_on:
+            - mongo
+            - redis
+
+    backoffice-foo:
+        extends: { service: base }
+        command: ['debug']
+        environment:
+            PORT: 3011
+            DEBUG_PORT: 9011
+            HOST: backoffice-foo
+            SERVICE: backoffice
+            TENANT: foo
+        volumes:
+            - ./node_modules:/opt/app/node_modules
+            - ./packages:/opt/app/packages
+            - ./services/backoffice:/opt/app/services/backoffice
+        deploy:
+            replicas: 1
+        depends_on:
+            - mongo
+            - redis
+    backoffice-bar:
+        extends: { service: base }
+        command: ['debug']
+        environment:
+            PORT: 3012
+            DEBUG_PORT: 9012
+            HOST: backoffice-bar
+            SERVICE: backoffice
+            TENANT: bar
+        volumes:
+            - ./node_modules:/opt/app/node_modules
+            - ./packages:/opt/app/packages
+            - ./services/backoffice:/opt/app/services/backoffice
+        deploy:
+            replicas: 1
+        depends_on:
+            - mongo
+            - redis

@@ -1,3 +1,4 @@
+import 'reflect-metadata'
 import { Plugins } from '../plugins'
 import { ExecutionContext } from '../types'
 import { PLUGIN_KEY } from '../types'
