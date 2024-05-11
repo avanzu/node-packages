@@ -1,7 +1,7 @@
 import type { CacheDriver } from "~/domain/interfaces"
 import type { AppService } from "../services/appService"
 import type { Config } from "./application"
-import type { Feature, CurrentUser } from "~/domain/interfaces"
+import type { Feature } from "~/domain/interfaces"
 import type { AppServices } from "@avanzu/kernel"
 import type Ajv from "ajv"
 import type { ORMProvider } from "../dependencyInjection/orm"
@@ -14,7 +14,6 @@ export type Services = AppServices & {
     appCache: Cache
     cacheDriver: CacheDriver
     useCases: Feature[]
-    currentUser: CurrentUser
     ajv: Ajv
     ORMProvider: ORMProvider
     em: EntityManager

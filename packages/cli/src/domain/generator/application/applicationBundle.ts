@@ -1,35 +1,11 @@
 import { Bundle } from "../common/bundle";
 import { GeneratorArguments } from "../common/context";
 import { Template } from "../common/template";
-import { AppContainerBuilder } from "./templates/dependencyInjection/appContainerBuilder.tpl";
-import { AppController } from "./templates/controllers/appController.tpl";
-import { AppKernel } from "./templates/appKernel.tpl";
-import { AppService } from "./templates/services/appService.tpl";
-import { AppTest } from "./templates/appTest.tpl";
-import { ControllerBarrel } from "./templates/controllers/controllerBarrel.tpl";
-import { DefaultConfig, DefaultConfigArguments } from "./templates/defaultConfig.tpl";
-import { ApplicationInterface } from "./templates/interfaces/application.tpl";
-import { InterfacesBarrel } from "./templates/interfaces/barrel.tpl";
-import { ConfigurationInterface } from "./templates/interfaces/configuration.tpl";
-import { ServicesInterface } from "./templates/interfaces/services.tpl";
-import { JestConfig } from "./templates/jest.config.json.tpl";
-import { Main } from "./templates/main.tpl";
+import { DefaultConfigArguments } from "./templates/defaultConfig.tpl";
 import { PackageJSON, PackageJSONArguments } from "./templates/package.json.tpl";
-import { TSConfigBuild } from "./templates/tsconfig.build.json.tpl";
-import { TSConfig } from "./templates/tsconfig.json.tpl";
-import { NodemonJSON } from "./templates/nodemon.json.tpl";
-import { DIBarrel } from "./templates/dependencyInjection/barrel.tpl";
-import { Dockerfile } from "./templates/docker.tpl";
-import { CurrentUser } from "./templates/domain/interfaces/currentUser.tpl";
-import { DomainInterfaces } from "./templates/domain/interfaces/foundation.tpl";
-import { DomainInterfacesBarrel } from "./templates/domain/interfaces/barrel.tpl";
-import { FeatureController } from "./templates/controllers/featureController.tpl";
-import { DemoFeature } from "./templates/domain/features/demo.tpl";
-import { FeaturesBarrel } from "./templates/domain/features/barrel.tpl";
 
-import decompress from 'decompress'
-import path from 'node:path'
-import AdmZip from 'adm-zip'
+import AdmZip from 'adm-zip';
+import path from 'node:path';
 
 export type ApplicationBundleArgs = GeneratorArguments & PackageJSONArguments & DefaultConfigArguments
 

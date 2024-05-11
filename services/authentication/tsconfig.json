@@ -38,7 +38,7 @@
   "include": [
     "src",
     "__tests__"
-  ],
+, "config/mikro-orm.ts"  ],
   "ts-node": {
     "files": true,
     "require": [

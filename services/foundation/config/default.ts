@@ -1,7 +1,7 @@
 import { deferConfig } from 'config/defer'
 import { type Options as AJVOpts } from 'ajv'
 import type { AuthenticatorOptions } from '@avanzu/kernel'
-
+import mikroOrm from './mikro-orm'
 export default {
     host: deferConfig(() => process.env.HOST || 'localhost'),
     port: deferConfig(() => process.env.PORT || 9090),
@@ -30,5 +30,6 @@ export default {
             issuer: process.env.JWT_ISSUER || 'avanzu_auth',
             expiresIn: process.env.JWT_EXPIY || '1d',
         }
-    }))
+    })),
+    orm: deferConfig(() => mikroOrm),
 }

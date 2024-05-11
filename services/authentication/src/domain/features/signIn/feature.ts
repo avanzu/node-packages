@@ -22,7 +22,7 @@ export class SignInFeature implements Feature<SignInInput, SignInOutput> {
             if (false === (await passwordHash.compare(user.password, value.password)))
                 throw new PasswordHashMismatch()
 
-            let authenticated = new Authenticated(user.fullName, user.id)
+            let authenticated = new Authenticated(user.username, user.id)
             authenticated.token = this.authenticator.createToken(authenticated)
 
             return authenticated

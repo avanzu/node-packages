@@ -1,7 +1,7 @@
-import { deferConfig } from 'config/defer'
-import { type Options as AJVOpts } from 'ajv'
-import { defineConfig, type Options as MongoORM } from '@mikro-orm/mongodb'
 import type { AuthenticatorOptions } from '@avanzu/kernel'
+import { type Options as AJVOpts } from 'ajv'
+import { deferConfig } from 'config/defer'
+import mikroorm from './mikro-orm'
 
 export default {
     host: deferConfig(() => process.env.HOST || 'localhost'),
@@ -24,14 +24,7 @@ export default {
         useDefaults: true,
         allowUnionTypes: true
     })),
-    orm: deferConfig(() => defineConfig({
-        clientUrl: process.env.MONGO_URL,
-        dbName: 'authentication',
-        password: process.env.MONGO_ROOT_PASSWD,
-        user: process.env.MONGO_ROOT_USER,
-        entities: ['./dist/domain/entities'],
-        entitiesTs: ['./src/domain/entities'],
-    })),
+    orm: deferConfig(() => mikroorm),
     authentication: deferConfig(() : AuthenticatorOptions => ({
         secret: process.env.JWT_SECRET || 'ya3mdsDb4jHvTymEV9rfWQG5zhJVNheZ',
         jwt: {

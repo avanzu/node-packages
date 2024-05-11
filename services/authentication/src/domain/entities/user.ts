@@ -1,5 +1,5 @@
 import { Entity, PrimaryKey, Property, SerializedPrimaryKey } from '@mikro-orm/core';
-import { EntityRepository, ObjectId } from '@mikro-orm/mongodb';
+import { ObjectId } from '@mikro-orm/mongodb';
 import { UserRepository } from './userRepository';
 
 @Entity({ repository: () => UserRepository })
@@ -9,12 +9,12 @@ export class User {
    _id!: ObjectId;
 
    @SerializedPrimaryKey()
-    id!: string; // won't be saved in the database
+    id!: string;
 
-   @Property()
-   fullName!: string;
+   @Property({ index: true, unique: true })
+   username!: string;
 
-   @Property()
+   @Property({ index: true, unique: true })
    email!: string;
 
    @Property({ lazy: true })
@@ -22,9 +22,6 @@ export class User {
 
    @Property({ lazy: true })
    salt!: string
-
-   @Property({ type: 'text' })
-   bio = '';
 
    @Property({ persist: false })
    token?: string

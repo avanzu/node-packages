@@ -1,6 +1,6 @@
 /// <reference types="awilix-manager" />
 
-import { ContainerBuilder, AJVValidator, JWTAuthenticator } from '@avanzu/kernel'
+import { AJVValidator, ContainerBuilder, JWTAuthenticator } from '@avanzu/kernel'
 import { aliasTo, asClass, asValue } from 'awilix'
 
 import '~/application/controllers'
@@ -8,14 +8,12 @@ import '~/application/resolvers'
 import '~/domain'
 import '~/presentation'
 
+import Ajv from 'ajv'
+import { UserRepository } from '~/domain/entities/userRepository'
 import { Cache, NoCacheDriver } from '~/domain/services/cache'
-import { CurrentUserAdapter } from '../adapters/CurrentUser'
 import { Config, Container } from '../interfaces'
 import { AppService } from '../services/appService'
-import Ajv from 'ajv'
-import { MikroORM, defineConfig } from '@mikro-orm/mongodb'
 import { ORMProvider } from './orm'
-import { UserRepository } from '~/domain/entities/userRepository'
 
 export class AppContainerBuilder implements ContainerBuilder {
     protected options: Config
@@ -26,32 +24,29 @@ export class AppContainerBuilder implements ContainerBuilder {
 
     public async build(container: Container): Promise<void> {
         container.register('appService', asClass(AppService, { lifetime: 'SINGLETON' }))
+        container.register('users', asClass(UserRepository, { lifetime: 'TRANSIENT' }))
+        container.register('ajv', this.ajvSingleton())
+        container.register('ORMProvider', this.ormSingleton())
+        container.register('authenticator', this.authenticatorSingleton())
         container.register('appConfig', asValue(this.options))
         container.register('appCache', asClass(Cache))
         container.register('cacheDriver', asClass(NoCacheDriver))
-        container.register('currentUser', asClass(CurrentUserAdapter))
         container.register('cache', aliasTo('appCache'))
-        container.register(
-            'ajv',
-            asClass(Ajv, { lifetime: 'SINGLETON' }).inject(() => ({
-                opts: this.options.get('validation'),
-            }))
-        )
         container.register('validator', asClass(AJVValidator))
-        container.register(
-            'ORMProvider',
-            asClass(ORMProvider, {
-                asyncInit: 'init',
-                asyncDispose: 'dispose',
-                lifetime: 'SINGLETON',
-            }).inject(() => ({ options: this.options.get('orm') }))
-        )
-        container.register('users', asClass(UserRepository, { lifetime: 'TRANSIENT' }))
-        container.register(
-            'authenticator',
-            asClass(JWTAuthenticator, { lifetime: 'SINGLETON' }).inject(() => ({
-                options: this.options.get('authentication'),
-            }))
-        )
+    }
+
+    private authenticatorSingleton() {
+        let resolver = asClass(JWTAuthenticator, { lifetime: 'SINGLETON' })
+        return resolver.inject(() => ({ options: this.options.get('authentication') }))
+    }
+
+    private ormSingleton() {
+        let resolver = asClass(ORMProvider, { asyncInit: 'init', asyncDispose: 'dispose', lifetime: 'SINGLETON' })
+        return resolver.inject(() => ({ options: this.options.get('orm') }))
+    }
+
+    private ajvSingleton() {
+        let resolver = asClass(Ajv, { lifetime: 'SINGLETON' })
+        return resolver.inject(() => ({ opts: this.options.get('validation') }))
     }
 }
