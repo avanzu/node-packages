@@ -35,8 +35,8 @@ export class PackageJSON implements Template {
             author: context.author || '',
             license: context.license || 'ISC',
             dependencies: {
-                '@avanzu/decorators': '^1.1.3',
-                '@avanzu/kernel': '^1.1.0',
+                '@avanzu/decorators': '^1.1.5',
+                '@avanzu/kernel': '^1.3.0',
                 '@koa/bodyparser': '^5.1.0',
                 '@koa/cors': '^5.0.0',
                 '@mikro-orm/core': '^6.2.5',
@@ -49,10 +49,12 @@ export class PackageJSON implements Template {
                 config: '^3.3.11',
                 dotenv: '^16.4.5',
                 'http-status-codes': '^2.3.0',
+                ioredis: '^5.4.1',
                 jsonwebtoken: '^9.0.2',
                 koa: '^2.15.2',
                 'koa-helmet': '^7.0.2',
                 'koa-qs': '^3.0.0',
+                msgpackr: '^1.10.2',
                 pino: '^8.21.0',
             },
             devDependencies: {
