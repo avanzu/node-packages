@@ -19,6 +19,14 @@
             "localRoot": "${workspaceFolder}/services/foundation",
             "cwd": "${workspaceFolder}/services/foundation",
             "command" : "npm run dev"
+        },
+        {
+            "type": "node-terminal",
+            "request": "launch",
+            "name": "Authentication (Launch)",
+            "localRoot": "${workspaceFolder}/services/authentication",
+            "cwd": "${workspaceFolder}/services/authentication",
+            "command" : "npm run dev"
         }
     ]
 }

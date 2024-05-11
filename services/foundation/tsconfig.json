@@ -38,9 +38,11 @@
   "include": [
     "src",
     "__tests__"
-, "../../packages/kernel/src/middleware/validate.ts"  ],
+  ],
   "ts-node": {
     "files": true,
-    "require": ["tsconfig-paths/register"]
+    "require": [
+      "tsconfig-paths/register"
+    ]
   }
 }

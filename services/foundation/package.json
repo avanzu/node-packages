@@ -16,7 +16,7 @@
         "dev": "nodemon src/main.ts",
         "debug": "nodemon --inspect=0.0.0.0:${DEBUG_PORT} src/main.ts",
         "start": "node dist/main.js",
-        "zip": "zip -r application.template.zip __tests__ src .dockerignore .gitignore Dockerfile jest.config.ts nodemon.json tsconfig.json tsconfig.build.json"
+        "zip": "zip -r application.template.zip __tests__ src config .dockerignore .gitignore Dockerfile jest.config.ts nodemon.json tsconfig.json tsconfig.build.json"
     },
     "author": "",
     "license": "ISC",
