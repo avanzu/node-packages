@@ -1,7 +1,4 @@
 import { Type, type Static } from '@sinclair/typebox'
+export const DemoInputSchema = Type.Object({})
 
-export const DemoPayloadSchema = Type.Object({
-    name:Type.String()
-})
-
-export type DemoPayload = Static<typeof DemoPayloadSchema>
+export type DemoInput = Static<typeof DemoInputSchema>

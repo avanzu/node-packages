@@ -1,24 +1,18 @@
-import { UseCase } from "@avanzu/kernel";
-import { CurrentUser, Feature } from "~/domain/interfaces";
-import { DemoPayload, DemoPayloadSchema } from './input'
+import { UseCase } from '@avanzu/kernel'
+import { Feature } from '~/domain/interfaces'
+import { DemoInput as Input, DemoInputSchema as InputSchema } from './input'
+import {
+  DemoOutput as Output,
+  DemoOutputSchema as OutputSchema,
+} from './output'
 
+@UseCase({ id: 'demo', schema: InputSchema })
+export class Demo implements Feature<Input, Output> {
+  kind: 'demo' = 'demo'
 
-type Output = {
-    message: string
-}
+  constructor() {}
 
-@UseCase({id: 'demo', schema: DemoPayloadSchema })
-export class DemoFeature implements Feature<DemoPayload, Output>  {
-
-    kind: 'demo' = 'demo'
-
-    constructor(protected currentUser: CurrentUser) {}
-
-    async invoke(value: DemoPayload): Promise<Output> {
-        let name = value.name ?? this.currentUser.getUsername()
-        let message = `Greetings from ${this.kind} to ${name}`
-
-        return { message }
-
-    }
+  async invoke(value: Input): Promise<Output> {
+    return {}
+  }
 }
