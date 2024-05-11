@@ -1,6 +1,6 @@
 {
     "name": "@avanzu/kernel",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "description": "> TODO: description",
     "author": "Marc Bach <mail@avanzu.de>",
     "homepage": "https://github.com/avanzu/node-packages#readme",
@@ -31,7 +31,7 @@
         "typedoc": "^0.25.13"
     },
     "dependencies": {
-        "@avanzu/decorators": "^1.1.4",
+        "@avanzu/decorators": "^1.1.5",
         "awilix": "^10.0.2",
         "awilix-manager": "^5.2.1",
         "http-status-codes": "^2.3.0",
@@ -43,10 +43,10 @@
     "peerDependencies": {
         "@koa/bodyparser": "^5.1.0",
         "@koa/cors": "^5.0.0",
+        "ajv": "^8.13.0",
         "config": "^3.3.11",
         "koa-helmet": "^7.0.2",
-        "pino": "^8.21.0",
-        "ajv": "^8.13.0"
+        "pino": "^8.21.0"
     },
     "peerDependenciesMeta": {
         "@koa/bodyparser": {
