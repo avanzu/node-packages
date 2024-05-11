@@ -1,6 +1,6 @@
 /// <reference types="awilix-manager" />
 
-import { ContainerBuilder, AJVValidator } from '@avanzu/kernel'
+import { ContainerBuilder, AJVValidator, JWTAuthenticator } from '@avanzu/kernel'
 import { aliasTo, asClass, asValue } from 'awilix'
 
 import '~/application/controllers'
@@ -16,7 +16,6 @@ import Ajv from 'ajv'
 import { MikroORM, defineConfig } from '@mikro-orm/mongodb'
 import { ORMProvider } from './orm'
 import { UserRepository } from '~/domain/entities/userRepository'
-import { Authenticator } from '~/domain/services'
 
 export class AppContainerBuilder implements ContainerBuilder {
     protected options: Config
@@ -50,8 +49,8 @@ export class AppContainerBuilder implements ContainerBuilder {
         container.register('users', asClass(UserRepository, { lifetime: 'TRANSIENT' }))
         container.register(
             'authenticator',
-            asClass(Authenticator, { lifetime: 'SINGLETON' }).inject(() => ({
-                options: this.options.get('authenticator'),
+            asClass(JWTAuthenticator, { lifetime: 'SINGLETON' }).inject(() => ({
+                options: this.options.get('authentication'),
             }))
         )
     }

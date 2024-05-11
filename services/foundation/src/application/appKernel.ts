@@ -1,4 +1,4 @@
-import { ContainerBuilder, Kernel, Logger, PinoLogger } from '@avanzu/kernel'
+import { ContainerBuilder, Kernel, Logger, PinoLogger, authenticate } from '@avanzu/kernel'
 import { bodyParser } from '@koa/bodyparser'
 import koaHelmet from 'koa-helmet'
 import { AppContainerBuilder } from './dependencyInjection'
@@ -16,7 +16,7 @@ export class AppKernel extends Kernel<Config, Application, Container> {
     }
 
     protected middlewares(): Middleware[] {
-        return [ koaHelmet(), bodyParser() ]
+        return [ koaHelmet(), bodyParser(), authenticate() ]
     }
 
 

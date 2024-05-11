@@ -1,12 +1,11 @@
 import { Context, Middleware, Next } from 'koa'
-import { AuthUser } from '../interfaces'
+import { Anonymous } from '~/modules'
 
-const ANONYMOUS = { username: 'anonymous', id: Symbol('anonymous') }
 
-export function authenticateAnonymous(identity: AuthUser = ANONYMOUS): Middleware {
+export function authenticateAnonymous(): Middleware {
     return function anonymous(context: Context, next: Next) {
         if (false === Boolean(context.user)) {
-            context.user = identity
+            context.user = new Anonymous()
         }
 
         return next()

@@ -1,5 +1,7 @@
 import { deferConfig } from 'config/defer'
 import { type Options as AJVOpts } from 'ajv'
+import type { AuthenticatorOptions } from '@avanzu/kernel'
+
 export default {
     host: deferConfig(() => process.env.HOST || 'localhost'),
     port: deferConfig(() => process.env.PORT || 9090),
@@ -20,5 +22,13 @@ export default {
         strict: false,
         useDefaults: true,
         allowUnionTypes: true
+    })),
+    authenticator: deferConfig(() : AuthenticatorOptions => ({
+        secret: process.env.JWT_SECRET || 'ya3mdsDb4jHvTymEV9rfWQG5zhJVNheZ',
+        jwt: {
+            algorithm: 'HS512',
+            issuer: process.env.JWT_ISSUER || 'avanzu_auth',
+            expiresIn: process.env.JWT_EXPIY || '1d',
+        }
     }))
 }

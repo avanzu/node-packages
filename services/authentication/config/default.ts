@@ -1,7 +1,7 @@
 import { deferConfig } from 'config/defer'
 import { type Options as AJVOpts } from 'ajv'
 import { defineConfig, type Options as MongoORM } from '@mikro-orm/mongodb'
-import type { AuthenticatorOptions } from '../src/domain/services'
+import type { AuthenticatorOptions } from '@avanzu/kernel'
 
 export default {
     host: deferConfig(() => process.env.HOST || 'localhost'),
@@ -32,7 +32,7 @@ export default {
         entities: ['./dist/domain/entities'],
         entitiesTs: ['./src/domain/entities'],
     })),
-    authenticator: deferConfig(() : AuthenticatorOptions => ({
+    authentication: deferConfig(() : AuthenticatorOptions => ({
         secret: process.env.JWT_SECRET || 'ya3mdsDb4jHvTymEV9rfWQG5zhJVNheZ',
         jwt: {
             algorithm: 'HS512',

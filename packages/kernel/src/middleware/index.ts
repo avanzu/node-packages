@@ -1,3 +1,4 @@
+export * from './authenticate'
 export * from './authenticateAnonymous'
 export * from './containerScope'
 export * from './errorHandler'

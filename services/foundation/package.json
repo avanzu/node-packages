@@ -16,6 +16,7 @@
         "dev": "nodemon src/main.ts",
         "debug": "nodemon --inspect=0.0.0.0:${DEBUG_PORT} src/main.ts",
         "start": "node dist/main.js",
+        "prezip": "rimraf application.template.zip",
         "zip": "zip -r application.template.zip __tests__ src config .dockerignore .gitignore Dockerfile jest.config.ts nodemon.json tsconfig.json tsconfig.build.json"
     },
     "author": "",

@@ -2,7 +2,7 @@ import type { RedisOptions } from "ioredis"
 import type { LoggerOptions } from "pino"
 import type { Options as AJVOptions } from 'ajv'
 import { type Options as MongoORM } from '@mikro-orm/mongodb'
-import type { AuthenticatorOptions } from "~/domain/services"
+import type { AuthenticatorOptions } from "@avanzu/kernel"
 export type ConfigValues = {
     host: string
     port: number
@@ -10,7 +10,7 @@ export type ConfigValues = {
     redis: RedisOptions
     validation: AJVOptions
     orm: MongoORM
-    authenticator: AuthenticatorOptions
+    authentication: AuthenticatorOptions
 }
 
 

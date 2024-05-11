@@ -5,6 +5,15 @@ import { AppMiddleware } from './middleware'
 export interface AuthUser {
     username?: string
     id?: string | number | symbol
+    authenticated: boolean
+    token?: string
+    isAnonymous() : boolean
+}
+
+export interface AuthenticatedUser extends AuthUser {
+    username: string
+    id: string|number|symbol
+    authenticated: true
 }
 
 export interface Request<Body = unknown> extends KoaRequest {

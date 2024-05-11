@@ -1,4 +1,5 @@
 export * from './app'
+export * from './authenticator'
 export * from './configuration'
 export * from './container'
 export * from './containerBuilder'

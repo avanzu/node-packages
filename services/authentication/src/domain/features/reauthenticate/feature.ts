@@ -1,8 +1,6 @@
-import { UseCase } from '@avanzu/kernel'
-import { User } from '~/domain/entities'
+import { Authenticated, Authenticator, UseCase } from '@avanzu/kernel'
 import { UserRepository } from '~/domain/entities/userRepository'
 import { Feature } from '~/domain/interfaces'
-import { Authenticator } from '~/domain/services'
 import { ReauthenticateInput } from './input'
 import { ReauthenticateOutput } from './output'
 
@@ -14,9 +12,8 @@ export class ReauthenticateFeature implements Feature<ReauthenticateInput, Reaut
 
     async invoke(value: ReauthenticateInput): Promise<ReauthenticateOutput> {
         let decoded = this.authenticator.verifyToken(value.token)
-        let user = await this.users.findOneOrFail({ id: decoded.sub })
-
-        let accessToken = this.authenticator.createToken(user)
-        return { accessToken }
+        let user = await this.users.findOneOrFail({ id: String(decoded.id) })
+        user.token = this.authenticator.createToken(decoded)
+        return { accessToken: user.token }
     }
 }

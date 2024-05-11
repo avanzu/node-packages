@@ -1,5 +1,5 @@
 import pino, { LoggerOptions, type Logger as Pino } from 'pino'
-import { Logger } from '../interfaces/logger'
+import { Logger } from '../../interfaces/logger'
 import { LogBox } from '@avanzu/decorators'
 
 export class PinoLogger implements Logger {

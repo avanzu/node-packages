@@ -1,9 +1,9 @@
-import { UseCase } from '@avanzu/kernel'
+import { Authenticated, Authenticator, UseCase } from '@avanzu/kernel'
 import { Feature } from '~/domain/interfaces'
 import { SignInInput, SignInInputSchema } from './input'
 import { SignInOutput } from './output'
 import { UserRepository } from '~/domain/entities/userRepository'
-import { Authenticator, PasswordHash } from '~/domain/services'
+import {  PasswordHash } from '~/domain/services'
 import { InvalidCredentials, PasswordHashMismatch, UserNotFound } from './errors'
 
 @UseCase({ id: 'signin', schema: SignInInputSchema })
@@ -22,9 +22,11 @@ export class SignInFeature implements Feature<SignInInput, SignInOutput> {
             if (false === (await passwordHash.compare(user.password, value.password)))
                 throw new PasswordHashMismatch()
 
-            let accessToken = this.authenticator.createToken(user)
+            let authenticated = new Authenticated(user.fullName, user.id)
+            authenticated.token = this.authenticator.createToken(authenticated)
 
-            return { accessToken }
+            return authenticated
+
         } catch (error) {
             if (error instanceof UserNotFound || error instanceof PasswordHashMismatch) {
                 throw new InvalidCredentials()

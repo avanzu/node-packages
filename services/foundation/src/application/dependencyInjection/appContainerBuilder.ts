@@ -1,6 +1,6 @@
 /// <reference types="awilix-manager" />
 
-import { ContainerBuilder, AJVValidator } from '@avanzu/kernel'
+import { ContainerBuilder, AJVValidator, JWTAuthenticator } from '@avanzu/kernel'
 import { aliasTo, asClass, asValue } from 'awilix'
 
 import '~/application/controllers'
@@ -30,5 +30,6 @@ export class AppContainerBuilder implements ContainerBuilder {
         container.register('cache', aliasTo('appCache'))
         container.register('ajv', asClass(Ajv, { lifetime: 'SINGLETON'}).inject(() => ({ opts: this.options.get('validation') })))
         container.register('validator', asClass(AJVValidator))
+        container.register('authenticator', asClass(JWTAuthenticator, { lifetime: 'SINGLETON' }).inject(() => ({options: this.options.get('authentication')})))
     }
 }

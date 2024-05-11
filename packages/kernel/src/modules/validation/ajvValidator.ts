@@ -1,5 +1,5 @@
 import { Ajv } from 'ajv'
-import { Schema, ValidationResult, Validator } from '../interfaces'
+import { Schema, ValidationResult, Validator } from '../../interfaces'
 
 export class AJVValidator implements Validator {
     constructor(protected ajv: Ajv) {}
