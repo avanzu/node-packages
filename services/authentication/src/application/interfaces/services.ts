@@ -7,7 +7,6 @@ import type Ajv from "ajv"
 import type { ORMProvider } from "../dependencyInjection/orm"
 import type { EntityManager } from "@mikro-orm/core"
 import type { UserRepository } from "~/domain/entities/userRepository"
-import type { Authenticator } from "~/domain/services"
 
 export type Services = AppServices & {
     appService: AppService
@@ -20,6 +19,5 @@ export type Services = AppServices & {
     ORMProvider: ORMProvider
     em: EntityManager
     users: UserRepository
-    authenticator: Authenticator
 
 }

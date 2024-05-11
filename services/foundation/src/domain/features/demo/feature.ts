@@ -1,5 +1,5 @@
 import { UseCase } from "@avanzu/kernel";
-import { CurrentUser, Feature } from "../../interfaces";
+import { CurrentUser, Feature } from "~/domain/interfaces";
 import { DemoPayload, DemoPayloadSchema } from './input'
 
 

@@ -1,6 +1,7 @@
 import { CliCommand } from "~/application/command";
 import { CommandGroup } from "~/application/commandGroup";
 import { GenerateApplication } from "./application";
+import { GenerateFeature } from "./feature";
 
 export class GenerateCommandGroup extends CommandGroup {
 
@@ -8,7 +9,8 @@ export class GenerateCommandGroup extends CommandGroup {
 
     commands(): CliCommand<unknown>[] {
         return [
-            new GenerateApplication()
+            new GenerateApplication(),
+            new GenerateFeature()
         ]
     }
 
