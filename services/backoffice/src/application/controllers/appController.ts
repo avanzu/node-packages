@@ -1,7 +1,8 @@
 import { ReasonPhrases, StatusCodes } from 'http-status-codes'
 import { AppService } from '../services/appService'
 import { Context, User } from '../interfaces'
-import { Controller, Get } from '@avanzu/kernel'
+import { Controller, Get, PermissionKind } from '@avanzu/kernel'
+import { authorize } from '../middleware/authorize'
 
 
 @Controller()
@@ -22,6 +23,13 @@ export class AppController {
 
     @Get('/info')
     async info(context: Context) {
+        let service = await this.service.info()
+
+        context.body = { service, authUser: this.authUser }
+    }
+
+    @Get('/test-auth', authorize({ kind: PermissionKind.ACTION, name: 'test-auth' }))
+    async testAuth(context: Context) {
         let service = await this.service.info()
 
         context.body = { service, authUser: this.authUser }

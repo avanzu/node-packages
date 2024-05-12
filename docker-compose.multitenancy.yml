@@ -18,6 +18,11 @@ services:
             HOST: authentication-foo
             SERVICE: authentication
             TENANT: foo
+            NODE_ENV: development
+            MONGO_URL: $MONGO_DSN
+            NAMESPACE: '/foo/auth'
+        env_file: [{ path: ./.env, required: true }]
+        ports: [3001:3001]
         volumes:
             - ./node_modules:/opt/app/node_modules
             - ./packages:/opt/app/packages
@@ -27,6 +32,11 @@ services:
         depends_on:
             - mongo
             - redis
+        labels:
+            - "traefik.http.routers.authentication-foo.rule=PathPrefix(`/foo/auth`)"
+            # - "traefik.http.routers.authentication-foo.middlewares=authentication-foo-stripprefix@docker,authentication-foo-customheader@docker"
+            # - "traefik.http.middlewares.authentication-foo-stripprefix.stripprefix.prefixes=/foo/auth"
+            - "traefik.http.middlewares.authentication-foo-customheader.headers.customrequestheaders.X-Tenant=foo"
 
     authentication-bar:
         extends: { service: base }
@@ -37,6 +47,11 @@ services:
             HOST: authentication-bar
             SERVICE: authentication
             TENANT: bar
+            NODE_ENV: development
+            MONGO_URL: $MONGO_DSN
+            NAMESPACE: '/bar/auth'
+        env_file: [{ path: ./.env, required: true }]
+        ports: [3002:3002]
         volumes:
             - ./node_modules:/opt/app/node_modules
             - ./packages:/opt/app/packages
@@ -46,6 +61,11 @@ services:
         depends_on:
             - mongo
             - redis
+        labels:
+            - "traefik.http.routers.authentication-bar.rule=PathPrefix(`/bar/auth`)"
+            # - "traefik.http.routers.authentication-bar.middlewares=authentication-bar-stripprefix@docker,authentication-bar-customheader"
+            # - "traefik.http.middlewares.authentication-bar-stripprefix.stripprefix.prefixes=/bar/auth"
+            - "traefik.http.middlewares.authentication-bar-customheader.headers.customrequestheaders.X-Tenant=bar"
 
     backoffice-foo:
         extends: { service: base }
@@ -56,6 +76,13 @@ services:
             HOST: backoffice-foo
             SERVICE: backoffice
             TENANT: foo
+            NODE_ENV: development
+            MONGO_URL: $MONGO_DSN
+            BASE_URL: backend.docker.local/foo
+            NAMESPACE: '/foo/backoffice'
+            AUTH_BASE_URL: 'http://backend/foo/auth'
+        env_file: [{ path: ./.env, required: true }]
+        ports: [3011:3011]
         volumes:
             - ./node_modules:/opt/app/node_modules
             - ./packages:/opt/app/packages
@@ -65,6 +92,12 @@ services:
         depends_on:
             - mongo
             - redis
+        labels:
+            - "traefik.http.routers.backoffice-foo.rule=PathPrefix(`/foo/backoffice`)"
+            #- "traefik.http.routers.backoffice-foo.middlewares=backoffice-foo-stripprefix@docker,backoffice-foo-customheader@docker"
+            #- "traefik.http.middlewares.backoffice-foo-stripprefix.stripprefix.prefixes=/foo/backoffice"
+            - "traefik.http.middlewares.backoffice-foo-customheader.headers.customrequestheaders.X-Tenant=foo"
+
     backoffice-bar:
         extends: { service: base }
         command: ['debug']
@@ -74,6 +107,12 @@ services:
             HOST: backoffice-bar
             SERVICE: backoffice
             TENANT: bar
+            NODE_ENV: development
+            MONGO_URL: $MONGO_DSN
+            NAMESPACE: '/bar/backoffice'
+            AUTH_BASE_URL: 'http://backend/bar/auth'
+        env_file: [{ path: ./.env, required: true }]
+        ports: [3012:3012]
         volumes:
             - ./node_modules:/opt/app/node_modules
             - ./packages:/opt/app/packages
@@ -83,3 +122,19 @@ services:
         depends_on:
             - mongo
             - redis
+        labels:
+            - "traefik.http.routers.backoffice-bar.rule=PathPrefix(`/bar/backoffice`)"
+            # - "traefik.http.routers.backoffice-bar.middlewares=backoffice-bar-stripprefix@docker,backoffice-bar-customheader@docker"
+            # - "traefik.http.middlewares.backoffice-bar-stripprefix.stripprefix.prefixes=/bar/backoffice"
+            - "traefik.http.middlewares.backoffice-bar-customheader.headers.customrequestheaders.X-Tenant=bar"
+
+    backend:
+        image: traefik:v2.11
+        command: --api.insecure=true --providers.docker
+        ports:
+            - '80:80'
+            - '8080:8080'
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+        deploy:
+            replicas: 1

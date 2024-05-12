@@ -10,6 +10,7 @@ import '~/presentation'
 
 import Ajv from 'ajv'
 import { Cache, NoCacheDriver } from '~/domain/services/cache'
+import { AuthorizationClient } from '~/infrastructure/authorizationClient'
 import { Config, Container } from '../interfaces'
 import { AppService } from '../services/appService'
 import { ORMProvider } from './orm'
@@ -31,6 +32,7 @@ export class AppContainerBuilder implements ContainerBuilder {
         container.register('cacheDriver', asClass(NoCacheDriver))
         container.register('cache', aliasTo('appCache'))
         container.register('validator', asClass(AJVValidator))
+        container.register('authorization', asClass(AuthorizationClient).inject(() => ({ options: this.options.get('resources').authorization })))
     }
 
     private authenticatorSingleton() {
@@ -39,7 +41,11 @@ export class AppContainerBuilder implements ContainerBuilder {
     }
 
     private ormSingleton() {
-        let resolver = asClass(ORMProvider, { asyncInit: 'init', asyncDispose: 'dispose', lifetime: 'SINGLETON' })
+        let resolver = asClass(ORMProvider, {
+            asyncInit: 'init',
+            asyncDispose: 'dispose',
+            lifetime: 'SINGLETON',
+        })
         return resolver.inject(() => ({ options: this.options.get('orm') }))
     }
 

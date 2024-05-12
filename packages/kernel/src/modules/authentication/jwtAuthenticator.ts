@@ -37,7 +37,7 @@ export class JWTAuthenticator implements Authenticator {
     verifyToken(token: string) : AuthenticatedUser {
         let decoded = jwt.verify(token, this.options.secret)
         if(typeof decoded === 'object') {
-            return new Authenticated(decoded.sub, decoded.preferred_username, token)
+            return new Authenticated(decoded.preferred_username, decoded.sub, token)
         }
 
     }

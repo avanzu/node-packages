@@ -6,6 +6,7 @@ import mikroorm from './mikro-orm'
 export default {
     host: deferConfig(() => process.env.HOST || 'localhost'),
     port: deferConfig(() => process.env.PORT || 9091),
+    namespace: deferConfig(() => process.env.NAMESPACE || 'auth'),
     logger: deferConfig(() => ({
         level: 'debug',
     })),

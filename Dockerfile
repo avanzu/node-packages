@@ -19,15 +19,15 @@ COPY --chown=node:node package.json package-lock.json ./
 # RUN --mount=type=cache,target=/opt/app/.npm \
 #     npm ci --cache /opt/app/.npm --include=dev --loglevel info --no-audit
 #     # \&& npm cache clean --force
-RUN npm ci --include=dev --loglevel info --no-audit
+RUN npm i --include=dev --loglevel info --no-audit
     # \&& npm cache clean --force
 
 # copy sources afterwards
 COPY --chown=node:node . .
 # build artifacts
-RUN npm run build
+#RUN npm run build
 # remove dev dependencies + caches after build
-RUN npm prune --production
+#RUN npm prune --production
  # && rm -rf /home/node/.cache /home/node/.npm
 USER node
 

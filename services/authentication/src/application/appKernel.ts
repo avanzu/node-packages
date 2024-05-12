@@ -4,6 +4,7 @@ import koaHelmet from 'koa-helmet'
 import { AppContainerBuilder } from './dependencyInjection'
 import { Application, Config, Container, Middleware } from './interfaces'
 import { scopeORM } from './middleware/scopeORM'
+import { requestLog } from './middleware/requestLog'
 
 export class AppKernel extends Kernel<Config, Application, Container> {
 
@@ -17,7 +18,7 @@ export class AppKernel extends Kernel<Config, Application, Container> {
     }
 
     protected middlewares(): Middleware[] {
-        return [ koaHelmet(), bodyParser(), scopeORM(), authenticate() ]
+        return [ requestLog(this.logger), koaHelmet(), bodyParser(), scopeORM(), authenticate() ]
     }
 
 

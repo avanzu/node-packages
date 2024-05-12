@@ -1,9 +1,9 @@
-import type { CacheDriver } from "~/domain/interfaces"
+import { AppServices, Authorization } from "@avanzu/kernel"
+import type Ajv from "ajv"
+import type { CacheDriver, CurrentUser, Feature } from "~/domain/interfaces"
+import type { ORMProvider } from "../dependencyInjection/orm"
 import type { AppService } from "../services/appService"
 import type { Config } from "./application"
-import type { Feature, CurrentUser } from "~/domain/interfaces"
-import { AppServices } from "@avanzu/kernel"
-import type Ajv from "ajv"
 
 export type Services = AppServices & {
     appService: AppService
@@ -11,7 +11,8 @@ export type Services = AppServices & {
     appCache: Cache
     cacheDriver: CacheDriver
     useCases: Feature[]
-    currentUser: CurrentUser
     ajv: Ajv
+    ORMProvider: ORMProvider
+    authorization: Authorization
 
 }

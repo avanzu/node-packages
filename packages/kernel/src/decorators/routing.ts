@@ -136,8 +136,8 @@ export function getMountPoints(target: Function) {
     return mount
 }
 
-export function mountControllers(): Router {
-    let root = new Router()
+export function mountControllers(globalPrefix?:string): Router {
+    let root = new Router({ prefix: globalPrefix })
     for (let controller of getControllers()) {
         let mountpoints = getMountPoints(controller)
         let router = new Router({ prefix: mountpoints.prefix })

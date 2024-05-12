@@ -95,7 +95,8 @@ export abstract class Kernel<
     protected abstract createLogger(): Types.Logger
 
     protected loadControllers() {
-        let router = mountControllers()
+        let prefix = this.options.get('namespace')
+        let router = mountControllers(prefix)
         this.app.use(router.routes())
     }
 }

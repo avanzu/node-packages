@@ -27,6 +27,7 @@
         "url": "https://github.com/avanzu/node-packages/issues"
     },
     "devDependencies": {
+        "@types/reflect-metadata": "^0.1.0",
         "tsc-alias": "^1.8.8",
         "typedoc": "^0.25.13"
     },

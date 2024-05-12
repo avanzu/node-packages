@@ -3,6 +3,8 @@ import { bodyParser } from '@koa/bodyparser'
 import koaHelmet from 'koa-helmet'
 import { AppContainerBuilder } from './dependencyInjection'
 import { Application, Config, Container, Middleware } from './interfaces'
+import { requestLog } from './middleware/requestLog'
+import { scopeORM } from './middleware/scopeORM'
 
 export class AppKernel extends Kernel<Config, Application, Container> {
 
@@ -16,7 +18,7 @@ export class AppKernel extends Kernel<Config, Application, Container> {
     }
 
     protected middlewares(): Middleware[] {
-        return [ koaHelmet(), bodyParser(), authenticate() ]
+        return [ requestLog(this.logger), koaHelmet(), bodyParser(), scopeORM(), authenticate() ]
     }
 
 

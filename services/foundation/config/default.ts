@@ -1,6 +1,7 @@
 import { deferConfig } from 'config/defer'
 import { type Options as AJVOpts } from 'ajv'
-import type { AuthenticatorOptions } from '@avanzu/kernel'
+import type { AuthenticatorOptions, ResourceMap } from '@avanzu/kernel'
+import type { Resources } from '../src/application/interfaces'
 import mikroOrm from './mikro-orm'
 export default {
     host: deferConfig(() => process.env.HOST || 'localhost'),
@@ -23,7 +24,7 @@ export default {
         useDefaults: true,
         allowUnionTypes: true
     })),
-    authenticator: deferConfig(() : AuthenticatorOptions => ({
+    authentication: deferConfig(() : AuthenticatorOptions => ({
         secret: process.env.JWT_SECRET || 'ya3mdsDb4jHvTymEV9rfWQG5zhJVNheZ',
         jwt: {
             algorithm: 'HS512',
@@ -32,4 +33,14 @@ export default {
         }
     })),
     orm: deferConfig(() => mikroOrm),
+    resources: deferConfig(() : Resources => ({
+        authentication: {
+            url: '',
+            auth: true
+        },
+        configuration: {
+            duration: 5,
+            prefix: 'foo'
+        }
+    }))
 }
