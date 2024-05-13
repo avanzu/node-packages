@@ -9,6 +9,7 @@ const resolvers = new Map()
 
 export type UseCaseOptions = {
     id: string
+    group?: string
     schema?: any
 
 }

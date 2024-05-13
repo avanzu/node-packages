@@ -1,22 +1,21 @@
-import * as Avanzu from '@avanzu/kernel'
+import * as Kernel from '@avanzu/kernel';
+import { ConfigValues } from './configuration';
 import { Services } from './services';
-import { ConfigValues } from './configuration'
-import { NameAndRegistrationPair, Resolver } from 'awilix';
 
-export type Config = Avanzu.Configuration<ConfigValues>
+export type Config = Kernel.Configuration<ConfigValues>
 
-export interface User extends Avanzu.AuthUser {}
+export interface User extends Kernel.AuthUser {}
 
-export interface Container extends Avanzu.Container<Services> {
+export interface Container extends Kernel.Container<Services> {
 
 }
 
-export interface State extends Avanzu.AppState<Container> {}
+export interface State extends Kernel.AppState<Container> {}
 
-export interface Context<Query extends {} = {}, Body = unknown> extends Avanzu.AppContext<Container, State, User, Body> {
+export interface Context<Query extends {} = {}, Body = unknown> extends Kernel.AppContext<Container, State, User, Body> {
     query: Query
 }
 
-export interface Middleware extends Avanzu.AppMiddleware<Container, State, Context> {}
+export interface Middleware extends Kernel.AppMiddleware<Container, State, Context> {}
 
-export interface Application extends Avanzu.App<Container, State, Context> {}
+export interface Application extends Kernel.App<Container, State, Context> {}

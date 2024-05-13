@@ -1,6 +1,6 @@
 import type { AxiosError } from 'axios'
 import { ReasonPhrases, StatusCodes, getReasonPhrase } from 'http-status-codes'
-import { KernelError } from '../errors'
+import { KernelError, NodeErrors } from '../errors'
 import { ErrorCode } from '~/errors/errorCodes'
 
 export class ErrorView {
@@ -9,17 +9,25 @@ export class ErrorView {
     public readonly stack?: string
     private error: Error
     private body: Record<string, any>
-    private code: string|number
+    private code: string | number
     constructor(error: unknown) {
         this.error = this.getError(error)
         this.status = this.getStatus()
-        this.reason = getReasonPhrase(this.status)
-        this.code =  this.createErrorCode()
+        this.reason = this.getPhrase()
+        this.code = this.createErrorCode()
         this.stack = this.error.stack
         this.body = this.createBody()
     }
+    private getPhrase(): string {
+        try {
+            return getReasonPhrase(this.status)
+        } catch (error) {
+            return ReasonPhrases.INTERNAL_SERVER_ERROR
+        }
+    }
+
     protected createErrorCode(): string | number {
-        if('code' in this.error) return String(this.error.code)
+        if ('code' in this.error) return String(this.error.code)
         return ErrorCode.KERNEL
     }
 
@@ -64,9 +72,13 @@ export class ErrorView {
     }
 
     getStatus(): number {
-        if ('status' in this.error) return Number(this.error.status)
-        if ('statusCode' in this.error) return Number(this.error.statusCode)
-        return StatusCodes.INTERNAL_SERVER_ERROR
+        let statusCode: string | number = StatusCodes.INTERNAL_SERVER_ERROR
+        if ('statusCode' in this.error) statusCode = String(this.error.statusCode)
+        if ('status' in this.error) statusCode = String(this.error.status)
+        if (String(statusCode) in NodeErrors) statusCode = NodeErrors[statusCode]
+        if (isNaN(statusCode as number)) statusCode = StatusCodes.INTERNAL_SERVER_ERROR
+
+        return Number(statusCode)
     }
 
     private createBody() {
