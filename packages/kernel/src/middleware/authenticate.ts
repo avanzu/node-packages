@@ -6,6 +6,7 @@ type Middleware = AppMiddleware<Container, AppState<Container>, Context>
 
 export function authenticate(): Middleware {
     return function authenticateToken(context: Context, next: Next) {
+
         let token: string = context.get('Authorization')
         if (false === Boolean(token)) {
             return next()
