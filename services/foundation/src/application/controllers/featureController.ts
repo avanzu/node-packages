@@ -1,28 +1,19 @@
-import {
-    All,
-    Controller,
-    Get,
-    UseCaseInfo,
-    ValidationError,
-    getResolver,
-    getUseCase,
-    getUseCases,
-} from '@avanzu/kernel'
+import * as Kernel from '@avanzu/kernel'
 import { StatusCodes } from 'http-status-codes'
 import { Feature, PayloadResolver } from '~/domain'
 import { Context } from '../interfaces'
 
-@Controller('/features')
+@Kernel.Controller('/features')
 export class FeatureController {
-    @Get('/')
+    @Kernel.Get('/')
     async list(context: Context): Promise<void> {
-        context.body = getUseCases().map((info) => info.id)
+        context.body = Kernel.getUseCases().map((info) => info.id)
     }
 
-    @All('/:featureId')
+    @Kernel.All('/:featureId')
     async dispatch(context: Context): Promise<any> {
         let featureId = context.params.featureId
-        let featureInfo = getUseCase(featureId)
+        let featureInfo = Kernel.getUseCase(featureId)
         if (null == featureInfo) {
             context.throw(StatusCodes.NOT_FOUND, `Feature ${featureId} not found`)
         }
@@ -37,7 +28,7 @@ export class FeatureController {
     }
 
     private async validatePayload(
-        featureInfo: UseCaseInfo,
+        featureInfo: Kernel.UseCaseInfo,
         context: Context<{}, unknown>,
         payload: unknown
     ) {
@@ -49,12 +40,12 @@ export class FeatureController {
         if (true === result.isValid) {
             return
         }
-        throw new ValidationError(result.errors)
+        throw new Kernel.ValidationError(result.errors)
     }
 
-    private async resolvePayload(useCaseInfo: UseCaseInfo, context: Context) {
+    private async resolvePayload(useCaseInfo: Kernel.UseCaseInfo, context: Context) {
         let payload = context.request.body
-        let resolverClass = getResolver(useCaseInfo.useCase)
+        let resolverClass = Kernel.getResolver(useCaseInfo.useCase)
         if (null === resolverClass) return payload
         let resolver: PayloadResolver = context.scope.build(resolverClass)
         payload = await resolver.resolve(context)
