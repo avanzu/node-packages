@@ -1,6 +1,6 @@
 {
     "name": "@avanzu/cli",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "description": "> TODO: description",
     "author": "Marc Bach <mail@avanzu.de>",
     "homepage": "https://github.com/avanzu/node-packages#readme",
@@ -33,7 +33,7 @@
         "url": "https://github.com/avanzu/node-packages/issues"
     },
     "devDependencies": {
-        "@avanzu/foundation": "^1.3.0",
+        "@avanzu/foundation": "^1.4.0",
         "@types/prettier": "^3.0.0",
         "tsc-alias": "^1.8.8",
         "typedoc": "^0.25.13"
