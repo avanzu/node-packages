@@ -18,7 +18,6 @@ export class Settings<T extends {} = {}> {
 
     @Property()
     revision!: number
-
 }
 
 export class SettingsRepository extends EntityRepository<Settings> {

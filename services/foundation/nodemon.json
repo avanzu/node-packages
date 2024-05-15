@@ -1,12 +1,7 @@
 {
-    "watch": [ "src", "config" ],
+    "watch": ["src", "config"],
     "ext": "js,json,ts",
     "exec": "node -r ts-node/register",
-    "signal" : "SIGINT",
-    "ignore": [
-        "coverage/",
-        "dist/",
-        "__tests__/",
-        "nodemon.json"
-    ]
-  }
+    "signal": "SIGINT",
+    "ignore": ["coverage/", "dist/", "__tests__/", "nodemon.json"]
+}

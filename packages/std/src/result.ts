@@ -26,7 +26,7 @@ export const Ok = (x) => ({
     [customInspectSymbol]: () => `Ok(${x})`,
 })
 
-export const Err = (e: string|unknown = ERROR) => ({
+export const Err = (e: string | unknown = ERROR) => ({
     isOk: () => false,
     isErr: () => true,
     fold: (onErr, _) => onErr(e),
@@ -50,28 +50,38 @@ export const Err = (e: string|unknown = ERROR) => ({
     [customInspectSymbol]: () => `Err(${e})`,
 })
 
-const tryCatch = (fn) => (...args) => {
-    try { return Ok(fn(...args)) }
-    catch (e) { return Err(e) }
-}
+const tryCatch =
+    (fn) =>
+    (...args) => {
+        try {
+            return Ok(fn(...args))
+        } catch (e) {
+            return Err(e)
+        }
+    }
 
 export const Result = {
     all: (results) =>
-    results.reduce((acc, cur) => acc.fold(Err, (xs) => cur.map((x) => xs.concat([x]))), Ok([])),
-    fromPredicate : (pred, x) => (pred(x) ? Ok(x) : Err(x)),
-    fromNullable : (x?, message?) => (x != null ? Ok(x) : Err(message)),
-    fromBoolean : (x?, message?) => (Boolean(x) ? Ok(x) : Err(message)),
-    promised : (p) => p.then(Ok, Err),
-    of : Ok,
-    err : Err,
+        results.reduce((acc, cur) => acc.fold(Err, (xs) => cur.map((x) => xs.concat([x]))), Ok([])),
+    fromPredicate: (pred, x) => (pred(x) ? Ok(x) : Err(x)),
+    fromNullable: (x?, message?) => (x != null ? Ok(x) : Err(message)),
+    fromBoolean: (x?, message?) => (Boolean(x) ? Ok(x) : Err(message)),
+    promised: (p) => p.then(Ok, Err),
+    of: Ok,
+    err: Err,
     Ok: Ok,
     Err: Err,
     try: tryCatch,
     tryCatch,
-    tryAsync: (fn) => async (...args) => {
-        try { return Ok(await fn(...args)) }
-        catch (e) { return Err(e) }
-    },
+    tryAsync:
+        (fn) =>
+        async (...args) => {
+            try {
+                return Ok(await fn(...args))
+            } catch (e) {
+                return Err(e)
+            }
+        },
     tryNow: (fn, ...args) => {
         try {
             return Ok(fn(...args))
@@ -79,15 +89,8 @@ export const Result = {
             return Err(e)
         }
     },
-    ERROR
+    ERROR,
 }
-
-
-
-
-
-
-
 
 /*
 const Result = {

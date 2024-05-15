@@ -6,7 +6,6 @@ import { Application, Config, Container, Middleware } from './interfaces'
 import { scopeORM } from './middleware/scopeORM'
 
 export class AppKernel extends Kernel<Config, Application, Container> {
-
     protected createLogger(): Logger {
         let loggerOptions = this.options.get('logger')
         return new PinoLogger(loggerOptions)
@@ -17,9 +16,6 @@ export class AppKernel extends Kernel<Config, Application, Container> {
     }
 
     protected middlewares(): Middleware[] {
-        return [ scopeORM(), koaHelmet(), bodyParser(), authenticate() ]
+        return [scopeORM(), koaHelmet(), bodyParser(), authenticate()]
     }
-
-
-
 }

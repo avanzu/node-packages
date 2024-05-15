@@ -1,4 +1,4 @@
-import { Identity } from "~/src"
+import { Identity } from '~/src'
 
 describe('Type "Identity"', () => {
     const val = Identity.of('something')

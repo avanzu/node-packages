@@ -1,10 +1,8 @@
-import { CacheDriver } from "~/domain/interfaces";
+import { CacheDriver } from '~/domain/interfaces'
 import type { Redis } from 'ioredis'
-import { Packr } from "msgpackr";
-
+import { Packr } from 'msgpackr'
 
 export class RedisCacheDriver implements CacheDriver {
-
     protected client: Redis
     protected packr: Packr
 
@@ -13,10 +11,10 @@ export class RedisCacheDriver implements CacheDriver {
         this.packr = new Packr({ maxSharedStructures: 8160, structures: [] })
     }
 
-    protected pack(contents: unknown) : Buffer {
+    protected pack(contents: unknown): Buffer {
         return this.packr.pack(contents)
     }
-    protected unpack<T = unknown>(buffer: Buffer) : T {
+    protected unpack<T = unknown>(buffer: Buffer): T {
         return this.packr.unpack(buffer)
     }
 
@@ -28,19 +26,15 @@ export class RedisCacheDriver implements CacheDriver {
         await this.client.del(key)
     }
     async save(key: string, value: unknown, ttl?: number | undefined): Promise<void> {
-        if(true === Boolean(ttl))
-            await this.client.setex(key, ttl!, this.pack(value))
-        else
-            await this.client.set(key, this.pack(value))
+        if (true === Boolean(ttl)) await this.client.setex(key, ttl!, this.pack(value))
+        else await this.client.set(key, this.pack(value))
     }
 
     async get<T = unknown>(key: string): Promise<T> {
         let buffer = await this.client.getBuffer(key)
-        if( null === buffer) {
+        if (null === buffer) {
             throw new Error('CacheMissError')
         }
         return this.unpack<T>(buffer!)
-
     }
-
 }

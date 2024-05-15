@@ -2,7 +2,6 @@ import { LogAsync } from '@avanzu/decorators'
 import { readFile } from 'fs/promises'
 import { Config } from '../interfaces'
 
-
 export type AppInfo = {
     name: string
     version: string
@@ -24,7 +23,7 @@ export class AppService {
             version: contents.version,
             description: contents.description,
             author: contents.author,
-            redis: this.appConfig.get('redis')
+            redis: this.appConfig.get('redis'),
         }
         this.appInfo = appInfo
     }

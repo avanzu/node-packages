@@ -6,7 +6,7 @@ export const Identity = (x) => ({
     map: (fn) => Identity(fn(x)),
     tap: (fn) => (fn(x), Identity(x)),
     chain: (fn) => fn(x),
-    ap:(id) => id.map(x),
+    ap: (id) => id.map(x),
     unwrap: () => x,
     unwrapAlways: (value) => value,
     unwrapWith: (fn) => fn(x),
@@ -22,4 +22,3 @@ Identity.all = (opts) =>
 Identity.of = Identity
 
 // export const of = Identity
-

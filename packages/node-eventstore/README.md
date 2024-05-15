@@ -1,4 +1,3 @@
-
 # Introduction
 
 **This is a heavily modified version of the original [node-eventstore](https://github.com/thenativeweb/node-eventstore) by Adriano Raiano.**
@@ -11,14 +10,16 @@ The project goal is to provide an eventstore implementation for node.js:
 -   snapshot support
 -   query your events
 
-# Upgrade instructions 
- - [upgrading from 1.x.x to 2.x.x](#from-1xx-to-2xx)
+# Upgrade instructions
+
+-   [upgrading from 1.x.x to 2.x.x](#from-1xx-to-2xx)
+
 # Installation
 
     npm install @avanzu/eventstore
 
-
 # Usage
+
 ## Require the module and init the eventstore:
 
 ```javascript
@@ -60,7 +61,8 @@ var es = require('@avanzu/eventstore')({
     // positionsCollectionName: 'positions'        // optional, defaultly wont keep position
 })
 ```
-<!-- 
+
+<!--
 example with redis:
 
 ```javascript
@@ -207,6 +209,7 @@ es.useEventPublisher(function (evt, callback) {
 })
 ```
 -->
+
 ## catch connect and disconnect events
 
 ```javascript
@@ -250,12 +253,12 @@ const { events } = await es.getEventStream({ query: 'streamId' })
 or
 
 ```javascript
-const { events } = await es.getEventStream({ 
+const { events } = await es.getEventStream({
     query: {
         aggregateId: 'myAggregateId',
         aggregate: 'person', // optional
         context: 'hr', // optional
-    }
+    },
 })
 ```
 
@@ -267,10 +270,14 @@ So you can have 2 complete different aggregate instances of 2 complete different
 you can request an eventstream even by limit the query with a 'minimum revision number' and a 'maximum revision number'
 
 ```javascript
-const {events} = await es.getEventStream({
-    query: 'streamId' || {/* query */ },
+const { events } = await es.getEventStream({
+    query:
+        'streamId' ||
+        {
+            /* query */
+        },
     revMin: 5,
-    revMax: 8
+    revMax: 8,
 })
 ```
 
@@ -284,7 +291,6 @@ stream.addEvents([{ my: 'event2' }])
 
 await stream.commit()
 console.log(stream.eventsToDispatch)
-
 ```
 
 if you defined an event publisher function the committed event will be dispatched to the provided publisher
@@ -296,27 +302,31 @@ if you just want to load the last event as stream you can call getLastEventAsStr
 get snapshot and eventhistory from the snapshot point
 
 ```javascript
-const [snapshot, stream] = await es.getFromSnapshot({query: 'streamId'})
+const [snapshot, stream] = await es.getFromSnapshot({ query: 'streamId' })
 ```
 
 or
 
 ```javascript
 const [snapshot, stream] = await es.getFromSnapshot({
-        query: {
-            aggregateId: 'myAggregateId',
-            aggregate: 'person', // optional
-            context: 'hr', // optional
-        }
-    })
+    query: {
+        aggregateId: 'myAggregateId',
+        aggregate: 'person', // optional
+        context: 'hr', // optional
+    },
+})
 ```
 
 you can request a snapshot and an eventstream even by limit the query with a 'maximum revision number'
 
 ```javascript
 const [snapshot, stream] = es.getFromSnapshot({
-    query: 'streamId' || { /* query */ },
-    revMax: 8 // if you omit revMax or you define it as -1 it will retrieve until the end
+    query:
+        'streamId' ||
+        {
+            /* query */
+        },
+    revMax: 8, // if you omit revMax or you define it as -1 it will retrieve until the end
 })
 ```
 
@@ -361,23 +371,26 @@ You can automatically clean older snapshots by configuring the number of snapsho
 ```javascript
 const evts = await es.getUndispatchedEvents()
 ```
+
 ## Deleting aggregates
 
-currently supported by: 
+currently supported by:
 
- 1. mongodb 
+1.  mongodb
 
-You can delete an aggregate including the event history, snapshots and transactions by calling `deleteStream`. 
+You can delete an aggregate including the event history, snapshots and transactions by calling `deleteStream`.
+
 ```js
 const deletedStream = await es.deleteStream('myStreamId')
 ```
-The return value is the `EventStream` that has just been deleted. 
 
-This stream will contain an undispatched `TombstoneEvent` ready to be processed. 
-The `payload` attribute of that event contains the complete event history. 
+The return value is the `EventStream` that has just been deleted.
 
-```js 
-const [tombstoneEvent] = deletedStream.eventsToDispatch 
+This stream will contain an undispatched `TombstoneEvent` ready to be processed.
+The `payload` attribute of that event contains the complete event history.
+
+```js
+const [tombstoneEvent] = deletedStream.eventsToDispatch
 ```
 
 ## query your events
@@ -390,11 +403,11 @@ skip, limit always optional
 var skip = 0,
     limit = 100 // if you omit limit or you define it as -1 it will retrieve until the end
 
-const events = await es.getEvents({skip, limit})
+const events = await es.getEvents({ skip, limit })
 
 // or
 
-const events = await es.getEvents({query: 'streamId', skip, limit})
+const events = await es.getEvents({ query: 'streamId', skip, limit })
 
 // or
 
@@ -406,7 +419,7 @@ const events = await es.getEvents({
         aggregateId: 'uuid',
     },
     skip,
-    limit
+    limit,
 })
 ```
 
@@ -415,11 +428,10 @@ by revision
 revMin, revMax always optional
 
 ```javascript
-
-const events = await es.getEventsByRevision({ 
-    query: 'streamId', 
-    revMin: 5, 
-    revMax: 8  // if you omit revMax or you define it as -1 it will retrieve until the end
+const events = await es.getEventsByRevision({
+    query: 'streamId',
+    revMin: 5,
+    revMax: 8, // if you omit revMax or you define it as -1 it will retrieve until the end
 })
 // or
 
@@ -429,8 +441,8 @@ const events = await es.getEventsByRevision({
         aggregate: 'person', // optional
         context: 'hr', // optional
     },
-    revMin: 5, 
-    revMax: 8  // if you omit revMax or you define it as -1 it will retrieve until the end
+    revMin: 5,
+    revMax: 8, // if you omit revMax or you define it as -1 it will retrieve until the end
 })
 ```
 
@@ -439,26 +451,24 @@ by commitStamp
 skip, limit always optional
 
 ```javascript
-
 const events = await es.getEventsSince({
-    commitStamp: new Date(2015, 5, 23), 
+    commitStamp: new Date(2015, 5, 23),
     skip: 10,
-    limit: 100 // if you omit limit or you define it as -1 it will retrieve until the end
+    limit: 100, // if you omit limit or you define it as -1 it will retrieve until the end
 })
 
 // or
 
 const events = await es.getEventsSince({
-    commitStamp: new Date(2015, 5, 23), 
-    limit: 50
+    commitStamp: new Date(2015, 5, 23),
+    limit: 50,
 })
 
 // or
 
 const events = await es.getEventsSince({
-    commitStamp: new Date(2015, 5, 23) 
+    commitStamp: new Date(2015, 5, 23),
 })
-
 ```
 
 ## streaming your events
@@ -471,18 +481,18 @@ skip, limit always optional
 var skip = 0,
     limit = 100 // if you omit limit or you define it as -1 it will retrieve until the end
 
-var stream = es.streamEvents({skip, limit})
+var stream = es.streamEvents({ skip, limit })
 // or
-var stream = es.streamEvents({query: 'streamId', skip, limit})
+var stream = es.streamEvents({ query: 'streamId', skip, limit })
 // or by commitstamp
-var stream = es.streamEventsSince({commitStamp: new Date(2015, 5, 23), skip, limit })
+var stream = es.streamEventsSince({ commitStamp: new Date(2015, 5, 23), skip, limit })
 // or by revision
 var stream = es.streamEventsByRevision({
     query: {
         aggregateId: 'myAggregateId',
         aggregate: 'person',
         context: 'hr',
-    }
+    },
 })
 
 stream.on('data', function (e) {
@@ -510,11 +520,12 @@ const event = await es.getLastEvent('streamId')
 
 // or
 
-const event = await es.getLastEvent({ // free choice (all, only context, only aggregate, only aggregateId...)
-  context: 'hr',
-  aggregate: 'person',
-  aggregateId: 'uuid'
-});
+const event = await es.getLastEvent({
+    // free choice (all, only context, only aggregate, only aggregateId...)
+    context: 'hr',
+    aggregate: 'person',
+    aggregateId: 'uuid',
+})
 ```
 
 ## obtain a new id
@@ -542,18 +553,20 @@ But if you want you can trigger this from outside:
 const [firstTransaction] = await es.store.getPendingTransactions()
 
 const lastEvent = await es.store.getLastEvent({
-        aggregateId: firstTransaction.aggregateId,
-        aggregate: firstTransaction.aggregate, // optional
-        context: firstTransaction.context, // optional
+    aggregateId: firstTransaction.aggregateId,
+    aggregate: firstTransaction.aggregate, // optional
+    context: firstTransaction.context, // optional
 })
 
-await es.store.repairFailedTransaction(lastEvent)    
-
+await es.store.repairFailedTransaction(lastEvent)
 ```
-# Upgrade instructions 
+
+# Upgrade instructions
+
 ## From 1.x.x to 2.x.x
+
 Starting from version 2.0.0 the eventstore does not longer support multiple positional arguments. Instead, you have to pass in a params object.
-The general idea, that you only have to specify the arguments that deviate from the defaults remains. 
+The general idea, that you only have to specify the arguments that deviate from the defaults remains.
 
 Please refer to the following table to see how the signatures have changed
 
@@ -568,7 +581,6 @@ Please refer to the following table to see how the signatures have changed
 | `getEventsByRevision(query, revMin, revMax)`    | `getEventsByRevision({query, revMin, revMax})`    |
 | `getEventStream(query, revMin, revMax)`         | `getEventStream({query, revMin, revMax})`         |
 | `getFromSnapshot(query, revMax)`                | `getFromSnapshot({query, revMax})`                |
-
 
 # Inspiration
 
@@ -593,7 +605,6 @@ You can use your own db implementation by extending this...
 var Store = require('@avanzu/eventstore').Store,
     util = require('util'),
     _ = require('lodash')
-
 
 class MyDB extends Store {
     constructor(options) {

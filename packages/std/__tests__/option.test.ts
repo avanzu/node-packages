@@ -1,5 +1,4 @@
-import { Option } from "~/src"
-
+import { Option } from '~/src'
 
 describe('Type "Option"', () => {
     describe('factories', () => {

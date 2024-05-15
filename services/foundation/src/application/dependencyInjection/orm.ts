@@ -3,7 +3,6 @@ import { MikroORM, type EntityManager } from '@mikro-orm/core'
 import { defineConfig, type Options as MongoORM } from '@mikro-orm/mongodb'
 
 export class ORMProvider {
-
     protected orm?: MikroORM
 
     constructor(protected options: MongoORM) {}
@@ -24,7 +23,7 @@ export class ORMProvider {
         this.orm = await MikroORM.init(options)
         await this.orm.schema.ensureDatabase()
         await this.orm.schema.ensureIndexes()
-        if(true === await this.orm.migrator.checkMigrationNeeded()) {
+        if (true === (await this.orm.migrator.checkMigrationNeeded())) {
             await this.orm.migrator.up()
         }
     }

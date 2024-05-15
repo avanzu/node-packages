@@ -4,5 +4,5 @@
  */
 const suiteName = require('./package.json').name
 module.exports = {
-    ...require('../../jest.base')(suiteName)
+    ...require('../../jest.base')(suiteName),
 }

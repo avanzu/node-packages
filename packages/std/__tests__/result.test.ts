@@ -1,4 +1,4 @@
-import { Result } from "~/src"
+import { Result } from '~/src'
 
 describe('Type "Result"', () => {
     describe('factories', () => {

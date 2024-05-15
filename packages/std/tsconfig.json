@@ -1,10 +1,10 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "noEmit": true,
-    "paths": {
-      "~/*": ["./*"]
-    }
-  },
-  "include": ["src", "__tests__"]
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "paths": {
+            "~/*": ["./*"]
+        }
+    },
+    "include": ["src", "__tests__"]
 }

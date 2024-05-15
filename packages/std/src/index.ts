@@ -1,3 +1,3 @@
-export *  from './option'
-export *  from './result'
-export *  from './identity'
+export * from './option'
+export * from './result'
+export * from './identity'
