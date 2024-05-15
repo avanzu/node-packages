@@ -1,3 +1,9 @@
+/**
+ * UseCase dispatcher approach.
+ * One Endpoint handles all available UseCases.
+ * UseCase instances are located and build dynamically during the dispatch process.
+ * Request payload transformation must be handled via InputResolver.
+ */
 import * as Kernel from '@avanzu/kernel'
 import { StatusCodes } from 'http-status-codes'
 import { Feature, PayloadResolver } from '~/domain'
