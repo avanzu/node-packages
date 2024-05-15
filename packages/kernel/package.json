@@ -46,7 +46,7 @@
         "ajv": "^8.13.0",
         "config": "^3.3.11",
         "koa-helmet": "^7.0.2",
-        "pino": "^8.21.0"
+        "pino": "^9.1.0"
     },
     "peerDependenciesMeta": {
         "@koa/bodyparser": {

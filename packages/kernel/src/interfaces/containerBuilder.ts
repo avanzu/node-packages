@@ -1,5 +1,5 @@
-import { AwilixContainer } from "awilix";
+import { Container } from "./container";
 
 export interface ContainerBuilder {
-    build(container: AwilixContainer) : Promise<void>
+    build(container: Container) : Promise<void>
 }

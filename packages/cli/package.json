@@ -34,7 +34,6 @@
     },
     "devDependencies": {
         "@avanzu/foundation": "^1.4.0",
-        "@types/prettier": "^3.0.0",
         "tsc-alias": "^1.8.8",
         "typedoc": "^0.25.13"
     },
@@ -45,7 +44,7 @@
         "date-fns": "^3.6.0",
         "decompress": "^4.2.1",
         "dotenv": "^16.4.5",
-        "prettier": "^3.2.5",
+        "prettier": "3.2.5",
         "reflect-metadata": "^0.2.2"
     },
     "gitHead": "9ebffa16391c453c9494aaf6057d1b856d3de614"

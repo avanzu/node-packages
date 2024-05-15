@@ -1,6 +1,12 @@
 /// <reference types="awilix-manager" />
 
-import { AJVValidator, ContainerBuilder, JWTAuthenticator } from '@avanzu/kernel'
+import {
+    AJVValidator,
+    ContainerBuilder,
+    JWTAuthenticator,
+    Logger,
+    getUseCases,
+} from '@avanzu/kernel'
 import { aliasTo, asClass, asValue } from 'awilix'
 
 import '~/application/controllers'
@@ -15,14 +21,17 @@ import { AppService } from '../services/appService'
 import { ORMProvider } from './orm'
 
 export class AppContainerBuilder implements ContainerBuilder {
+    protected logger: Logger
     protected options: Config
 
-    constructor(options: Config) {
+    constructor(options: Config, logger: Logger) {
         this.options = options
+        this.logger = logger
     }
 
     public async build(container: Container): Promise<void> {
         container.register('appService', asClass(AppService, { lifetime: 'SINGLETON' }))
+        container.register('appLogger', asValue(this.logger))
         container.register('ajv', this.ajvSingleton())
         container.register('ORMProvider', this.ormSingleton())
         container.register('authenticator', this.authenticatorSingleton())
@@ -31,20 +40,32 @@ export class AppContainerBuilder implements ContainerBuilder {
         container.register('cacheDriver', asClass(NoCacheDriver))
         container.register('cache', aliasTo('appCache'))
         container.register('validator', asClass(AJVValidator))
+
+        this.registerUseCases(container)
     }
 
-    private authenticatorSingleton() {
+    protected ajvSingleton() {
+        let resolver = asClass(Ajv, { lifetime: 'SINGLETON' })
+        return resolver.inject(() => ({ opts: this.options.get('validation') }))
+    }
+
+    protected authenticatorSingleton() {
         let resolver = asClass(JWTAuthenticator, { lifetime: 'SINGLETON' })
         return resolver.inject(() => ({ options: this.options.get('authentication') }))
     }
 
-    private ormSingleton() {
-        let resolver = asClass(ORMProvider, { asyncInit: 'init', asyncDispose: 'dispose', lifetime: 'SINGLETON' })
+    protected ormSingleton() {
+        let resolver = asClass(ORMProvider, {
+            asyncInit: 'init',
+            asyncDispose: 'dispose',
+            lifetime: 'SINGLETON',
+        })
         return resolver.inject(() => ({ options: this.options.get('orm') }))
     }
 
-    private ajvSingleton() {
-        let resolver = asClass(Ajv, { lifetime: 'SINGLETON' })
-        return resolver.inject(() => ({ opts: this.options.get('validation') }))
+    protected registerUseCases(container: Container) {
+        for (let entry of getUseCases()) {
+            container.register(entry.id, asClass(entry.useCase))
+        }
     }
 }

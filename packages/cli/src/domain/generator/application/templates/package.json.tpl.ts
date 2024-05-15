@@ -65,7 +65,6 @@ export class PackageJSON implements Template {
                 '@types/koa': '^2.15.0',
                 '@types/koa__cors': '^5.0.0',
                 '@types/koa-router': '^7.4.8',
-                '@types/pino': '^7.0.5',
                 '@types/supertest': '^6.0.2',
                 axios: '^0.27.2',
                 eslint: '^8.12.0',

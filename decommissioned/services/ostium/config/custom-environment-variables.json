@@ -1,7 +1,0 @@
-{
-    "host": "HOST",
-    "service": "SERVICE",
-    "port": "PORT",
-    "redis": "REDIS_URL",
-    "amqp": "ACTIVEMQ_URL"
-}

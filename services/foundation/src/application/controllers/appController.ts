@@ -5,8 +5,8 @@ import { AppService } from '../services/appService'
 
 @Kernel.Controller()
 export class AppController {
-    private service: AppService
-    private authUser: User
+    protected service: AppService
+    protected authUser: User
     constructor(appService: AppService, authUser: User) {
         this.service = appService
         this.authUser = authUser

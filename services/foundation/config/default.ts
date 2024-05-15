@@ -10,7 +10,7 @@ export default {
     port: deferConfig(() => process.env.PORT || 9090),
     namespace: deferConfig(() => process.env.NAMESPACE || null),
     logger: deferConfig(() => ({
-        level: 'debug',
+        level: process.env.LOG_LEVEL || 'debug',
     })),
     redis: deferConfig(() => ({
         connectionName: process.env.REDIS_CONNECTION_NAME || 'foundation-cache',

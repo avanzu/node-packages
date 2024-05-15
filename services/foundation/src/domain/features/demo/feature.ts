@@ -5,9 +5,13 @@ import {
   DemoOutput as Output,
   DemoOutputSchema as OutputSchema,
 } from './output'
+import { Container } from '~/application/interfaces'
 
-@UseCase({ id: 'demo', schema: InputSchema })
-export class Demo implements Feature<Input, Output> {
+@UseCase({
+  id: 'demo',
+  schema: InputSchema,
+})
+export class DemoFeature implements Feature<Input, Output> {
   kind: 'demo' = 'demo'
 
   constructor() {}

@@ -22,6 +22,11 @@ export class ORMProvider {
     async init() {
         let options = defineConfig({ ...this.options })
         this.orm = await MikroORM.init(options)
+        await this.orm.schema.ensureDatabase()
+        await this.orm.schema.ensureIndexes()
+        if(true === await this.orm.migrator.checkMigrationNeeded()) {
+            await this.orm.migrator.up()
+        }
     }
 
     async dispose() {

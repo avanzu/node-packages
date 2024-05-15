@@ -24,10 +24,10 @@
     "dependencies": {
         "dompurify": "^3.0.3",
         "handlebars": "^4.7.7",
-        "jsdom": "^22.0.0",
-        "lru-cache": "^9.1.1",
-        "markdown-it": "^13.0.1",
-        "piscina": "^3.2.0"
+        "jsdom": "^24.0.0",
+        "lru-cache": "^10.2.2",
+        "markdown-it": "^14.1.0",
+        "piscina": "^4.4.0"
     },
     "gitHead": "f5fc121607537beac2502adcafcab3f97285e65a"
 }

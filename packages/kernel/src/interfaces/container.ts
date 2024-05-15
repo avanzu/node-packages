@@ -1,4 +1,4 @@
-import type { AwilixContainer, NameAndRegistrationPair, Resolver } from "awilix";
+import type { AwilixContainer, InjectorFunction, NameAndRegistrationPair, Resolver } from "awilix";
 import type { AuthUser } from "./app";
 import type { Validator } from "./validation";
 import type { Authenticator } from "./authenticator";

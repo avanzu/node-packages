@@ -1,4 +1,4 @@
-import { Entity, PrimaryKey, Property, SerializedPrimaryKey } from '@mikro-orm/core'
+import { Entity, PrimaryKey, Property, SerializedPrimaryKey, Unique } from '@mikro-orm/core'
 import { EntityManager, EntityRepository, ObjectId } from '@mikro-orm/mongodb'
 
 @Entity({ repository: () => SettingsRepository })
@@ -9,7 +9,8 @@ export class Settings<T extends {} = {}> {
     @SerializedPrimaryKey()
     id!: string
 
-    @Property({ index: true, unique: true })
+    @Property({})
+    @Unique()
     name!: string
 
     @Property({})

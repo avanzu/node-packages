@@ -13,7 +13,7 @@ export class AppKernel extends Kernel<Config, Application, Container> {
     }
 
     protected createContainerBuilder(): ContainerBuilder {
-        return new AppContainerBuilder(this.options)
+        return new AppContainerBuilder(this.options, this.logger)
     }
 
     protected middlewares(): Middleware[] {
