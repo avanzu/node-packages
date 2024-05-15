@@ -44,9 +44,9 @@ export abstract class Kernel<
     }
 
     public async serve(): Promise<Server> {
-        let host = this.options.get('host')
-        let port = this.options.get('port')
-        let serving = new Promise<Server>((Ok) => {
+        const host = this.options.get('host')
+        const port = this.options.get('port')
+        const serving = new Promise<Server>((Ok) => {
             this._server = this.app.listen(port, host, () => {
                 this._address = this._server.address() as AddressInfo
                 this.logger.info('Server running', { host, port, url: `http://${host}:${port}` })
@@ -69,7 +69,7 @@ export abstract class Kernel<
     }
 
     protected async buildContainer() {
-        let builder = this.createContainerBuilder()
+        const builder = this.createContainerBuilder()
         await builder.build(this.container)
     }
 
@@ -77,7 +77,7 @@ export abstract class Kernel<
         this.app.use(errorHandler(this.logger))
         this.app.use(authenticateAnonymous())
         this.app.use(containerScope(this.container))
-        for (let middleware of this.middlewares()) {
+        for (const middleware of this.middlewares()) {
             this.app.use(middleware)
         }
     }
@@ -95,8 +95,8 @@ export abstract class Kernel<
     protected abstract createLogger(): Types.Logger
 
     protected loadControllers() {
-        let prefix = this.options.get('namespace')
-        let router = mountControllers(prefix)
+        const prefix = this.options.get('namespace')
+        const router = mountControllers(prefix)
         this.app.use(router.routes())
     }
 }

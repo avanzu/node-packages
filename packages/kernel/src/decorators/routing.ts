@@ -88,9 +88,9 @@ export type MountPoint = {
 }
 
 export function getMountPoints(target: Function) {
-    let proto = target.prototype
-    let ctor = proto.constructor
-    let mount: MountPoint = { endpoints: [], middlewares: [] }
+    const proto = target.prototype
+    const ctor = proto.constructor
+    const mount: MountPoint = { endpoints: [], middlewares: [] }
 
     if (Reflect.hasMetadata(CONTROLLER_KEY, ctor)) {
         mount.prefix = Reflect.getMetadata(CONTROLLER_KEY, ctor)
@@ -100,13 +100,13 @@ export function getMountPoints(target: Function) {
         mount.middlewares = Reflect.getMetadata(MIDDLEWARE_KEY, ctor)
     }
 
-    for (let method of Object.getOwnPropertyNames(proto)) {
+    for (const method of Object.getOwnPropertyNames(proto)) {
         if (false === Reflect.hasMetadata(ROUTE_KEY, proto, method)) {
             continue
         }
 
-        let route = Reflect.getMetadata(ROUTE_KEY, proto, method)
-        let endpoint: Endpoint = {
+        const  route = Reflect.getMetadata(ROUTE_KEY, proto, method)
+        const  endpoint: Endpoint = {
             target,
             route,
             verb: 'all',
@@ -137,17 +137,17 @@ export function getMountPoints(target: Function) {
 }
 
 export function mountControllers(globalPrefix?:string): Router {
-    let root = new Router({ prefix: globalPrefix })
-    for (let controller of getControllers()) {
-        let mountpoints = getMountPoints(controller)
-        let router = new Router({ prefix: mountpoints.prefix })
-        for (let middleware of mountpoints.middlewares) {
+    const  root = new Router({ prefix: globalPrefix })
+    for (const  controller of getControllers()) {
+        const  mountpoints = getMountPoints(controller)
+        const  router = new Router({ prefix: mountpoints.prefix })
+        for (const  middleware of mountpoints.middlewares) {
             router.use(middleware)
         }
 
-        for (let endpoint of mountpoints.endpoints) {
-            let handler = createHandler(endpoint)
-            let middlewares = [
+        for (const  endpoint of mountpoints.endpoints) {
+            const  handler = createHandler(endpoint)
+            const  middlewares = [
                 ...endpoint.before,
                 ...endpoint.middlewares,
                 handler,
@@ -163,7 +163,7 @@ export function mountControllers(globalPrefix?:string): Router {
 
 function createHandler(endpoint: Endpoint): Middleware {
     return async function dispatchRequest(context: Context, next: Next) {
-        let instance = context.scope.build(endpoint.target)
+        const instance = context.scope.build(endpoint.target)
         await instance[endpoint.method](context, next)
     }
 }

@@ -18,17 +18,17 @@ export class FeatureController {
 
     @Kernel.All('/:featureId')
     async dispatch(context: Context): Promise<any> {
-        let featureId = context.params.featureId
-        let featureInfo = Kernel.getUseCase(featureId)
+        const featureId = context.params.featureId
+        const featureInfo = Kernel.getUseCase(featureId)
         if (null == featureInfo) {
             context.throw(StatusCodes.NOT_FOUND, `Feature ${featureId} not found`)
         }
-        let feature: Feature = context.scope.build(featureInfo.useCase)
-        let payload = await this.resolvePayload(featureInfo, context)
+        const feature: Feature = context.scope.build(featureInfo.useCase)
+        const payload = await this.resolvePayload(featureInfo, context)
 
         await this.validatePayload(featureInfo, context, payload)
 
-        let result = await feature.invoke(payload)
+        const result = await feature.invoke(payload)
 
         context.body = result
     }
@@ -41,8 +41,8 @@ export class FeatureController {
         if (false === Boolean(featureInfo.schema)) {
             return
         }
-        let validator = context.scope.cradle.validator
-        let result = await validator.validate(featureInfo.schema, payload)
+        const validator = context.scope.cradle.validator
+        const result = await validator.validate(featureInfo.schema, payload)
         if (true === result.isValid) {
             return
         }
@@ -51,9 +51,9 @@ export class FeatureController {
 
     private async resolvePayload(useCaseInfo: Kernel.UseCaseInfo, context: Context) {
         let payload = context.request.body
-        let resolverClass = Kernel.getResolver(useCaseInfo.useCase)
+        const resolverClass = Kernel.getResolver(useCaseInfo.useCase)
         if (null === resolverClass) return payload
-        let resolver: PayloadResolver = context.scope.build(resolverClass)
+        const resolver: PayloadResolver = context.scope.build(resolverClass)
         payload = await resolver.resolve(context)
         return payload
     }

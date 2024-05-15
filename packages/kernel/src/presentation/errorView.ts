@@ -52,7 +52,7 @@ export class ErrorView {
             return e
         }
 
-        let details = {
+        const details = {
             baseUrl: e.config?.baseURL,
             url: e.config?.url,
             query: e.config?.params,
@@ -88,7 +88,7 @@ export class ErrorView {
             details = this.error.details
         }
 
-        let body = {
+        const body = {
             errorCode: this.code,
             statusCode: this.status,
             reason: getReasonPhrase(this.status),

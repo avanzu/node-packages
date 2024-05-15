@@ -13,8 +13,8 @@ export function errorHandler(logger: Logger): Middleware {
             await next()
         } catch (error) {
 
-            let ErrorView = getErrorView()
-            let view = context.scope.build(asClass(ErrorView).inject(() => ({ error })))
+            const ErrorView = getErrorView()
+            const view = context.scope.build(asClass(ErrorView).inject(() => ({ error })))
 
             context.status = view.getStatus()
             context.body = view

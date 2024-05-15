@@ -19,7 +19,7 @@ export class RedisCacheDriver implements CacheDriver {
     }
 
     async exists(key: string): Promise<boolean> {
-        let result = await this.client.exists(key)
+        const result = await this.client.exists(key)
         return Boolean(result)
     }
     async drop(key: string): Promise<void> {
@@ -31,7 +31,7 @@ export class RedisCacheDriver implements CacheDriver {
     }
 
     async get<T = unknown>(key: string): Promise<T> {
-        let buffer = await this.client.getBuffer(key)
+        const buffer = await this.client.getBuffer(key)
         if (null === buffer) {
             throw new Error('CacheMissError')
         }

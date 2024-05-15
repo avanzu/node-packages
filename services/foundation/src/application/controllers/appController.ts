@@ -20,7 +20,7 @@ export class AppController {
 
     @Kernel.Get('/info')
     async info(context: Context) {
-        let service = await this.service.info()
+        const service = await this.service.info()
 
         context.body = { service, authUser: this.authUser }
     }

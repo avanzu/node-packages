@@ -36,9 +36,9 @@ export type UseCaseInfo = UseCaseOptions & {
 }
 
 export function getUseCases() : UseCaseInfo[] {
-    let entries: UseCaseInfo[] = []
-    for (let [id, useCase] of useCases) {
-        let info = createInfo(useCase)
+    const entries: UseCaseInfo[] = []
+    for (const [id, useCase] of useCases) {
+        const info = createInfo(useCase)
         entries.push(info)
     }
 
@@ -46,15 +46,15 @@ export function getUseCases() : UseCaseInfo[] {
 }
 
 function createInfo(useCase: Constructor<any>) {
-    let proto = useCase.prototype
-    let ctor = proto.constructor
-    let info = Reflect.getMetadata(USECASE_INFO, ctor)
+    const proto = useCase.prototype
+    const ctor = proto.constructor
+    const info = Reflect.getMetadata(USECASE_INFO, ctor)
     return {...info, useCase, tags: [ USECASE_TAG ]}
 }
 
 export function getUseCase(id: string) : UseCaseInfo {
     if(useCases.has(id)) {
-        let useCase = useCases.get(id)
+        const useCase = useCases.get(id)
         return createInfo(useCase)
     }
     return null

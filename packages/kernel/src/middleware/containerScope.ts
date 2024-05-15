@@ -5,7 +5,7 @@ import { USECASE_TAG } from "..";
 
 export function containerScope(container: AwilixContainer) : Middleware {
     return function createRequestScope(context: Context, next: Next) {
-        let scope = container.createScope()
+        const scope = container.createScope()
         context.scope = scope
         context.state.container = scope
         scope.register('authUser', asFunction(() => context.user, { lifetime: 'TRANSIENT' }))

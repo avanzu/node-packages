@@ -23,19 +23,19 @@ export class JWTAuthenticator implements Authenticator {
             throw new Error('create token for anonymous user is not allowed.')
         }
 
-        let payload: JWTPayload = {
+        const payload: JWTPayload = {
             sub: String(user.id),
             preferred_username: user.username,
         }
 
-        let token = jwt.sign(payload, this.options.secret, this.options.jwt)
+        const token = jwt.sign(payload, this.options.secret, this.options.jwt)
         user.token = token
 
         return token
     }
 
     verifyToken(token: string) : AuthenticatedUser {
-        let decoded = jwt.verify(token, this.options.secret)
+        const decoded = jwt.verify(token, this.options.secret)
         if(typeof decoded === 'object') {
             return new Authenticated(decoded.preferred_username, decoded.sub, token)
         }

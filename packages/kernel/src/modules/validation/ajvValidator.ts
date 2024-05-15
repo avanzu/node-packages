@@ -12,8 +12,8 @@ export class AJVValidator implements Validator {
     }
 
     async validate(schema: Schema, data: any): Promise<ValidationResult> {
-        let validator = this.getValidator(schema)
-        let isValid = Boolean(validator(data))
+        const validator = this.getValidator(schema)
+        const isValid = Boolean(validator(data))
         return { isValid, errors: validator.errors }
     }
 }

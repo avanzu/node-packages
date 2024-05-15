@@ -45,17 +45,17 @@ export class AppContainerBuilder implements ContainerBuilder {
     }
 
     protected ajvSingleton() {
-        let resolver = asClass(Ajv, { lifetime: 'SINGLETON' })
+        const resolver = asClass(Ajv, { lifetime: 'SINGLETON' })
         return resolver.inject(() => ({ opts: this.options.get('validation') }))
     }
 
     protected authenticatorSingleton() {
-        let resolver = asClass(JWTAuthenticator, { lifetime: 'SINGLETON' })
+        const resolver = asClass(JWTAuthenticator, { lifetime: 'SINGLETON' })
         return resolver.inject(() => ({ options: this.options.get('authentication') }))
     }
 
     protected ormSingleton() {
-        let resolver = asClass(ORMProvider, {
+        const resolver = asClass(ORMProvider, {
             asyncInit: 'init',
             asyncDispose: 'dispose',
             lifetime: 'SINGLETON',
@@ -64,7 +64,7 @@ export class AppContainerBuilder implements ContainerBuilder {
     }
 
     protected registerUseCases(container: Container) {
-        for (let entry of getUseCases()) {
+        for (const entry of getUseCases()) {
             container.register(entry.id, asClass(entry.useCase))
         }
     }

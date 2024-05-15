@@ -4,7 +4,7 @@ import { Context, Middleware } from '../interfaces'
 
 export function scopeORM(): Middleware {
     return function forkEntityManager(context: Context, next: Next) {
-        let ormProvider = context.scope.cradle.ORMProvider
+        const ormProvider = context.scope.cradle.ORMProvider
         context.scope.register(
             'em',
             asFunction(() => ormProvider.entityManager().fork())

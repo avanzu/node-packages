@@ -19,7 +19,7 @@ export class ORMProvider {
     }
 
     async init() {
-        let options = defineConfig({ ...this.options })
+        const options = defineConfig({ ...this.options })
         this.orm = await MikroORM.init(options)
         await this.orm.schema.ensureDatabase()
         await this.orm.schema.ensureIndexes()

@@ -7,7 +7,7 @@ import { scopeORM } from './middleware/scopeORM'
 
 export class AppKernel extends Kernel<Config, Application, Container> {
     protected createLogger(): Logger {
-        let loggerOptions = this.options.get('logger')
+        const loggerOptions = this.options.get('logger')
         return new PinoLogger(loggerOptions)
     }
 

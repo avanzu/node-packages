@@ -5,7 +5,7 @@ import config from 'config'
 async function main() {
     await resolveAsyncConfigs(config)
 
-    let kernel = new AppKernel(config)
+    const kernel = new AppKernel(config)
 
     process.on('SIGTERM', kernel.shutdown.bind(kernel))
     process.on('SIGINT', kernel.shutdown.bind(kernel))

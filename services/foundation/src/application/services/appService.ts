@@ -16,9 +16,9 @@ export class AppService {
 
     @LogAsync()
     protected async buildInfo() {
-        let raw = await readFile(`${__dirname}/../../../package.json`, 'utf-8')
-        let contents = JSON.parse(raw)
-        let appInfo = {
+        const raw = await readFile(`${__dirname}/../../../package.json`, 'utf-8')
+        const contents = JSON.parse(raw)
+        const appInfo = {
             name: contents.name,
             version: contents.version,
             description: contents.description,

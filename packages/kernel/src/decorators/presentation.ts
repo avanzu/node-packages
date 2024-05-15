@@ -1,8 +1,8 @@
 import { Constructor, isClass } from "./util"
 import * as Views from '../presentation'
 
-let ERROR_VIEW = Symbol('avanzu.kernel.presentation.errorView')
-let views: Map<string|symbol, Constructor> = new Map([
+const ERROR_VIEW = Symbol('avanzu.kernel.presentation.errorView')
+const views: Map<string|symbol, Constructor> = new Map([
     [ERROR_VIEW, Views.ErrorView]
 ])
 
