@@ -46,7 +46,8 @@
         "ajv": "^8.13.0",
         "config": "^3.3.11",
         "koa-helmet": "^7.0.2",
-        "pino": "^9.1.0"
+        "pino": "^9.1.0",
+        "jsonwebtoken": "^9.0.2"
     },
     "peerDependenciesMeta": {
         "@koa/bodyparser": {
@@ -59,13 +60,16 @@
             "optional": true
         },
         "pino": {
-            "optional": true
+            "optional": false
         },
         "config": {
             "optional": true
         },
         "ajv": {
             "optional": true
+        },
+        "jsonwebtoken": {
+            "optional": false
         }
     },
     "gitHead": "9ebffa16391c453c9494aaf6057d1b856d3de614"

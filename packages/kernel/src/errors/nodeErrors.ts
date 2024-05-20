@@ -1,4 +1,4 @@
-import { StatusCodes } from "http-status-codes";
+import { StatusCodes } from 'http-status-codes'
 
 export const NodeErrors = {
     ECONNRESET: StatusCodes.SERVICE_UNAVAILABLE,
@@ -11,3 +11,5 @@ export const NodeErrors = {
     EHOSTUNREACH: StatusCodes.SERVICE_UNAVAILABLE,
     EAI_AGAIN: StatusCodes.SERVICE_UNAVAILABLE,
 }
+
+export type NodeError = keyof typeof NodeErrors

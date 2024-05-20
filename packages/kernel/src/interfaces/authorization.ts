@@ -1,22 +1,26 @@
 import { AuthUser } from "./app";
 
-export enum PermissionKind {
-    ACTION = 'action',
-    DATA = 'data',
-    WORKFLOW = 'workflow'
+export const PermissionKinds = {
+    ACTION : 'action',
+    DATA : 'data',
+    WORKFLOW : 'workflow'
 }
+
+export type PermissionKind = keyof typeof PermissionKinds
 
 export interface Permission {
     kind: PermissionKind,
     name: string
 }
 
+export const AuthorizationResults = {
+    GRANTED : 'granted',
+    DENIED : 'denied',
+    NONE : 'none'
 
-export enum AuthorizationResult {
-    GRANTED = 'granted',
-    DENIED = 'denied',
-    NONE = 'none'
 }
+
+export type AuthorizationResult = keyof typeof AuthorizationResults
 
 export interface Authorization {
     isGranted(user: AuthUser, permission: Permission): Promise<AuthorizationResult>

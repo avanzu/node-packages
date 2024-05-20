@@ -105,8 +105,8 @@ export function getMountPoints(target: Function) {
             continue
         }
 
-        const  route = Reflect.getMetadata(ROUTE_KEY, proto, method)
-        const  endpoint: Endpoint = {
+        const route = Reflect.getMetadata(ROUTE_KEY, proto, method)
+        const endpoint: Endpoint = {
             target,
             route,
             verb: 'all',
@@ -136,18 +136,18 @@ export function getMountPoints(target: Function) {
     return mount
 }
 
-export function mountControllers(globalPrefix?:string): Router {
-    const  root = new Router({ prefix: globalPrefix })
-    for (const  controller of getControllers()) {
-        const  mountpoints = getMountPoints(controller)
-        const  router = new Router({ prefix: mountpoints.prefix })
-        for (const  middleware of mountpoints.middlewares) {
+export function mountControllers(globalPrefix?: string): Router {
+    const root = new Router({ prefix: globalPrefix })
+    for (const controller of getControllers()) {
+        const mountpoints = getMountPoints(controller)
+        const router = new Router({ prefix: mountpoints.prefix })
+        for (const middleware of mountpoints.middlewares) {
             router.use(middleware)
         }
 
-        for (const  endpoint of mountpoints.endpoints) {
-            const  handler = createHandler(endpoint)
-            const  middlewares = [
+        for (const endpoint of mountpoints.endpoints) {
+            const handler = createHandler(endpoint)
+            const middlewares = [
                 ...endpoint.before,
                 ...endpoint.middlewares,
                 handler,

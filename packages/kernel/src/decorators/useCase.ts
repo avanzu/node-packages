@@ -11,12 +11,11 @@ export type UseCaseOptions = {
     id: string
     group?: string
     schema?: any
-
 }
 
 export function UseCase(options: UseCaseOptions): ClassDecorator {
     return function useCaseDecorator(target: Function) {
-        if(false === isClass(target)) return
+        if (false === isClass(target)) return
 
         Reflect.defineMetadata(USECASE_KEY, true, target)
         Reflect.defineMetadata(USECASE_INFO, options, target)
@@ -24,7 +23,7 @@ export function UseCase(options: UseCaseOptions): ClassDecorator {
     }
 }
 
-export function InputResolver(targetUseCase: Constructor | string ) : ClassDecorator {
+export function InputResolver(targetUseCase: Constructor | string): ClassDecorator {
     return function payloadResolverDecorator(target: Function) {
         resolvers.set(targetUseCase, target)
     }
@@ -35,9 +34,9 @@ export type UseCaseInfo = UseCaseOptions & {
     tags: string[]
 }
 
-export function getUseCases() : UseCaseInfo[] {
+export function getUseCases(): UseCaseInfo[] {
     const entries: UseCaseInfo[] = []
-    for (const [id, useCase] of useCases) {
+    for (const [, useCase] of useCases) {
         const info = createInfo(useCase)
         entries.push(info)
     }
@@ -49,11 +48,11 @@ function createInfo(useCase: Constructor<any>) {
     const proto = useCase.prototype
     const ctor = proto.constructor
     const info = Reflect.getMetadata(USECASE_INFO, ctor)
-    return {...info, useCase, tags: [ USECASE_TAG ]}
+    return { ...info, useCase, tags: [USECASE_TAG] }
 }
 
-export function getUseCase(id: string) : UseCaseInfo {
-    if(useCases.has(id)) {
+export function getUseCase(id: string): UseCaseInfo {
+    if (useCases.has(id)) {
         const useCase = useCases.get(id)
         return createInfo(useCase)
     }
@@ -61,7 +60,7 @@ export function getUseCase(id: string) : UseCaseInfo {
 }
 
 export function getResolver(useCase: Constructor | string) {
-    if(resolvers.has(useCase)) {
+    if (resolvers.has(useCase)) {
         return resolvers.get(useCase)
     }
 
