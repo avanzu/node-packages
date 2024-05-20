@@ -11,7 +11,7 @@ export class AppKernel extends Kernel<Config, Application, Container> {
         return new PinoLogger(loggerOptions)
     }
 
-    protected createContainerBuilder(): ContainerBuilder {
+    protected createContainerBuilder(): ContainerBuilder<Container> {
         return new AppContainerBuilder(this.options, this.logger)
     }
 

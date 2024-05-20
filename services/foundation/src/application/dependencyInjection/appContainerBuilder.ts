@@ -1,12 +1,6 @@
 /// <reference types="awilix-manager" />
 
-import {
-    AJVValidator,
-    ContainerBuilder,
-    JWTAuthenticator,
-    Logger,
-    getUseCases,
-} from '@avanzu/kernel'
+import * as Kernel from '@avanzu/kernel'
 import { aliasTo, asClass, asValue } from 'awilix'
 
 import '~/application/controllers'
@@ -20,11 +14,11 @@ import { Config, Container } from '../interfaces'
 import { AppService } from '../services/appService'
 import { ORMProvider } from './orm'
 
-export class AppContainerBuilder implements ContainerBuilder {
-    protected logger: Logger
+export class AppContainerBuilder implements Kernel.ContainerBuilder<Container> {
+    protected logger: Kernel.Logger
     protected options: Config
 
-    constructor(options: Config, logger: Logger) {
+    constructor(options: Config, logger: Kernel.Logger) {
         this.options = options
         this.logger = logger
     }
@@ -39,7 +33,7 @@ export class AppContainerBuilder implements ContainerBuilder {
         container.register('appCache', asClass(Cache))
         container.register('cacheDriver', asClass(NoCacheDriver))
         container.register('cache', aliasTo('appCache'))
-        container.register('validator', asClass(AJVValidator))
+        container.register('validator', asClass(Kernel.AJVValidator))
 
         this.registerUseCases(container)
     }
@@ -50,7 +44,7 @@ export class AppContainerBuilder implements ContainerBuilder {
     }
 
     protected authenticatorSingleton() {
-        const resolver = asClass(JWTAuthenticator, { lifetime: 'SINGLETON' })
+        const resolver = asClass(Kernel.JWTAuthenticator, { lifetime: 'SINGLETON' })
         return resolver.inject(() => ({ options: this.options.get('authentication') }))
     }
 
@@ -64,7 +58,7 @@ export class AppContainerBuilder implements ContainerBuilder {
     }
 
     protected registerUseCases(container: Container) {
-        for (const entry of getUseCases()) {
+        for (const entry of Kernel.getUseCases()) {
             container.register(entry.id, asClass(entry.useCase))
         }
     }

@@ -9,7 +9,7 @@
         "build": "tsc --project tsconfig.build.json",
         "postbuild": "tsc-alias -p tsconfig.build.json && npm run zip",
         "test": "jest",
-        "test:integration": "jest --config=jest.integration.config.js",
+        "test:unit": "jest --config=jest.unit.config.js",
         "lint": "eslint . ",
         "jest": "jest",
         "format": "prettier --write .",

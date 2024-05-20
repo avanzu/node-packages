@@ -11,7 +11,7 @@ export type InstanceMap<U extends Discriminated> = {
 }
 
 export interface Entity extends Discriminated {}
-export interface Feature<Input = any, Output = any> extends Discriminated {
+export interface Feature<Input = any, Output = any> {
     invoke(value: Input): Promise<Output>
 }
 

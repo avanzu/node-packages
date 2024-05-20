@@ -1,7 +1,6 @@
 # `@avanzu/kernel`
 
-> (Micro-)service application kernel combining [koa](https://koajs.com/) as http server with [awilix](https://github.com/jeffijoe/awilix) as dependency injection container.
-
+The package provides a robust foundation for creating scalable (micro-)services applications. It features a modular architecture, leveraging dependency injection for managing application components, and supporting middleware for handling HTTP requests and responses. The package is designed to promote clean, maintainable code and facilitate easy integration of additional functionality, making it ideal for building both simple and complex services.
 
 ## Getting started
 Create a new typescript enabled project.
@@ -52,9 +51,8 @@ Extend interfaces provided by the kernel to simplify tying in your application l
 import * as Kernel from '@avanzu/kernel'
 
 // declare configuration options that your application needs
-interface ConfigValues extends Kernel.ConfigOptions {
+interface ConfigValues extends Kernel.ConfigOptions {}
 
-}
 interface Configuration extends Kernel.Configuration<ConfigValues> {}
 
 // declare services that will be managed by your DIC to help with type safety during development
@@ -62,7 +60,6 @@ interface Services extends Kernel.AppServices {
     appLogger: Kernel.Logger,
     appConfig: Configuration
 }
-
 
 // extend kernel interfaces to use as shorthand during development
 interface Container extends Kernel.Container<Services> {}
@@ -73,9 +70,11 @@ interface App extends Kernel.App<Container, State, Context> {}
 
 You will need to provide an implementation for the Configuration interface.
 
+The `Config` class centralizes application settings, enabling consistent configuration management across the application.
+It simplifies access to configuration values and supports environment-specific settings, enhancing maintainability and scalability.
+
 __minimal example__
 ```ts
-
 export class Config implements Kernel.Configuration<ConfigValues> {
     constructor(protected values: ConfigValues) {}
 
@@ -88,7 +87,9 @@ export class Config implements Kernel.Configuration<ConfigValues> {
 }
 ```
 
-Next, you need to create your container builder. This class is responsible for the dependency injection container configuration.
+Next, you need to create your container builder.
+
+The `ContainerBuilder` class facilitates dependency injection by managing the creation and lifecycle of application components. It ensures that dependencies are provided efficiently and promotes loose coupling, making the application easier to test and extend.
 
 For detailed instructions on how to register dependencies, see the [awilix](https://github.com/jeffijoe/awilix) and the [awilix-manager](https://github.com/kibertoad/awilix-manager) documentation.
 ```ts
@@ -311,7 +312,7 @@ import '~/application/controllers'
 That way, when you add more controllers, you don't have to modify the`containerBuilder.ts` each time. Just make sure to add them to the exports of your `index.ts` barrel in the `controllers/` folder.
 
 ## Middlewares
-A great tool to isolate and provide cross cutting concerns like logging, input validation, authorization and the like.
+Middleware functions in web applications handle requests and responses, performing tasks like logging, authentication, and validation. They enhance modularity and reusability, allowing developers to easily add or modify functionality.
 
 ### Creating middlewares
 In order to create a custom middlware, you can mainly follow the [koa](https://koajs.com/) documentation.
