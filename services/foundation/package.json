@@ -1,6 +1,6 @@
 {
     "name": "@avanzu/foundation",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "description": "",
     "main": "dist/index.js",
     "private": true,
@@ -22,8 +22,8 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "@avanzu/decorators": "^1.2.1",
-        "@avanzu/kernel": "^1.4.1",
+        "@avanzu/decorators": "^1.2.2",
+        "@avanzu/kernel": "^1.4.2",
         "@koa/bodyparser": "^5.1.0",
         "@koa/cors": "^5.0.0",
         "@mikro-orm/core": "^6.2.6",

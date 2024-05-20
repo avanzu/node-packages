@@ -1,6 +1,6 @@
 {
     "name": "@avanzu/redis-composable",
-    "version": "1.2.7",
+    "version": "1.2.8",
     "description": "> TODO: description",
     "author": "Marc Bach <mail@avanzu.de>",
     "homepage": "https://github.com/avanzu/node-packages#readme",

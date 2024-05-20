@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.4.2](https://github.com/avanzu/node-packages/compare/@avanzu/kernel@1.4.1...@avanzu/kernel@1.4.2) (2024-05-20)
+
+
+### Bug Fixes
+
+* fixes incorrect import ([f434a03](https://github.com/avanzu/node-packages/commit/f434a0351be45c73843d4e9656cad71d68ba3ebb))
+
+
+
+
+
 ## [1.4.1](https://github.com/avanzu/node-packages/compare/@avanzu/kernel@1.4.0...@avanzu/kernel@1.4.1) (2024-05-20)
 
 **Note:** Version bump only for package @avanzu/kernel
