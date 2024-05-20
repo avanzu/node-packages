@@ -1,6 +1,6 @@
 {
     "name": "@avanzu/foundation",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "description": "",
     "main": "dist/index.js",
     "private": true,
@@ -22,8 +22,8 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "@avanzu/decorators": "^1.2.0",
-        "@avanzu/kernel": "^1.4.0",
+        "@avanzu/decorators": "^1.2.1",
+        "@avanzu/kernel": "^1.4.1",
         "@koa/bodyparser": "^5.1.0",
         "@koa/cors": "^5.0.0",
         "@mikro-orm/core": "^6.2.6",
@@ -52,8 +52,8 @@
         "@types/jest": "^29.5.12",
         "@types/jsonwebtoken": "^9.0.6",
         "@types/koa": "^2.15.0",
-        "@types/koa__cors": "^5.0.0",
         "@types/koa-router": "^7.4.8",
+        "@types/koa__cors": "^5.0.0",
         "@types/supertest": "^6.0.2",
         "axios": "^1.6.0",
         "eslint": "^9.2.0",

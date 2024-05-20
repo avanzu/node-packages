@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.4](https://github.com/avanzu/node-packages/compare/@avanzu/template-renderer@1.1.3...@avanzu/template-renderer@1.1.4) (2024-05-20)
+
+**Note:** Version bump only for package @avanzu/template-renderer
+
+
+
+
+
 ## [1.1.3](https://github.com/avanzu/node-packages/compare/@avanzu/template-renderer@1.1.2...@avanzu/template-renderer@1.1.3) (2024-04-28)
 
 **Note:** Version bump only for package @avanzu/template-renderer
