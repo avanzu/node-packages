@@ -12,7 +12,7 @@ import { authenticateAnonymous } from './middleware/authenticateAnonymous'
 export abstract class Kernel<
     Config extends Types.Configuration,
     App extends Types.App<any, any, any>,
-    Container extends Types.Container
+    Container extends Types.Container,
 > {
     protected app: App
     protected container: Container
@@ -86,7 +86,7 @@ export abstract class Kernel<
         return new Koa() as App
     }
 
-    protected abstract createContainerBuilder(): Types.ContainerBuilder
+    protected abstract createContainerBuilder(): Types.ContainerBuilder<Container>
 
     protected middlewares(): Types.AppMiddleware<any, any, any>[] {
         return []
