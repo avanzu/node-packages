@@ -65,5 +65,5 @@
         "jest": "jest --forceExit --runInBand --timeout=250 --bail=3",
         "format": "prettier --write ."
     },
-    "gitHead": "f5fc121607537beac2502adcafcab3f97285e65a"
+    "gitHead": "dad812b188ab961da2f5bbbddb76d6e33eae26cd"
 }

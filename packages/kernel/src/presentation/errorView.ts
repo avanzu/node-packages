@@ -1,7 +1,7 @@
 import type { AxiosError } from 'axios'
 import { ReasonPhrases, StatusCodes, getReasonPhrase } from 'http-status-codes'
 import { KernelError, NodeErrors } from '../errors'
-import { ErrorCode } from '~/errors/errorCodes'
+import { ErrorCodes } from '~/errors/errorCodes'
 
 export class ErrorView {
     public readonly status: number
@@ -28,7 +28,7 @@ export class ErrorView {
 
     protected createErrorCode(): string | number {
         if ('code' in this.error) return String(this.error.code)
-        return ErrorCode.KERNEL
+        return ErrorCodes.KERNEL
     }
 
     private isError(value: unknown): value is Error {
