@@ -1,12 +1,19 @@
 {
     "name": "@avanzu/kernel",
-    "version": "1.4.2",
+    "version": "1.4.3",
     "description": "Robust foundation for creating scalable (micro-)services applications",
     "author": "Marc Bach <mail@avanzu.de>",
     "homepage": "https://github.com/avanzu/node-packages/tree/main/packages/kernel#readme",
     "license": "MIT",
     "main": "dist/index.js",
-    "keywords": ["koa", "koajs" ,"awilix", "application", "framework", "dependency injection"],
+    "keywords": [
+        "koa",
+        "koajs",
+        "awilix",
+        "application",
+        "framework",
+        "dependency injection"
+    ],
     "files": [
         "dist"
     ],
