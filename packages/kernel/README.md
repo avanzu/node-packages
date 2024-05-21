@@ -2,7 +2,36 @@
 
 The package provides a robust foundation for creating scalable (micro-)services applications. It features a modular architecture, leveraging dependency injection for managing application components, and supporting middleware for handling HTTP requests and responses. The package is designed to promote clean, maintainable code and facilitate easy integration of additional functionality, making it ideal for building both simple and complex services.
 
+> **Attention:** If you are not interested in the introduction, feel free to use the [quickstart project](https://github.com/avanzu/kernel-basic) to get right into development.
+>
+- [Getting started](#getting-started)
+  - [Create boilerplate code](#create-boilerplate-code)
+- [Refactoring: divide and conquer](#refactoring-divide-and-conquer)
+  - [Folder structure breakdown](#folder-structure-breakdown)
+  - [Build configuration](#build-configuration)
+  - [Loading controller code](#loading-controller-code)
+- [Middlewares](#middlewares)
+  - [Creating middlewares](#creating-middlewares)
+  - [Adding middlewares](#adding-middlewares)
+    - [Application wide](#application-wide)
+    - [Controller wide](#controller-wide)
+    - [Endpoint isolated](#endpoint-isolated)
+- [UseCases](#usecases)
+  - [Creating UseCases](#creating-usecases)
+  - [Interface implementations](#interface-implementations)
+    - [User entity](#user-entity)
+    - [MD5Authenticator](#md5authenticator)
+    - [InMemoryUserRespository](#inmemoryuserrespository)
+  - [Application integration](#application-integration)
+    - [Application level interfaces](#application-level-interfaces)
+    - [ContainerBuilder](#containerbuilder)
+    - [Controller](#controller)
+    - [Mixed approach](#mixed-approach)
+
+
 ## Getting started
+
+
 Create a new typescript enabled project.
 
 ```bash
@@ -625,12 +654,12 @@ export class UseCaseDispatcher {
     }
 }
 ```
-##### Pros:
+**Pros:**
  - **Flexibility:** Handles various UseCases dynamically,
 making it ideal for smaller applications or those with rapidly changing UseCase requirements.
 - **Unified Endpoint:** Simplifies routing logic by having a single endpoint for all UseCases.
 
-##### Cons:
+**Cons:**
 
 - **Complex Input Handling:** Requires additional logic to manage different input types and methods.
 Less Granular Control: Harder to enforce specific validation, authentication, and authorization rules per UseCase.
@@ -659,12 +688,12 @@ export class AuthenticationController {
     }
 }
 ```
-##### Pros:
+**Pros:**
 - **Granular Control:** Easier to apply specific validation, authentication, and authorization rules for each endpoint.
 - **Clear Structure:** Each endpoint has a clear purpose, making the codebase easier to understand and maintain.
 - **Simplified Error Handling:** More straightforward error handling tailored to each specific UseCase.
 
-##### Cons:
+**Cons:**
 - **Increased Boilerplate:** Requires more code to set up individual endpoints for each UseCase.
 - **Scalability Challenges:** Adding new UseCases involves creating new endpoints and potentially duplicating code.
 
