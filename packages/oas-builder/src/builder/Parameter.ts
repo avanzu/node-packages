@@ -1,4 +1,4 @@
-const { valueOf } = require('../util')
+import { valueOf } from '../util'
 
 const defaults = () => ({ in: 'query', schema: { type: 'string' } })
 const Schema = (state = {}) => ({
@@ -18,6 +18,8 @@ const Schema = (state = {}) => ({
     example: (example) => Schema({ ...state, example }),
 })
 
-exports.defaults = defaults
-exports.Schema = Schema
-exports.new = () => Schema(defaults())
+export default {
+    defaults,
+    Schema,
+    new: () => Schema(defaults())
+}

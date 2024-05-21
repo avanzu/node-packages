@@ -1,8 +1,8 @@
-const { valueOf } = require('../util')
-const { Map } = require('./Collections')
+import { valueOf } from '../util'
+import { Map } from './Collections'
 
 const defaults = () => ({ flows: Map() })
-const Schema = (state = {}) => ({
+const Schema = (state: any = {}) => ({
     valueOf: () => valueOf(state),
     name: (name) => Schema({ ...state, name }),
     typeApiKey: (name, place) => Schema({ ...state, type: 'apiKey', name, in: place }),
@@ -18,6 +18,8 @@ const Schema = (state = {}) => ({
     flow: (name, flow) => Schema({ ...state, flows: state.flows.add(name, flow) }),
 })
 
-exports.defaults = defaults
-exports.Schema = Schema
-exports.new = () => Schema(defaults())
+export default {
+    defaults,
+    Schema,
+    new: () => Schema(defaults())
+}

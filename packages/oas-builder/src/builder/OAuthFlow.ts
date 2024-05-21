@@ -1,8 +1,8 @@
-const { valueOf } = require('../util')
-const { Map } = require('./Collections')
+import { valueOf } from '../util'
+import { Map } from './Collections'
 
 const defaults = () => ({ scopes: Map() })
-const Schema = (state = {}) => ({
+const Schema = (state: any = {}) => ({
     valueOf: () => valueOf(state),
     authorizationUrl: (authorizationUrl) => Schema({ ...state, authorizationUrl }),
     tokenUrl: (tokenUrl) => Schema({ ...state, tokenUrl }),
@@ -10,7 +10,8 @@ const Schema = (state = {}) => ({
     scope: (name, value) =>
         Schema({ ...state, scopes: state.scopes.add(name, value ? value : name) }),
 })
-
-exports.defaults = defaults
-exports.Schema = Schema
-exports.new = () => Schema(defaults())
+export default {
+    defaults,
+    Schema,
+    new: () => Schema(defaults())
+}

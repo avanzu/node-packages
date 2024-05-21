@@ -1,5 +1,5 @@
-const Methods = require('./Methods')
-const { valueOf } = require('../util')
+import Methods from './Methods'
+import { valueOf } from '../util'
 
 const defaults = () => ({})
 const Schema = (state = {}) => ({
@@ -15,6 +15,8 @@ const Schema = (state = {}) => ({
     method: (method, value) => Schema({ ...state, [method]: value }),
 })
 
-exports.defaults = defaults
-exports.Schema = Schema
-exports.new = () => Schema(defaults())
+export default {
+    defaults,
+    Schema,
+    new: () => Schema(defaults())
+}

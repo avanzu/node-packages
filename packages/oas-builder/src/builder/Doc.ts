@@ -1,6 +1,6 @@
-const { valueOf } = require('../util')
-const collections = require('./Collections')
-const Components = require('./Components')
+import { valueOf } from '../util'
+import collections from './Collections'
+import Components from './Components'
 const defaults = () => ({
     openapi: '3.0.0',
     servers: collections.List(),
@@ -10,7 +10,7 @@ const defaults = () => ({
     tags: collections.List(),
 })
 
-const Schema = (state = {}) => ({
+const Schema = (state: any = {}) => ({
     valueOf: () => valueOf(state),
     raw: (raw) => Schema({ ...state, ...raw }),
     info: (info) => Schema({ ...state, info }),
@@ -44,6 +44,8 @@ const Schema = (state = {}) => ({
         Schema({ ...state, components: state.components.pathItem(name, pathItem) }),
 })
 
-exports.defaults = defaults
-exports.Schema = Schema
-exports.new = () => Schema(defaults())
+export default {
+    defaults,
+    Schema,
+    new: () => Schema(defaults())
+}

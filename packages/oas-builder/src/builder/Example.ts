@@ -1,7 +1,7 @@
-const { valueOf } = require('../util')
+import { valueOf } from '../util'
 
 const defaults = () => ({})
-const Schema = (state = {}) => ({
+const Schema = (state: any = {}) => ({
     valueOf: () => valueOf(state),
     summary: (summary) => Schema({ ...state, summary }),
     description: (...description) => Schema({ ...state, description: description.join('\n') }),
@@ -10,6 +10,8 @@ const Schema = (state = {}) => ({
     raw: (raw) => Schema({ ...state, ...raw }),
 })
 
-exports.defaults = defaults
-exports.Schema = Schema
-exports.new = () => Schema(defaults())
+export default {
+    defaults,
+    Schema,
+    new: () => Schema(defaults())
+}

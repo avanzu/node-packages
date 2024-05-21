@@ -1,4 +1,4 @@
-const { valueOf } = require('../util')
+import { valueOf } from '../util'
 
 const defaults = () => ({})
 const Schema = (state = {}) => ({
@@ -15,6 +15,8 @@ const Schema = (state = {}) => ({
     pathItem: (name) => Schema({ ...state, $ref: `#/components/pathItems/${name}` }),
 })
 
-exports.defaults = defaults
-exports.Schema = Schema
-exports.new = () => Schema(defaults())
+export default {
+    defaults,
+    Schema,
+    new: () => Schema(defaults())
+}

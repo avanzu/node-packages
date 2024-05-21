@@ -1,10 +1,10 @@
-const { valueOf, toValue } = require('../util')
-const { Map, List } = require('./Collections')
-const Status = require('./StatusCodes')
-const Body = require('./Body')
-const Parameter = require('./Parameter')
+import { valueOf, toValue } from '../util'
+import { Map, List } from './Collections'
+import Status from './StatusCodes'
+import Body from './Body'
+import Parameter from './Parameter'
 
-const { toPairs, pipe, pathOr, includes, curry } = require('ramda')
+import { toPairs, pipe, pathOr, includes, curry } from 'ramda'
 const propsOf = pipe(toValue, pathOr({}, ['properties']), toPairs)
 const isRequired = (name, schema) => pipe(toValue, pathOr([], ['required']), includes(name))(schema)
 
@@ -20,7 +20,7 @@ const addParam = (acc, param) => ({ ...acc, parameters: acc.parameters.add(param
 const defaultTo = (description) => Body.new().description(description)
 
 const defaults = () => ({ responses: Map(), parameters: List(), security: List(), tags: [] })
-const Schema = (state = {}) => ({
+const Schema = (state: any = {}) => ({
     valueOf: () => valueOf(state),
     raw: (raw) => Schema({ ...state, ...raw }),
     id: (operationId) => Schema({ ...state, operationId }),
@@ -87,6 +87,8 @@ const Schema = (state = {}) => ({
         Schema({ ...state, responses: state.responses.add(Status.GatewayTimeout, body) }),
 })
 
-exports.defaults = defaults
-exports.Schema = Schema
-exports.new = (summary, id) => Schema({ ...defaults(), summary, id })
+export default {
+    defaults,
+    Schema,
+    new: (summary?: any, id?: any) => Schema({ ...defaults(), summary, id }),
+}

@@ -1,7 +1,7 @@
-const { valueOf } = require('../util')
-const { Map } = require('./Collections')
+import { valueOf } from '../util'
+import { Map } from './Collections'
 
-const defaults = () => ({
+export const defaults = () => ({
     schemas: Map(),
     responses: Map(),
     parameters: Map(),
@@ -13,7 +13,7 @@ const defaults = () => ({
     callbacks: Map(),
     pathItems: Map(),
 })
-const Schema = (state = {}) => ({
+export const Schema = (state: any = {}) => ({
     valueOf: () => valueOf(state),
     schema: (name, schema) => Schema({ ...state, schemas: state.schemas.add(name, schema) }),
     response: (name, response) =>
@@ -33,6 +33,8 @@ const Schema = (state = {}) => ({
         Schema({ ...state, pathItems: state.pathItems.add(name, pathItem) }),
 })
 
-exports.defaults = defaults
-exports.Schema = Schema
-exports.new = () => Schema(defaults())
+export default {
+    defaults,
+    Schema,
+    new: () => Schema(defaults())
+}

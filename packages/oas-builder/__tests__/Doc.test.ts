@@ -1,4 +1,4 @@
-const { Doc } = require('../lib/builder')
+import  { Doc }  from '~/builder'
 
 describe('Doc', () => {
     test('Structure', () => {

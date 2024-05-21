@@ -1,6 +1,6 @@
-const OAS = require('..')
-const validator = require('oas-validator')
-const S = require('fluent-json-schema')
+import OAS from '~/index'
+import validator from 'oas-validator'
+import S from 'fluent-json-schema'
 
 describe('Static', () => {
     test('document', () => {

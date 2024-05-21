@@ -1,5 +1,5 @@
 'use strict'
-const lib = require('../package.json')
+import lib from '../package.json'
 
 describe('rhea-composable', () => {
     test('sanity', () => {
