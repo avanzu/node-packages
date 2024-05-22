@@ -10,6 +10,28 @@ const defaults = () => ({
     tags: collections.List(),
 })
 
+export type TDoc = {
+    valueOf: () => any
+    raw: (raw) => TDoc
+    info: (info) => TDoc
+    server: (server) => TDoc
+    security: (name, value) => TDoc
+    path: (name, path) => TDoc
+    paths: (paths) => TDoc
+    tag: (tag) => TDoc
+    tags: (tags) => TDoc
+    schema: (name, schema) => TDoc
+    response: (name, response) => TDoc
+    parameter: (name, parameter) => TDoc
+    example: (name, example) => TDoc
+    requestBody: (name, requestBody) => TDoc
+    header: (name, header) => TDoc
+    securityScheme: (name, securityScheme) => TDoc
+    link: (name, link) => TDoc
+    callback: (name, callback) => TDoc
+    pathItem: (name, pathItem) => TDoc
+}
+
 const Schema = (state: any = {}) => ({
     valueOf: () => valueOf(state),
     raw: (raw) => Schema({ ...state, ...raw }),
@@ -47,5 +69,5 @@ const Schema = (state: any = {}) => ({
 export default {
     defaults,
     Schema,
-    new: () => Schema(defaults())
+    new: (): TDoc => Schema(defaults()),
 }

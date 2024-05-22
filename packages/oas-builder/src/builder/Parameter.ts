@@ -1,6 +1,25 @@
 import { valueOf } from '../util'
 
 const defaults = () => ({ in: 'query', schema: { type: 'string' } })
+
+export type TParameter = {
+    valueOf: () => any,
+    raw: (raw) => TParameter,
+    name: (name) => TParameter,
+    description: (...description) => TParameter,
+    optional: () => TParameter,
+    required: () => TParameter,
+    deprecated: () => TParameter,
+    mandatory: (flag) => TParameter,
+    inQuery: () => TParameter,
+    inPath: () => TParameter,
+    inHeader: () => TParameter,
+    inCookie: () => TParameter,
+    schema: (schema) => TParameter,
+    example: (example) => TParameter,
+
+}
+
 const Schema = (state = {}) => ({
     valueOf: () => valueOf(state),
     raw: (raw) => Schema({ ...state, ...raw }),
@@ -18,8 +37,9 @@ const Schema = (state = {}) => ({
     example: (example) => Schema({ ...state, example }),
 })
 
+
 export default {
     defaults,
     Schema,
-    new: () => Schema(defaults())
+    new: () : TParameter => Schema(defaults())
 }

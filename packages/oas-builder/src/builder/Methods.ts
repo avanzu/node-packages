@@ -1,3 +1,5 @@
+import { defaults } from "./Components"
+
 export const GET = 'get'
 export const POST = 'post'
 export const PUT = 'put'
@@ -6,7 +8,7 @@ export const DELETE = 'delete'
 export const OPTIONS = 'options'
 export const HEAD = 'head'
 
-export default {
+export const HTTPVerbs = {
     GET,
     POST,
     PUT,
@@ -15,3 +17,6 @@ export default {
     OPTIONS,
     HEAD,
 }
+
+export type HTTPVerb = keyof typeof HTTPVerbs
+export default HTTPVerbs

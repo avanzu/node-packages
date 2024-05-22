@@ -1,6 +1,16 @@
 import { valueOf } from '../util'
 
 const defaults = () => ({})
+export type TExample = {
+    valueOf: () => any,
+    summary: (summary) => TExample,
+    description: (...description) => TExample,
+    value: (value) => TExample,
+    externalValue: (externalValue) => TExample,
+    raw: (raw) => TExample,
+
+}
+
 const Schema = (state: any = {}) => ({
     valueOf: () => valueOf(state),
     summary: (summary) => Schema({ ...state, summary }),
@@ -10,8 +20,9 @@ const Schema = (state: any = {}) => ({
     raw: (raw) => Schema({ ...state, ...raw }),
 })
 
+
 export default {
     defaults,
     Schema,
-    new: () => Schema(defaults())
+    new: (): TExample => Schema(defaults())
 }

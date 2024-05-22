@@ -18,7 +18,7 @@ export const BadGateway = '502'
 export const ServiceUnavailable = '503'
 export const GatewayTimeout = '504'
 
-export default {
+export const HTTPStatusCodes = {
     OK,
     Created,
     Accepted,
@@ -39,3 +39,6 @@ export default {
     ServiceUnavailable,
     GatewayTimeout,
 }
+export type HTTPStatusCode = keyof typeof HTTPStatusCodes
+
+export default HTTPStatusCodes

@@ -1,7 +1,7 @@
 import { valueOf, toValue } from '../util'
 import { Map, List } from './Collections'
 import Status from './StatusCodes'
-import Body from './Body'
+import Body, { TBody } from './Body'
 import Parameter from './Parameter'
 
 import { toPairs, pipe, pathOr, includes, curry } from 'ramda'
@@ -20,6 +20,55 @@ const addParam = (acc, param) => ({ ...acc, parameters: acc.parameters.add(param
 const defaultTo = (description) => Body.new().description(description)
 
 const defaults = () => ({ responses: Map(), parameters: List(), security: List(), tags: [] })
+
+export type TOperation = {
+    valueOf: () => any
+    raw: (raw) => TOperation
+    id: (operationId) => TOperation
+    security: (name, ...scopes) => TOperation
+    summary: (summary) => TOperation
+    description: (...description) => TOperation
+    deprecated: () => TOperation
+
+    tag: (tag) => TOperation
+    tags: (tags) => TOperation
+
+    request: (requestBody) => TOperation
+    responses: (responses) => TOperation
+    response: (status, body) => TOperation
+    parameter: (param) => TOperation
+
+    // shorthands
+    idPath: (name, description?: string, type?: string) => TOperation
+    query: (schema) => TOperation
+
+    default: (body ?: TBody) => TOperation
+
+    // response types
+    Ok: (body: TBody) => TOperation
+    Created: (body: TBody) => TOperation
+    Accepted: (body: TBody) => TOperation
+    NoContent: (body ?: TBody) => TOperation
+    ResetContent: (body ?: TBody) => TOperation
+    // 4xx range
+    BadRequest: (body ?: TBody) => TOperation
+    Unauthorized: (body ?: TBody) => TOperation
+    Forbidden: (body ?: TBody) => TOperation
+    NotFound: (body ?: TBody) => TOperation
+    MethodNotAllowed: (body ?: TBody) => TOperation
+    NotAcceptable: (body ?: TBody) => TOperation
+    RequestTimeout: (body ?: TBody) => TOperation
+    Conflict: (body ?: TBody) => TOperation
+    Unprocessable: (body ?: TBody) => TOperation
+
+    // 5xx range
+    GeneralError: (body ?: TBody) => TOperation
+    NotImplemented: (body ?: TBody) => TOperation
+    BadGateway: (body ?: TBody) => TOperation
+    ServiceUnavailable: (body ?: TBody) => TOperation
+    GatewayTimeout: (body ?: TBody) => TOperation
+}
+
 const Schema = (state: any = {}) => ({
     valueOf: () => valueOf(state),
     raw: (raw) => Schema({ ...state, ...raw }),
@@ -90,5 +139,5 @@ const Schema = (state: any = {}) => ({
 export default {
     defaults,
     Schema,
-    new: (summary?: any, id?: any) => Schema({ ...defaults(), summary, id }),
+    new: (summary?: any, id?: any): TOperation => Schema({ ...defaults(), summary, id }),
 }

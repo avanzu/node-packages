@@ -17,6 +17,27 @@ import _SecurityScheme from './SecurityScheme'
 import _OAuthFlow from './OAuthFlow'
 import _Example from './Example'
 
+export { type TDoc } from './Doc'
+export { type TList, type TMap } from './Collections'
+export { type TInfo } from './Info'
+export { type TServer } from './Server'
+export { type TPath } from './Path'
+export { type TOperation } from './Operation'
+export { type TBody } from './Body'
+export { type TContent } from './Content'
+export { type HTTPStatusCode } from './StatusCodes'
+export { type ContentType } from './MediaTypes'
+export { type HTTPVerb } from './Methods'
+export { type TParameter } from './Parameter'
+export { type THeader } from './Header'
+export { type TRef } from './Ref'
+export { type TTag } from './Tag'
+export { type TSecrityScheme } from './SecurityScheme'
+export { type TOAuthFlow } from './OAuthFlow'
+export { type TExample } from './Example'
+
+
+
 export const Doc = _Doc
 export const Collection = _Collection
 export const Info = _Info
@@ -35,8 +56,6 @@ export const Tag = _Tag
 export const SecurityScheme = _SecurityScheme
 export const OAuthFlow = _OAuthFlow
 export const Example = _Example
-
-
 
 export default {
     Doc,
@@ -57,5 +76,4 @@ export default {
     SecurityScheme,
     OAuthFlow,
     Example,
-
 }

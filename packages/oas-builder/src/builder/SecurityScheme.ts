@@ -2,6 +2,24 @@ import { valueOf } from '../util'
 import { Map } from './Collections'
 
 const defaults = () => ({ flows: Map() })
+
+export type TSecrityScheme = {
+    valueOf: () => any,
+    name: (name) => TSecrityScheme,
+    typeApiKey: (name, place) => TSecrityScheme,
+    typeHttp: (bearerFormat) => TSecrityScheme,
+    typeMTLS: () => TSecrityScheme,
+    typeOAuth2: () => TSecrityScheme,
+    typeOpenId: (openIdConnectUrl) => TSecrityScheme,
+    inQuery: () => TSecrityScheme,
+    inHeader: () => TSecrityScheme,
+    inCookie: () => TSecrityScheme,
+    scheme: (scheme) => TSecrityScheme,
+    bearerFormat: (bearerFormat) => TSecrityScheme,
+    flow: (name, flow) => TSecrityScheme,
+
+}
+
 const Schema = (state: any = {}) => ({
     valueOf: () => valueOf(state),
     name: (name) => Schema({ ...state, name }),
@@ -17,9 +35,8 @@ const Schema = (state: any = {}) => ({
     bearerFormat: (bearerFormat) => Schema({ ...state, bearerFormat }),
     flow: (name, flow) => Schema({ ...state, flows: state.flows.add(name, flow) }),
 })
-
 export default {
     defaults,
     Schema,
-    new: () => Schema(defaults())
+    new: (): TSecrityScheme => Schema(defaults())
 }

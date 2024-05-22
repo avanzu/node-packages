@@ -1,6 +1,19 @@
 import { valueOf } from '../util'
 
 const defaults = () => ({ schema: { type: 'string' } })
+
+export type THeader = {
+    valueOf: () => any,
+    raw: (raw) => THeader,
+    description: (...description) => THeader,
+    optional: () => THeader,
+    required: () => THeader,
+    deprecated: () => THeader,
+    schema: (schema) => THeader,
+    example: (example) => THeader,
+
+}
+
 const Schema = (state = {}) => ({
     valueOf: () => valueOf(state),
     raw: (raw) => Schema({ ...state, ...raw }),
@@ -11,8 +24,11 @@ const Schema = (state = {}) => ({
     schema: (schema) => Schema({ ...state, schema }),
     example: (example) => Schema({ ...state, example }),
 })
+
+
+
 export default {
     defaults,
     Schema,
-    new: () => Schema(defaults())
+    new: (): THeader => Schema(defaults())
 }

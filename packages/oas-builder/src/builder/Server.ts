@@ -1,6 +1,13 @@
 import { valueOf } from '../util'
 
 const defaults = () => ({})
+export type TServer = {
+    valueOf: () => any,
+    raw: (raw) => TServer,
+    url: (url) => TServer,
+    description: (...description) => TServer,
+
+}
 const Schema = (state = {}) => ({
     valueOf: () => valueOf(state),
     raw: (raw) => Schema({ ...state, ...raw }),
@@ -10,5 +17,5 @@ const Schema = (state = {}) => ({
 export default {
     defaults,
     Schema,
-    new: () => Schema(defaults())
+    new: (): TServer => Schema(defaults())
 }

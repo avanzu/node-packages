@@ -2,7 +2,17 @@ import { valueOf } from '../util'
 
 const defaults = () => ({ title: 'New project', version: '1.0.0' })
 
-const Schema = (state = {}) => ({
+export type TInfo = {
+    title: (title) => TInfo
+    summary: (summary) => TInfo
+    description: (...description) => TInfo
+    terms: (termsOfService) => TInfo
+    version: (version) => TInfo
+    valueOf: () => any,
+    raw: (raw) => TInfo
+}
+
+const Schema = (state = {}) : TInfo => ({
     title: (title) => Schema({ ...state, title }),
     summary: (summary) => Schema({ ...state, summary }),
     description: (...description) => Schema({ ...state, description: description.join('\n') }),
@@ -12,8 +22,9 @@ const Schema = (state = {}) => ({
     raw: (raw) => Schema({ ...state, ...raw }),
 })
 
+
 export default {
     defaults,
     Schema,
-    new: () => Schema(defaults())
+    new: () : TInfo => Schema(defaults())
 }

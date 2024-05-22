@@ -1,6 +1,20 @@
 import { valueOf } from '../util'
 
 const defaults = () => ({})
+export type TRef = {
+    valueOf: () => any,
+    to: ($ref) => TRef,
+    schema: (name) => TRef,
+    response: (name) => TRef,
+    param: (name) => TRef,
+    body: (name) => TRef,
+    header: (name) => TRef,
+    security: (name) => TRef,
+    link: (name) => TRef,
+    callback: (name) => TRef,
+    pathItem: (name) => TRef,
+
+}
 const Schema = (state = {}) => ({
     valueOf: () => valueOf(state),
     to: ($ref) => Schema({ ...state, $ref }),
@@ -14,9 +28,8 @@ const Schema = (state = {}) => ({
     callback: (name) => Schema({ ...state, $ref: `#/components/callbacks/${name}` }),
     pathItem: (name) => Schema({ ...state, $ref: `#/components/pathItems/${name}` }),
 })
-
 export default {
     defaults,
     Schema,
-    new: () => Schema(defaults())
+    new: (): TRef => Schema(defaults())
 }

@@ -1,5 +1,10 @@
 import { valueOf } from '../util'
+import { TBody } from './Body'
 import { Map } from './Collections'
+import { TExample } from './Example'
+import { THeader } from './Header'
+import { TParameter } from './Parameter'
+import { TSecrityScheme } from './SecurityScheme'
 
 export const defaults = () => ({
     schemas: Map(),
@@ -15,16 +20,16 @@ export const defaults = () => ({
 })
 export const Schema = (state: any = {}) => ({
     valueOf: () => valueOf(state),
-    schema: (name, schema) => Schema({ ...state, schemas: state.schemas.add(name, schema) }),
-    response: (name, response) =>
+    schema: (name: string, schema: any) => Schema({ ...state, schemas: state.schemas.add(name, schema) }),
+    response: (name, response: TBody) =>
         Schema({ ...state, responses: state.responses.add(name, response) }),
-    parameter: (name, parameter) =>
+    parameter: (name, parameter: TParameter) =>
         Schema({ ...state, parameters: state.parameters.add(name, parameter) }),
-    example: (name, example) => Schema({ ...state, examples: state.examples.add(name, example) }),
-    requestBody: (name, requestBody) =>
+    example: (name, example: TExample) => Schema({ ...state, examples: state.examples.add(name, example) }),
+    requestBody: (name, requestBody: TBody) =>
         Schema({ ...state, requestBodies: state.requestBodies.add(name, requestBody) }),
-    header: (name, header) => Schema({ ...state, headers: state.headers.add(name, header) }),
-    securityScheme: (name, securityScheme) =>
+    header: (name, header: THeader) => Schema({ ...state, headers: state.headers.add(name, header) }),
+    securityScheme: (name, securityScheme: TSecrityScheme) =>
         Schema({ ...state, securitySchemes: state.securitySchemes.add(name, securityScheme) }),
     link: (name, link) => Schema({ ...state, links: state.links.add(name, link) }),
     callback: (name, callback) =>
@@ -33,8 +38,10 @@ export const Schema = (state: any = {}) => ({
         Schema({ ...state, pathItems: state.pathItems.add(name, pathItem) }),
 })
 
+export type TComponents = ReturnType<typeof Schema>
+
 export default {
     defaults,
     Schema,
-    new: () => Schema(defaults())
+    new: (): TComponents => Schema(defaults())
 }

@@ -1,4 +1,26 @@
 import Builder from './builder'
+
+export {
+    TDoc,
+    TInfo,
+    TServer,
+    TPath,
+    TOperation,
+    TBody,
+    TContent,
+    TParameter,
+    THeader,
+    TRef,
+    TSecrityScheme,
+    TOAuthFlow,
+    TTag,
+    TExample,
+    TList,
+    StatusCodes,
+    MediaTypes,
+    HTTPVerb,
+} from './builder'
+
 export const document = Builder.Doc.new
 export const info = Builder.Info.new
 export const server = Builder.Server.new

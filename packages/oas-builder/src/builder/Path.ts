@@ -2,6 +2,19 @@ import Methods from './Methods'
 import { valueOf } from '../util'
 
 const defaults = () => ({})
+export type TPath = {
+    valueOf: () => any,
+    raw: (raw) => TPath,
+    summary: (summary) => TPath,
+    description: (...description) => TPath,
+    get: (value) => TPath,
+    put: (value) => TPath,
+    post: (value) => TPath,
+    delete: (value) => TPath,
+    patch: (value) => TPath,
+    method: (method, value) => TPath,
+
+}
 const Schema = (state = {}) => ({
     valueOf: () => valueOf(state),
     raw: (raw) => Schema({ ...state, ...raw }),
@@ -15,8 +28,9 @@ const Schema = (state = {}) => ({
     method: (method, value) => Schema({ ...state, [method]: value }),
 })
 
+
 export default {
     defaults,
     Schema,
-    new: () => Schema(defaults())
+    new: (): TPath => Schema(defaults())
 }
