@@ -4,6 +4,7 @@ import koaHelmet from 'koa-helmet'
 import { AppContainerBuilder } from './dependencyInjection'
 import { Application, Config, Container, Middleware } from './interfaces'
 import { scopeORM } from './middleware/scopeORM'
+import koaStatic from 'koa-static'
 
 export class AppKernel extends Kernel<Config, Application, Container> {
     protected createLogger(): Logger {
@@ -16,6 +17,6 @@ export class AppKernel extends Kernel<Config, Application, Container> {
     }
 
     protected middlewares(): Middleware[] {
-        return [scopeORM(), koaHelmet(), bodyParser(), authenticate()]
+        return [scopeORM(), koaStatic(this.options.get('publicRoot')), koaHelmet({ contentSecurityPolicy: undefined }), bodyParser(), authenticate()]
     }
 }

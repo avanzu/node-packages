@@ -9,6 +9,7 @@ export default {
     host: deferConfig(() => process.env.HOST || 'localhost'),
     port: deferConfig(() => process.env.PORT || 9090),
     namespace: deferConfig(() => process.env.NAMESPACE || null),
+    publicRoot: deferConfig(() => `${__dirname}/../public` ),
     logger: deferConfig(() => ({
         level: process.env.LOG_LEVEL || 'debug',
     })),
