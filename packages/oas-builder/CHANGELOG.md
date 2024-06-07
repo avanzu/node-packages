@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.1.0](https://github.com/avanzu/node-packages/compare/@avanzu/oas-builder@1.4.5...@avanzu/oas-builder@2.1.0) (2024-06-07)
+
+
+### Features
+
+* improves type definitions ([5ba3236](https://github.com/avanzu/node-packages/commit/5ba3236fd5c04c6c26f4519ecd0391acb6223474))
+
+
+
+
+
 ## [1.4.5](https://github.com/avanzu/node-packages/compare/@avanzu/oas-builder@1.4.4...@avanzu/oas-builder@1.4.5) (2024-05-20)
 
 
