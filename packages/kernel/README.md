@@ -2,8 +2,10 @@
 
 The package provides a robust foundation for creating scalable (micro-)services applications. It features a modular architecture, leveraging dependency injection for managing application components, and supporting middleware for handling HTTP requests and responses. The package is designed to promote clean, maintainable code and facilitate easy integration of additional functionality, making it ideal for building both simple and complex services.
 
-> **Attention:** If you are not interested in the introduction, feel free to use the [quickstart project](https://github.com/avanzu/kernel-basic) to get right into development.
->
+> [!TIP]
+> If you are not interested in the introduction, feel free to use the [quickstart project](https://github.com/avanzu/kernel-basic) to get right into development.
+
+
 - [Getting started](#getting-started)
   - [Create boilerplate code](#create-boilerplate-code)
 - [Refactoring: divide and conquer](#refactoring-divide-and-conquer)
@@ -323,7 +325,8 @@ Now let's add some scripts to your package.json to simplify the build process
     }
 }
 ```
-> **Attention:** Although being very convenient, you don't have to use path mappings if you want to avoid the additional tooling that is required in the build process.
+> [!NOTE]
+> Although being very convenient, you don't have to use path mappings if you want to avoid the additional tooling that is required in the build process.
 
 You should be able to divide an distribute the contents of our `index.ts` from [Getting started](#getting-started) into individual modules.
 
@@ -363,7 +366,8 @@ export function logRequests() : Middleware {
     }
 }
 ```
-> **Notice:** it is totally fine to use arrow functions instead of named ones if you prefer the syntax.<br/>However, named functions provide the additional benefit to have their names show up in the stack trace which makes debugging much easier.
+> [!NOTE]
+> it is totally fine to use arrow functions instead of named ones if you prefer the syntax.<br/>However, named functions provide the additional benefit to have their names show up in the stack trace which makes debugging much easier.
 
 ### Adding middlewares
 Since the server component is a koa application, you can use any pre made middleware from the koa ecosystem.
@@ -522,7 +526,8 @@ That's almost all we need to do in the domain layer.
 ### Interface implementations
 Now that we have declared our interfaces, we need to provide at least one concrete implementation in order to end up with a working login feature.
 
-> **Attention:** keep in mind, that the following implementations are kept extremely simple and only serve demonstrative purposes in context of this document.
+> [!WARNING]
+> keep in mind, that the following implementations are kept extremely simple and only serve demonstrative purposes in context of this document.
 
 #### User entity
 Since the `User` is apparently a concept that exists in the business domain, the concrete implementation of the interface also needs to exist in the domain layer, we could replace the interface with a concrete entity class.
