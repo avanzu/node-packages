@@ -49,4 +49,13 @@ export default {
             },
         })
     ),
+    pluginBaseDir: deferConfig(() => `${__dirname}/../dist/plugins`),
+    plugins: [
+        {
+            type: 'local',
+            modulePath: './localTest.js',
+            className: 'LocalTestPlugin',
+            options: {}
+        }
+    ]
 }

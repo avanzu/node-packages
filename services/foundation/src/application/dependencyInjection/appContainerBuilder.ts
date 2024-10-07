@@ -13,6 +13,7 @@ import { Cache, NoCacheDriver } from '~/domain/services/cache'
 import { Config, Container } from '../interfaces'
 import { AppService } from '../services/appService'
 import { ORMProvider } from './orm'
+import { ConfigBasedPluginRepository } from '~/infrastructure/pluginRepository'
 
 export class AppContainerBuilder implements Kernel.ContainerBuilder<Container> {
     protected logger: Kernel.Logger
@@ -34,6 +35,10 @@ export class AppContainerBuilder implements Kernel.ContainerBuilder<Container> {
         container.register('cacheDriver', asClass(NoCacheDriver))
         container.register('cache', aliasTo('appCache'))
         container.register('validator', asClass(Kernel.AJVValidator))
+
+        container.register('pluginRepository', asClass(ConfigBasedPluginRepository))
+        container.register('pluginManager', asClass(Kernel.PluginManager))
+        container.register('pluginRegistry', asClass(Kernel.PluginRegistry).inject(() => ({ baseDir: this.options.get('pluginBaseDir') })))
 
         this.registerUseCases(container)
     }

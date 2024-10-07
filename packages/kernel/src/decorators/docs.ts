@@ -35,7 +35,7 @@ export type Documentor = CustomDocumentor | GenricDocumentor
 export type RequestDefinition = Record<string, any>
 export type ResponseDefinition = Record<string, any>
 export type Responses = Partial<Record<StatusCodes, ResponseDefinition>>
-export type ErrorCodes = StatusCodes[]
+export type ErrorStatusCodes = StatusCodes[]
 
 export type ContractInfo = {
     description?: string
@@ -49,7 +49,7 @@ export type ContractDefinition = {
     request?: () => RequestDefinition
     response?: () => Responses
     errors?: () => Responses
-    errorCodes?: () => ErrorCodes
+    errorCodes?: () => ErrorStatusCodes
 }
 
 export type ApiDocsOpts = {
@@ -138,7 +138,8 @@ export function ErrorSchema(schema: any): MethodDecorator {
 export function getErrorSchema(target: Function, property: string | symbol) {
     return Reflect.getMetadata(ERR, target.prototype, property)
 }
-export function ErrorCodes(codes: ErrorCodes): MethodDecorator {
+
+export function ErrorStatusCodes(codes: ErrorStatusCodes): MethodDecorator {
     return function (target: Object, propertyKey: string | symbol) {
         Reflect.defineMetadata(CODES, codes, target, propertyKey)
     }

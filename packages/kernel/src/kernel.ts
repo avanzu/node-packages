@@ -39,6 +39,9 @@ export abstract class Kernel<
     public async boot(): Promise<void> {
         await this.buildContainer()
         await asyncInit(this.container)
+
+
+
         this.addMiddlewares()
         this.loadControllers()
     }
@@ -57,6 +60,7 @@ export abstract class Kernel<
     }
 
     public async shutdown(): Promise<void> {
+
         await asyncDispose(this.container)
 
         if (true === Boolean(this._server)) {

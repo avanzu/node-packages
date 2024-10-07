@@ -1,4 +1,4 @@
-import type { AuthenticatorOptions, ResourceDefinition, ResourceMap, ConfigOptions } from '@avanzu/kernel'
+import type { AuthenticatorOptions, ResourceDefinition, ResourceMap, ConfigOptions, PluginDefinition } from '@avanzu/kernel'
 import type { Options as MongoORM } from '@mikro-orm/mongodb'
 import type { Options as AJVOptions } from 'ajv'
 import type { RedisOptions } from 'ioredis'
@@ -18,4 +18,6 @@ export type ConfigValues = ConfigOptions<Resources> & {
     authentication: AuthenticatorOptions
     orm: MongoORM
     resources: Resources
+    pluginBaseDir: string
+    plugins: PluginDefinition[]
 }

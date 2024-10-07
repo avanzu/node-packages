@@ -27,6 +27,7 @@ export class AppController {
         context.body = { service, authUser: this.authUser }
     }
 
+    /*
     @Kernel.Get('/openapi.json')
     async apidocs(context: Context) {
         const info = await this.service.info()
@@ -39,4 +40,5 @@ export class AppController {
 
         context.body = generator.generate()
     }
+    */
 }
