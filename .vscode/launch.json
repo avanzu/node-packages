@@ -18,7 +18,12 @@
             "name": "Foundation (Launch)",
             "localRoot": "${workspaceFolder}/services/foundation",
             "cwd": "${workspaceFolder}/services/foundation",
-            "command" : "npm run dev"
+            "command" : "npm run dev",
+            "env": {
+                "MONGO_URL": "mongodb://localhost:27017",
+                "MONGO_PASSWD": "jHnaLFofRm6ZZdyQf8zo5CUf3SWK1GVh",
+                "MONGO_USER": "root"
+            }
         },
         {
             "type": "node-terminal",
