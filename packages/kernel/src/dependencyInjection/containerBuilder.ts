@@ -1,6 +1,13 @@
 import { asClass, type BuildResolverOptions } from 'awilix'
-import type { Container, ContainerBuilder, ContainerModule, ContainerModuleAware, EventHandlerSpec } from '~/interfaces'
+import type {
+    Container,
+    ContainerBuilder,
+    ContainerModule,
+    ContainerModuleAware,
+    EventHandlerSpec,
+} from '~/interfaces'
 import * as Bus from '../messageBus'
+import { getWithTags } from 'awilix-manager'
 
 export abstract class AbstractContainerBuilder<DIC extends Container>
     implements ContainerBuilder<DIC>, ContainerModuleAware
@@ -12,6 +19,7 @@ export abstract class AbstractContainerBuilder<DIC extends Container>
     }
 
     async build(container: DIC): Promise<void> {
+        this.registerMessageBus(container)
         this.buildMainContainer(container)
 
         for (let containerModule of this.getModules()) {
@@ -27,6 +35,20 @@ export abstract class AbstractContainerBuilder<DIC extends Container>
                 this.registerLazyHandler(container, spec, serviceKey)
             }
         }
+    }
+
+    protected registerMessageBus(container: DIC) {
+        const containerOptions: BuildResolverOptions<Bus.LocalMessageBus> = {
+            lifetime: 'SINGLETON',
+            asyncInit: 'initialize',
+            asyncDispose: 'dispose',
+        }
+
+        const resolver = asClass(Bus.LocalMessageBus, containerOptions).inject((container) => ({
+            eventHandlers: Object.values(getWithTags(container, [Bus.ContainerTags.EventHandler])),
+        }))
+
+        container.register('messageBus', resolver)
     }
 
     private registerLazyHandler(container: Container, spec: EventHandlerSpec, serviceKey: string) {
