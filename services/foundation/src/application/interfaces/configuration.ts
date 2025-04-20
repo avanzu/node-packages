@@ -1,4 +1,4 @@
-import type { AuthenticatorOptions, ResourceDefinition, ResourceMap, ConfigOptions, PluginDefinition } from '@avanzu/kernel'
+import type { AuthenticatorOptions, ConfigOptions, PluginDefinition } from '@avanzu/kernel'
 import type { Options as MongoORM } from '@mikro-orm/mongodb'
 import type { Options as AJVOptions } from 'ajv'
 import type { RedisOptions } from 'ioredis'
@@ -6,9 +6,9 @@ import type { LoggerOptions } from 'pino'
 
 // export type AuthenticationService = ResourceDefinition<'authentication'>
 
-export type Resources = ResourceMap<any>
 
-export type ConfigValues = ConfigOptions<Resources> & {
+
+export type ConfigValues = ConfigOptions & {
     host: string
     port: number
     publicRoot: string
@@ -17,7 +17,7 @@ export type ConfigValues = ConfigOptions<Resources> & {
     validation: AJVOptions
     authentication: AuthenticatorOptions
     orm: MongoORM
-    resources: Resources
+
     pluginBaseDir: string
     plugins: PluginDefinition[]
 }

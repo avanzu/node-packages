@@ -10,7 +10,7 @@ import { containerScope, errorHandler } from './middleware'
 import { authenticateAnonymous } from './middleware/authenticateAnonymous'
 
 export abstract class Kernel<
-    Config extends Types.Configuration,
+    Config extends Types.Configuration<Types.ConfigOptions>,
     App extends Types.App<any, any, any>,
     Container extends Types.Container,
 > {

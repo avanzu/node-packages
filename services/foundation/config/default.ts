@@ -1,7 +1,7 @@
 import { deferConfig } from 'config/defer'
 import { type Options as AJVOpts } from 'ajv'
-import type { AuthenticatorOptions, ResourceMap } from '@avanzu/kernel'
-import type { Resources } from '../src/application/interfaces'
+import type { AuthenticatorOptions } from '@avanzu/kernel'
+// import type { Resources } from '../src/application/interfaces'
 import type { Algorithm } from 'jsonwebtoken'
 import mikroOrm from './mikro-orm'
 
@@ -41,14 +41,14 @@ export default {
         })
     ),
     orm: deferConfig(() => mikroOrm),
-    resources: deferConfig(
-        (): Resources => ({
-            authentication: {
-                url: '',
-                auth: true,
-            },
-        })
-    ),
+    // resources: deferConfig(
+    //     (): Resources => ({
+    //         authentication: {
+    //             url: '',
+    //             auth: true,
+    //         },
+    //     })
+    // ),
     pluginBaseDir: deferConfig(() => `${__dirname}/../dist/plugins`),
     plugins: [
         {

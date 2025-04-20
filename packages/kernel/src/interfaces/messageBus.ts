@@ -12,6 +12,7 @@ export interface MessageBus {
     unsubscribeFromEvent(eventHandler: EventHandler<unknown>): void;
 }
 
+
 export interface EventHandler<Body, EventType = string> {
     eventName: EventType
     eventVersion: number

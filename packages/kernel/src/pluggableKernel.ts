@@ -20,9 +20,8 @@ export abstract class PluggableKernel<
 
     public async shutdown(): Promise<void> {
 
-        await this.plugins.invoke(new PluginHookContext('kernel.shutdown', this, {}))
-
-        await this.plugins.dispose()
+        await this.plugins?.invoke(new PluginHookContext('kernel.shutdown', this, {}))
+        await this.plugins?.dispose()
         await super.shutdown()
     }
 }

@@ -1,32 +1,18 @@
 import { asClass, type BuildResolverOptions } from 'awilix'
-import type { ContainerBuilder, Container, ContainerModule, EventHandlerSpec } from '~/interfaces'
+import type { Container, ContainerBuilder, ContainerModule, ContainerModuleAware, EventHandlerSpec } from '~/interfaces'
 import * as Bus from '../messageBus'
-import { getWithTags } from 'awilix-manager'
 
 export abstract class AbstractContainerBuilder<DIC extends Container>
-    implements ContainerBuilder<DIC>
+    implements ContainerBuilder<DIC>, ContainerModuleAware
 {
     protected abstract buildMainContainer(container: DIC): Promise<void>
 
-    protected getModules(): ContainerModule<any>[] {
+    getModules(): ContainerModule<any>[] {
         return []
     }
 
     async build(container: DIC): Promise<void> {
         this.buildMainContainer(container)
-
-        container.register(
-            'messageBus',
-            asClass(Bus.LocalMessageBus, {
-                lifetime: 'SINGLETON',
-                asyncInit: 'initialize',
-                asyncDispose: 'dispose',
-            }).inject((container) => ({
-                eventHandlers: Object.values(
-                    getWithTags(container, [Bus.ContainerTags.EventHandler])
-                ),
-            }))
-        )
 
         for (let containerModule of this.getModules()) {
             containerModule.configure(container)

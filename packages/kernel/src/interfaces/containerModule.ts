@@ -7,6 +7,11 @@ export type EventHandlerSpec = {
     eventVersion: number
     resolver: Resolver<EventHandler<any>>
 }
+
+export interface ContainerModuleAware {
+    getModules(): ContainerModule<any>[]
+}
+
 export interface ContainerModule<Exports extends {}, Imports extends AppServices = AppServices> {
     getName(): string
     configure(container: Container<Imports & Exports>): void
