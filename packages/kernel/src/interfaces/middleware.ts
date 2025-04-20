@@ -1,6 +1,6 @@
-import { Middleware as KoaMiddleware } from 'koa'
-import { AppState, AppContext } from './app'
-import { Container } from './container'
+import type { Middleware as KoaMiddleware } from 'koa'
+import type { AppState, AppContext } from './app'
+import type { Container } from './container'
 
 export interface AppMiddleware<
     DIC extends Container,

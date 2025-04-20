@@ -1,7 +1,5 @@
-import { AwilixContainer, asFunction } from "awilix";
-import { getWithTags } from "awilix-manager";
-import { Context, Middleware, Next } from "koa";
-import { USECASE_TAG } from "..";
+import { type AwilixContainer, asFunction } from "awilix";
+import type { Context, Middleware, Next } from "koa";
 
 export function containerScope(container: AwilixContainer) : Middleware {
     return function createRequestScope(context: Context, next: Next) {

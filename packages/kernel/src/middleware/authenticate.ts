@@ -1,5 +1,5 @@
 import { Next } from 'koa'
-import { AppContext, AppMiddleware, AppState, Container } from '../interfaces'
+import type { AppContext, AppMiddleware, AppState, Container } from '../interfaces'
 
 type Context = AppContext<Container, AppState<Container>>
 type Middleware = AppMiddleware<Container, AppState<Container>, Context>

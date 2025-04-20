@@ -1,5 +1,6 @@
 export * from './authentication'
 export * from './documentation'
 export * from './logging'
-export * from './validation'
+export * from './messageBus'
 export * from './plugins'
+export * from './validation'

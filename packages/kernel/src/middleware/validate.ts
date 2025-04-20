@@ -1,5 +1,5 @@
-import { Next } from 'koa'
-import { AppContext, AppMiddleware, AppState, Container, Schema } from '../interfaces'
+import type { Next } from 'koa'
+import type { AppContext, AppMiddleware, AppState, Container, Schema } from '../interfaces'
 import { ValidationError } from '~/errors'
 
 type Context = AppContext<Container, AppState<Container>>

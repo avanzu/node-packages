@@ -1,12 +1,15 @@
-import type { AwilixContainer, InjectorFunction, NameAndRegistrationPair, Resolver } from "awilix";
+import type { AwilixContainer, NameAndRegistrationPair, Resolver } from "awilix";
 import type { AuthUser } from "./app";
-import type { Validator } from "./validation";
 import type { Authenticator } from "./authenticator";
+import type { Validator } from "./validation";
+import type { MessageBus } from "./messageBus";
+
 
 export interface AppServices {
     authUser: AuthUser
     validator: Validator
     authenticator: Authenticator
+    messageBus: MessageBus
 }
 
 export interface Container<Services extends AppServices = AppServices> extends AwilixContainer<Services> {

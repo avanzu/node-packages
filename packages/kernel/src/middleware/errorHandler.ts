@@ -1,8 +1,7 @@
-import { ReasonPhrases, StatusCodes } from 'http-status-codes'
-import {  Next } from 'koa'
-import { Logger, AppContext, Container, AppState, AppMiddleware } from '../interfaces'
-import { getErrorView } from '..'
 import { asClass } from 'awilix'
+import type { Next } from 'koa'
+import { getErrorView } from '..'
+import type { AppContext, AppMiddleware, AppState, Container, Logger } from '../interfaces'
 
 type Context = AppContext<Container, AppState<Container>>
 type Middleware = AppMiddleware<Container, AppState<Container>, Context>
