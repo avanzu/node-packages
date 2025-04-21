@@ -28,7 +28,7 @@ export class AppContainerBuilder implements Kernel.ContainerBuilder<Container> {
         container.register('appService', asClass(AppService, { lifetime: 'SINGLETON' }))
         container.register('appLogger', asValue(this.logger))
         container.register('ajv', this.ajvSingleton())
-        // container.register('ORMProvider', this.ormSingleton())
+        container.register('ORMProvider', this.ormSingleton())
         container.register('authenticator', this.authenticatorSingleton())
         container.register('appConfig', asValue(this.options))
         container.register('appCache', asClass(Cache))

@@ -6,7 +6,7 @@ import { Application, Config, Container, Middleware } from './interfaces'
 import { scopeORM } from './middleware/scopeORM'
 import koaStatic from 'koa-static'
 
-export class AppKernel extends Kernel<Config, Application, Container> {
+export class AppKernel extends PluggableKernel<Config, Application, Container> {
     protected createLogger(): Logger {
         const loggerOptions = this.options.get('logger')
         return new PinoLogger(loggerOptions)
