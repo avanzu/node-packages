@@ -47,24 +47,24 @@ export class HttpClient {
         return this
     }
 
-    async get(url: string, options: HttpRequestOptions = {}) {
-        return this.request(url, { ...options, method: 'GET' })
+    async get<RES = any>(url: string, options: HttpRequestOptions = {}) :Promise<RES> {
+        return this.request<RES>(url, { ...options, method: 'GET' })
     }
 
-    async post(url: string, jsonBody: any, options: HttpRequestOptions = {}) {
+    async post<RES = any>(url: string, jsonBody: any, options: HttpRequestOptions = {}): Promise<RES> {
         const headers = { 'Content-Type': 'application/json', ...options.headers }
         const body = JSON.stringify(jsonBody)
-        return this.request(url, { ...options, method: 'POST', body, headers })
+        return this.request<RES>(url, { ...options, method: 'POST', body, headers })
     }
 
-    async put(url: string, jsonBody: any, options: HttpRequestOptions = {}) {
+    async put<RES = any>(url: string, jsonBody: any, options: HttpRequestOptions = {}): Promise<RES> {
         const headers = { 'Content-Type': 'application/json', ...options.headers }
         const body = JSON.stringify(jsonBody)
-        return this.request(url, { ...options, method: 'PUT', body, headers })
+        return this.request<RES>(url, { ...options, method: 'PUT', body, headers })
     }
 
-    async delete(url: string, options: HttpRequestOptions = {}) {
-        return this.request(url, { ...options, method: 'DELETE' })
+    async delete<RES = any>(url: string, options: HttpRequestOptions = {}): Promise<RES> {
+        return this.request<RES>(url, { ...options, method: 'DELETE' })
     }
 
     private async handleResponse(res: Response, url: string, method: string, stream?: boolean) {
