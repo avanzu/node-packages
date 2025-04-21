@@ -1,1 +1,0 @@
-# @avanzu/http-client
