@@ -2,7 +2,7 @@
 
 Central hub for all node packages in this monorepo.
 
-- 📦 [`@avanzu/kernel`](./kernel/getting-started.md)
+- 📦 [`@avanzu/kernel`](./kernel/1%20-%20Welcome/1-intro.md)
 - 🧪 Examples & Patterns
 - 🛠 Architecture Guidelines
 

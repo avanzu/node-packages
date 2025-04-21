@@ -21,7 +21,7 @@ export default function Home() {
             {siteConfig.tagline}
           </p>
           <div className={styles.buttons}>
-            <Link className={styles.primaryButton} to="/docs/kernel/welcome/intro">
+            <Link className={styles.primaryButton} to="/docs/kernel/Welcome/intro">
               Get Started
             </Link>
             <Link className={styles.secondaryButton} to="https://github.com/avanzu/node-packages">
