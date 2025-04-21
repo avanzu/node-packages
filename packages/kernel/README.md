@@ -8,8 +8,10 @@ The package provides a robust foundation for creating scalable (micro-)services 
 
 - [Getting started](#getting-started)
   - [Create boilerplate code](#create-boilerplate-code)
-- [Refactoring: divide and conquer](#refactoring-divide-and-conquer)
+- [Refactoring: divide and conquer (hexagonal style)](#refactoring-divide-and-conquer-hexagonal-style)
   - [Folder structure breakdown](#folder-structure-breakdown)
+- [Alternative: feature-sliced modularity](#alternative-feature-sliced-modularity)
+  - [integration with container modules](#integration-with-container-modules)
   - [Build configuration](#build-configuration)
   - [Loading controller code](#loading-controller-code)
 - [Middlewares](#middlewares)
@@ -127,11 +129,11 @@ For detailed instructions on how to register dependencies, see the [awilix](http
 
 import { asValue } from 'awilix'
 
-export class ContainerBuilder implements Kernel.ContainerBuilder<Container> {
+export class ContainerBuilder extends Kernel.AbstractContainerBuilder<Container> {
 
     constructor(protected options: Config, protected logger: Kernel.Logger) {}
 
-    async build(container: Container): Promise<void> {
+    async buildMainContainer(container: Container): Promise<void> {
         // register dependencies as usual in awilix
         container.register('appLogger', asValue(this.logger))
         container.register('appConfig', asValue(this.options))
@@ -246,7 +248,7 @@ curl -v localhost:3000/health
 * Connection #0 to host localhost left intact
 OK
 ```
-## Refactoring: divide and conquer
+## Refactoring: divide and conquer (hexagonal style)
 In order to provide a maintainable codebase, the recommended structure for your application would look something like this.
 
 _Feel free to modify file and folder names to your liking and/or naming conventions._
@@ -295,6 +297,73 @@ Inside of the sources folder, we organize horizontally in terms of abstraction l
 - `application/` - contains application specific code like controllers, middlewares and the container builder.<br/>Here you will wire the abstractions of the domain layer with the concrete implementations of the infrastructure layer.
   - `kernel.ts` - your application kernel that manages the application lifecycle.
 - `main.ts` - the entrypoint of your application that loads the configuration, initializes and runs the kernel.
+
+## Alternative: feature-sliced modularity
+As an alternative structure and philosophy, your application can be organized around vertically sliced features (or "modules"), which aim to keep all related concerns together — rather than scattering them across architectural layers.
+
+```
+myproject/
+    src/
+        main.ts
+        application/
+            kernel.ts
+            controllers/
+            dependencyInjection/
+                containerBuilder.ts
+                index.ts
+        features/
+            myfeature/
+                entities/
+                infrastructure/
+                useCases/
+                module.ts
+```
+### integration with container modules
+To plug a feature slice into your application, define a `ContainerModule`.
+```ts
+// myproject/src/features/myfeature/module.ts
+import * as Kernel from '@avanzu/kernel'
+// declare which dependencies will be registered in the application container
+export type MyFeatureExports = {}
+// declare whih dependencies are expected to be available in the application container
+export type MyFeatureImports = {}
+
+export class MyFeatureContainerModule implements Kernel.ContainerModule<MyFeatureExports, MyFeatureImports> {
+
+    getName(): string {
+        // make sure to return a unique name.
+        // Be cautious around bundlers which will often rename classes
+        return this.constructor.name
+    }
+
+    configure(container: Kernel.Container<MyFeatureExports & MyFeatureImports>) : void {
+        // register your exports
+    }
+
+    getEventhandlers(): Kernel.EventHandlerSpec[] {
+        return []
+    }
+}
+
+```
+Then, register the module in your application's container builder:
+```ts
+// myproject/src/application/dependencyInjection/containerBuilder.ts
+
+import { MyFeatureContainerModule } from '~/features/myfeature'
+
+export class ContainerBuilder extends Kernel.AbstractContainerBuilder<Container> {
+
+    getModules(): ContainerModule<any> {
+        return [ new MyFeatureContainerModule() ]
+    }
+
+}
+```
+>[!IMPORTANT]
+>The examples in later sections may use a hexagonal layout with distinct `domain`, and `infrastructure` layers. If you prefer feature slices, you can embed those same layers within each feature instead — maintaining the same separation of concerns, but scoped locally.
+>
+>The kernel remains agnostic to either approach.
 
 ### Build configuration
 With this setup, the `tsconfig.json` needs some adjustments.
