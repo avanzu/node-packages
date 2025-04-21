@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.4.6](https://github.com/avanzu/node-packages/compare/@avanzu/cli@1.4.5...@avanzu/cli@1.4.6) (2025-04-21)
+
+
+### Bug Fixes
+
+* removes invalid export ([b24c7d0](https://github.com/avanzu/node-packages/commit/b24c7d00e73e65105ad2a3440f63cae1d097e7e7))
+
+
+
+
+
 ## [1.4.5](https://github.com/avanzu/node-packages/compare/@avanzu/cli@1.4.4...@avanzu/cli@1.4.5) (2025-04-21)
 
 **Note:** Version bump only for package @avanzu/cli
