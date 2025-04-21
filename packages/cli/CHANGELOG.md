@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.4.5](https://github.com/avanzu/node-packages/compare/@avanzu/cli@1.4.4...@avanzu/cli@1.4.5) (2025-04-21)
+
+**Note:** Version bump only for package @avanzu/cli
+
+
+
+
+
 ## [1.4.4](https://github.com/avanzu/node-packages/compare/@avanzu/cli@1.4.3...@avanzu/cli@1.4.4) (2024-06-07)
 
 **Note:** Version bump only for package @avanzu/cli

@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.5.0](https://github.com/avanzu/node-packages/compare/@avanzu/kernel@1.4.4...@avanzu/kernel@1.5.0) (2025-04-21)
+
+
+### Features
+
+* adds container modules ([9927acb](https://github.com/avanzu/node-packages/commit/9927acb02b73d530cf974179c0d2f3e64b630270))
+* adds decorator based documentation ([a9e309b](https://github.com/avanzu/node-packages/commit/a9e309b6900a7facbc91bb2476708e7ed820ddf6))
+* introduces container modules and message bus ([35fd18d](https://github.com/avanzu/node-packages/commit/35fd18d2cc0a460b63d8cf220553048c7ec7694c))
+* introduces optional plugin system ([0e0e0b3](https://github.com/avanzu/node-packages/commit/0e0e0b31068d3b279b77be2d22e4041f28795f11))
+* resolves messageBus into kernel core component ([021ce14](https://github.com/avanzu/node-packages/commit/021ce148d3f5af47ceea8d96a0b914cd6f222dc8))
+
+
+
+
+
 ## [1.4.4](https://github.com/avanzu/node-packages/compare/@avanzu/kernel@1.4.3...@avanzu/kernel@1.4.4) (2024-06-07)
 
 **Note:** Version bump only for package @avanzu/kernel

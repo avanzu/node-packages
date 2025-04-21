@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.5.0](https://github.com/avanzu/node-packages/compare/@avanzu/foundation@1.4.4...@avanzu/foundation@1.5.0) (2025-04-21)
+
+
+### Features
+
+* adds container modules ([9927acb](https://github.com/avanzu/node-packages/commit/9927acb02b73d530cf974179c0d2f3e64b630270))
+* introduces optional plugin system ([0e0e0b3](https://github.com/avanzu/node-packages/commit/0e0e0b31068d3b279b77be2d22e4041f28795f11))
+
+
+
+
+
 ## [1.4.4](https://github.com/avanzu/node-packages/compare/@avanzu/foundation@1.4.3...@avanzu/foundation@1.4.4) (2024-06-07)
 
 **Note:** Version bump only for package @avanzu/foundation
