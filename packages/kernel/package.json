@@ -40,6 +40,7 @@
     },
     "dependencies": {
         "@avanzu/decorators": "^1.2.2",
+        "@avanzu/http-client": "^1.1.1",
         "@avanzu/oas-builder": "^2.1.0",
         "awilix": "^10.0.2",
         "awilix-manager": "^5.2.1",

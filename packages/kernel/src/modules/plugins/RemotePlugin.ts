@@ -1,6 +1,7 @@
 import { PluginHookContext } from './HookContext'
 import type { Plugin, RemotePluginDefinition } from './plugin'
-import axios from 'axios'
+// import axios from 'axios'
+import { HttpClient } from '@avanzu/http-client'
 import * as crypto from 'crypto'
 import { Type, Static } from '@sinclair/typebox'
 import type { Validator } from '~/interfaces'
@@ -38,22 +39,23 @@ export class RemotePlugin implements Plugin {
 
 
         try {
-            const url = new URL(endpoint, this.definition.baseURL)
+            const client = new HttpClient({baseUrl: this.definition.baseURL})
+            // const url = new URL(endpoint, this.definition.baseURL)
             const serializedContext = context.toJSON()
-            const response = await axios.post<PluginResponse>(url.toString(), serializedContext)
+            const response = await client.post<PluginResponse>(endpoint, serializedContext)
 
             const validation = await this.validator.validate(PluginResponseSchema, response.data)
             if(false === validation.isValid){
                 throw new ValidationError(validation.errors)
             }
 
-            const { signature, ...data } = response.data
+            const { signature, ...data } = response
 
             if (false === this.isSignatureValid(data, signature)) {
                 throw new Error('Invalid signature; data may have been tampered with.')
             }
 
-            context.applyDTO(response.data)
+            context.applyDTO(response)
 
             return context
 
