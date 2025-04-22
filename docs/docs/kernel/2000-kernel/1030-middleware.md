@@ -1,3 +1,8 @@
+---
+
+title: Middleware
+sidebar_label: Middleware
+---
 Middleware functions in web applications handle requests and responses, performing tasks like logging, authentication, and validation. They enhance modularity and reusability, allowing developers to easily add or modify functionality.
 
 ### Creating middlewares

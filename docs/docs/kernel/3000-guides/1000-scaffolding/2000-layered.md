@@ -1,6 +1,6 @@
 ---
-title: Hexagonal style
-sidebar_label: Hexagonal style
+title: Layered style
+sidebar_label: Layered style
 ---
 If you prefer to organize your codebase in a more traditional, layered style, the recommended structure would look something like this
 ```
