@@ -7,7 +7,7 @@ Middleware functions in web applications handle requests and responses, performi
 
 ### Creating middlewares
 In order to create a custom middlware, you can mainly follow the [koa](https://koajs.com/) documentation.
-However, instead of using the types provided by koa, you will mostly use the shorthand declarations from [getting started](#getting-started). Additionally, you will have access to your DIC in the `scope` property in the context object.
+However, instead of using the types provided by koa, you will mostly use the shorthand declarations from [owning your tpyes](./1001-owning-your-types.md). Additionally, you will have access to your DIC in the `scope` property in the context object.
 
 Assuming that you have your interfaces moved into `./src/application/interfaces`, lets build a middleware that logs incoming requests.
 
