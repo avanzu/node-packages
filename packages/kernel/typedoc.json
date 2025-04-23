@@ -1,0 +1,11 @@
+{
+    "entryPoints": ["src/index.ts"],
+    "plugin": ["typedoc-plugin-markdown"],
+    "out": "../../docs/docs/kernel/api",
+    "entryPointStrategy": "expand",
+    "excludePrivate": true,
+    "excludeProtected": false,
+    "excludeInternal": true,
+    "cleanOutputDir": true,
+    "readme": "none"
+  }

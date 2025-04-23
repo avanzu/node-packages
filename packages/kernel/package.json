@@ -29,14 +29,16 @@
         "build": "tsc -p tsconfig.build.json",
         "postbuild": "tsc-alias -p tsconfig.build.json",
         "prebuild": "rimraf ./dist",
-        "prepublish": "npm run build"
+        "prepublish": "npm run build",
+        "typedoc": "typedoc"
     },
     "bugs": {
         "url": "https://github.com/avanzu/node-packages/issues"
     },
     "devDependencies": {
         "tsc-alias": "^1.8.8",
-        "typedoc": "^0.25.13"
+        "typedoc": "^0.28.3",
+        "typedoc-plugin-markdown": "4.6.3"
     },
     "dependencies": {
         "@avanzu/decorators": "^1.2.2",
