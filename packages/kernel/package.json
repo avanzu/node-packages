@@ -1,6 +1,6 @@
 {
     "name": "@avanzu/kernel",
-    "version": "1.5.1",
+    "version": "1.6.0",
     "description": "Robust foundation for creating scalable (micro-)services applications",
     "author": "Marc Bach <mail@avanzu.de>",
     "homepage": "https://github.com/avanzu/node-packages/tree/main/packages/kernel#readme",
@@ -42,7 +42,7 @@
     },
     "dependencies": {
         "@avanzu/decorators": "^1.2.2",
-        "@avanzu/http-client": "^1.1.1",
+        "@avanzu/http-client": "^1.1.2",
         "@avanzu/oas-builder": "^2.1.0",
         "awilix": "^10.0.2",
         "awilix-manager": "^5.2.1",

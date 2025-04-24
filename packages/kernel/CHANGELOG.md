@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.6.0](https://github.com/avanzu/node-packages/compare/@avanzu/kernel@1.5.1...@avanzu/kernel@1.6.0) (2025-04-24)
+
+
+### Bug Fixes
+
+* adds missing barrel exports ([1011646](https://github.com/avanzu/node-packages/commit/1011646995197af92f2569e0a633d09718d6639c))
+
+
+### Features
+
+* replaces axios with @avanzu/httpkernel ([d9aae80](https://github.com/avanzu/node-packages/commit/d9aae8045c0509b92ef3f406dd2481c342b4148f))
+
+
+
+
+
 ## [1.5.1](https://github.com/avanzu/node-packages/compare/@avanzu/kernel@1.5.0...@avanzu/kernel@1.5.1) (2025-04-21)
 
 
