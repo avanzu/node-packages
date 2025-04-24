@@ -7,7 +7,7 @@ export type DomainEvent<Body, EventType = string> = {
 export interface MessageBus {
     initialize(): Promise<void>;
     dispose(): Promise<void>;
-    publishEvent(event: DomainEvent<Body>): Promise<boolean>;
+    publishEvent<Body = unknown>(event: DomainEvent<Body>): Promise<boolean>;
     subscribeToEvent(eventHandler: EventHandler<unknown>): void;
     unsubscribeFromEvent(eventHandler: EventHandler<unknown>): void;
 }
