@@ -25,6 +25,9 @@
   "scripts": {
     "version": "lerna version  -y --conventional-commits --loglevel verbose",
     "publish": "lerna publish from-package -y --loglevel verbose -- --access public",
+    "docs:start": "npm start --prefix=docs",
+    "docs:build": "npm run build --prefix=docs",
+    "docs:deploy": "npm run deploy --prefix=docs",
     "test": "lerna run test",
     "build": "lerna run build",
     "docker:up": "docker compose -f docker-compose.yml -f docker/override.yml -f docker/service-common.yml --env-file=.env up",
