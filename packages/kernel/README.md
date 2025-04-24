@@ -10,6 +10,8 @@ Designed for structure, composability, and maintainability—without sacrificing
 - 🧩 Plugin-ready via method hooks
 - 📄 OpenAPI-ready controllers (optional)
 
+> 🧓 **Siggy says:** “It’s boring and predictable as heck… and that’s how we like it.”
+
 ## Installation
 
 ```bash
@@ -52,4 +54,7 @@ import { environments } from './configuration'
 Comprehensive documentation and integration guides available at:
 
 👉 [avanzu.github.io](https://avanzu.github.io/node-packages/docs/kernel/welcome/index)
+
+
+
 
