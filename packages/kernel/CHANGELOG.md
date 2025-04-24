@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.6.1](https://github.com/avanzu/node-packages/compare/@avanzu/kernel@1.6.0...@avanzu/kernel@1.6.1) (2025-04-24)
+
+
+### Bug Fixes
+
+* adds missing generic to publishEvent method ([3a90c4e](https://github.com/avanzu/node-packages/commit/3a90c4ede4aac67131e095a7a8ed1a43a5e87796))
+
+
+
+
+
 # [1.6.0](https://github.com/avanzu/node-packages/compare/@avanzu/kernel@1.5.1...@avanzu/kernel@1.6.0) (2025-04-24)
 
 
