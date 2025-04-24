@@ -1,3 +1,6 @@
+/**
+ * @module Kernel
+ */
 import { createContainer } from 'awilix'
 import { asyncDispose, asyncInit } from 'awilix-manager'
 import Koa from 'koa'
@@ -9,6 +12,11 @@ import * as Types from './interfaces'
 import { containerScope, errorHandler } from './middleware'
 import { authenticateAnonymous } from './middleware/authenticateAnonymous'
 
+/**
+ * The kernel class is the orchestration layer of your application.
+ * It serves as the entry point that initializes the container, prepares the Koa application, wires up middleware, and loads your controller routes.
+ *
+ */
 export abstract class Kernel<
     Config extends Types.Configuration<Types.ConfigOptions>,
     App extends Types.App<any, any, any>,

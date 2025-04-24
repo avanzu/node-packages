@@ -1,3 +1,6 @@
+/**
+ * @module Decorators
+ */
 export * from './util'
 export * from './docs'
 export * from './presentation'

@@ -1,3 +1,4 @@
+
 import 'reflect-metadata'
 import type { TPath } from '@avanzu/oas-builder'
 import type { Endpoint, MountPoint } from './routing'
@@ -19,9 +20,7 @@ export type DocumentorContext = {
     opts: ApiDocsOpts
     container: Container
 }
-/**
- * @namespace Decorators.Documentation
- */
+
 export type CustomDocumentor<Controller = unknown> = {
     [Method in keyof Controller]?: (context: DocumentorContext) => EndpointInfo
 } & {
@@ -74,7 +73,9 @@ export function ApiDocs(opts: ApiDocsOpts): ClassDecorator {
         Reflect.defineMetadata(APIDOCS, opts, target)
     }
 }
-
+/**
+ * @internal
+ */
 export function getApiDocs(target: Function): ApiDocsOpts {
     return Reflect.hasMetadata(APIDOCS, target) ? Reflect.getMetadata(APIDOCS, target) : null
 }
@@ -97,7 +98,9 @@ export function ParamSchema(params: Record<string, any>): MethodDecorator {
         Reflect.defineMetadata(PARAMS, params, target, propertyKey)
     }
 }
-
+/**
+ * @internal
+ */
 export function getParamSchema(target: Function, property: string | symbol) {
     return Reflect.getMetadata(PARAMS, target.prototype, property)
 }
@@ -107,7 +110,9 @@ export function QuerySchema(params: () => Record<string, any>): MethodDecorator 
         Reflect.defineMetadata(QUERY, params, target, propertyKey)
     }
 }
-
+/**
+ * @internal
+ */
 export function getQuerySchema(target: Function, property: string | symbol) {
     return Reflect.getMetadata(QUERY, target.prototype, property)
 }
@@ -117,7 +122,9 @@ export function RequestSchema(schema: any): MethodDecorator {
         Reflect.defineMetadata(REQ, schema, target, propertyKey)
     }
 }
-
+/**
+ * @internal
+ */
 export function getRequestSchema(target: Function, property: string | symbol) {
     return Reflect.getMetadata(REQ, target.prototype, property)
 }
@@ -127,7 +134,9 @@ export function ResponseSchema(schema: any): MethodDecorator {
         Reflect.defineMetadata(RES, schema, target, propertyKey)
     }
 }
-
+/**
+ * @internal
+ */
 export function getResponseSchema(target: Function, property: string | symbol) {
     return Reflect.getMetadata(RES, target.prototype, property)
 }
@@ -137,7 +146,9 @@ export function ErrorSchema(schema: any): MethodDecorator {
         Reflect.defineMetadata(ERR, schema, target, propertyKey)
     }
 }
-
+/**
+ * @internal
+ */
 export function getErrorSchema(target: Function, property: string | symbol) {
     return Reflect.getMetadata(ERR, target.prototype, property)
 }
@@ -147,7 +158,9 @@ export function ErrorStatusCodes(codes: ErrorStatusCodes): MethodDecorator {
         Reflect.defineMetadata(CODES, codes, target, propertyKey)
     }
 }
-
+/**
+ * @internal
+ */
 export function getErrorCodes(target: Function, property: string | symbol) {
     return Reflect.getMetadata(CODES, target.prototype, property)
 }
@@ -157,6 +170,9 @@ export function Info(info: ContractInfo): MethodDecorator {
         Reflect.defineMetadata(INFO, info, target, propertyKey)
     }
 }
+/**
+ * @internal
+ */
 export function getInfo(target: Function, property: string | symbol) {
     return Reflect.getMetadata(INFO, target.prototype, property)
 }

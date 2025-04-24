@@ -1,7 +1,13 @@
+/**
+ * @module Kernel
+ */
 import { Kernel } from './kernel'
 import * as Types from './interfaces'
 import { PluginHookContext, PluginManager } from './modules'
 
+/**
+ * @experimental
+ */
 export abstract class PluggableKernel<
     Config extends Types.Configuration,
     App extends Types.App<any, any, any>,

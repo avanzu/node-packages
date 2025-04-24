@@ -1,10 +1,13 @@
 {
-    "entryPoints": ["src/index.ts"],
+    "entryPoints": ["src"],
+    "entryPointStrategy": "expand",
     "out": "../../docs/static/api/kernel",
     "excludePrivate": true,
     "excludeProtected": false,
     "excludeInternal": true,
+    "excludeExternals": true,
     "cleanOutputDir": true,
+    "disableSources": true,
     "readme": "none",
     "jsDocCompatibility": true
   }

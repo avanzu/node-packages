@@ -1,3 +1,4 @@
+
 import { Next } from 'koa'
 import Router from 'koa-router'
 import 'reflect-metadata'
@@ -67,6 +68,9 @@ export function All(route: string = '/', ...middlewares: Middleware[]): MethodDe
     return Route('all', route, middlewares)
 }
 
+/**
+ * @internal
+ */
 export function getControllers() {
     return Array.from(controllerMap)
 }
@@ -87,6 +91,9 @@ export type MountPoint = {
     endpoints: Endpoint[]
 }
 
+/**
+ * @internal
+ */
 export function getMountPoints(target: Function) {
     const proto = target.prototype
     const ctor = proto.constructor
@@ -135,7 +142,9 @@ export function getMountPoints(target: Function) {
 
     return mount
 }
-
+/**
+ * @internal
+ */
 export function mountControllers(globalPrefix?: string): Router {
     const root = new Router({ prefix: globalPrefix })
     for (const controller of getControllers()) {

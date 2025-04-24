@@ -1,3 +1,4 @@
+
 import { Constructor, isClass } from './util'
 import * as Views from '../presentation'
 
@@ -9,7 +10,9 @@ export function ErrorPresenter(): ClassDecorator {
         if (isClass(target)) views.set(ERROR_VIEW, target)
     }
 }
-
+/**
+ * @internal
+ */
 export function getErrorView(): Constructor<Views.ErrorView> {
     return views.get(ERROR_VIEW)
 }
