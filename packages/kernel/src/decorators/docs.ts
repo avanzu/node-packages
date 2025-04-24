@@ -6,6 +6,7 @@ import type { Constructor } from './util'
 import { StatusCodes } from 'http-status-codes'
 import { Container } from '..'
 
+
 export type EndpointInfo = {
     route: string
     path: TPath
@@ -18,7 +19,9 @@ export type DocumentorContext = {
     opts: ApiDocsOpts
     container: Container
 }
-
+/**
+ * @namespace Decorators.Documentation
+ */
 export type CustomDocumentor<Controller = unknown> = {
     [Method in keyof Controller]?: (context: DocumentorContext) => EndpointInfo
 } & {
