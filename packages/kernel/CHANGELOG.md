@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.6.2](https://github.com/avanzu/node-packages/compare/@avanzu/kernel@1.6.1...@avanzu/kernel@1.6.2) (2025-05-08)
+
+
+### Bug Fixes
+
+* renames generic type Body to avoid conflict with ambient type ([556461d](https://github.com/avanzu/node-packages/commit/556461d4be5a0d9c60490245a37816b40ecacc9d))
+
+
+
+
+
 ## [1.6.1](https://github.com/avanzu/node-packages/compare/@avanzu/kernel@1.6.0...@avanzu/kernel@1.6.1) (2025-04-24)
 
 
