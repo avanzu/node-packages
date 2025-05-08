@@ -1,6 +1,6 @@
 import { Container, DomainEvent, EventHandler, EventHandlerSpec, Logger, MessageBus } from "~/interfaces"
 
-export class LazyEventHandler<Body> implements EventHandler<Body> {
+export class LazyEventHandler<EventBody> implements EventHandler<EventBody> {
     private messageBus!: MessageBus
 
     constructor(
@@ -18,8 +18,8 @@ export class LazyEventHandler<Body> implements EventHandler<Body> {
     usingMessageBus(owner: MessageBus): void {
         this.messageBus = owner
     }
-    async handleEvent(event: DomainEvent<Body>): Promise<void> {
-        const actualHandler = this.container.resolve<EventHandler<Body>>(this.serviceKey)
+    async handleEvent(event: DomainEvent<EventBody>): Promise<void> {
+        const actualHandler = this.container.resolve<EventHandler<EventBody>>(this.serviceKey)
         actualHandler.usingMessageBus(this.messageBus)
         await actualHandler.handleEvent(event)
     }
@@ -40,7 +40,7 @@ export class LocalMessageBus implements MessageBus {
     async initialize(): Promise<void> {}
     async dispose(): Promise<void> {}
 
-    async publishEvent<Body = unknown>(event: DomainEvent<Body>): Promise<boolean> {
+    async publishEvent<EventBody = unknown>(event: DomainEvent<EventBody>): Promise<boolean> {
         const versionedHandlers = this.eventHandlers.get(event.name)?.get(event.version)
         const eventInfo = { eventName: event.name, eventVersion: event.version }
 
