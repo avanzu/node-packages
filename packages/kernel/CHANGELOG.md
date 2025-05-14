@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.7.0](https://github.com/avanzu/node-packages/compare/@avanzu/kernel@1.6.2...@avanzu/kernel@1.7.0) (2025-05-14)
+
+
+### Features
+
+* adds route naming and name based url generation ([afd483e](https://github.com/avanzu/node-packages/commit/afd483e3c6aeb0cf9ad4aa4070409b02d5860e12))
+
+
+
+
+
 ## [1.6.2](https://github.com/avanzu/node-packages/compare/@avanzu/kernel@1.6.1...@avanzu/kernel@1.6.2) (2025-05-08)
 
 

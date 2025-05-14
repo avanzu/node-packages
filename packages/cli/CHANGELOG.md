@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.5.0](https://github.com/avanzu/node-packages/compare/@avanzu/cli@1.4.9...@avanzu/cli@1.5.0) (2025-05-14)
+
+
+### Features
+
+* adds route naming and name based url generation ([afd483e](https://github.com/avanzu/node-packages/commit/afd483e3c6aeb0cf9ad4aa4070409b02d5860e12))
+
+
+
+
+
 ## [1.4.9](https://github.com/avanzu/node-packages/compare/@avanzu/cli@1.4.8...@avanzu/cli@1.4.9) (2025-05-08)
 
 **Note:** Version bump only for package @avanzu/cli
