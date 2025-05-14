@@ -7,6 +7,8 @@ import { AppKernel } from '~/application/appKernel'
 import { ORMProvider } from '~/application/dependencyInjection'
 import { TestKernel } from '~tests/testKernel'
 import { createMock } from './createMock'
+import * as Kernel from '@avanzu/kernel'
+
 describe('@avanzu/foundation', () => {
     let app: AppKernel
     let ormProvider: jest.Mocked<ORMProvider>
@@ -33,8 +35,16 @@ describe('@avanzu/foundation', () => {
     })
 
     test('sanity', async () => {
-        let response = await request(app.server).get('/health')
+        let response = await request(app.server).get('/foo/bar/health')
         expect(response.status).toBe(StatusCodes.OK)
         expect(response.text).toBe(ReasonPhrases.OK)
+    })
+
+    test('named routes', async () => {
+        const appInfoUrl = Kernel.getRouteUrl('AppInfo', { foo: 'bar' })
+        const paramsUrl = Kernel.getRouteUrl('WithParams', { baz: 'baz-param', bar: 'bar-param'}, {query: {a: 'b'}})
+        console.log(appInfoUrl)
+        console.log(paramsUrl)
+
     })
 })

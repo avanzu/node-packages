@@ -10,8 +10,11 @@ const BEFORE_MIDDLEWARE_KEY = Symbol('avanzu.kernel.middleware.before')
 const AFTER_MIDDLEWARE_KEY = Symbol('avanzu.kernel.middleware.after')
 const ROUTE_KEY = Symbol('avanzu.kernel.route')
 const HTTP_VERB_KEY = Symbol('avanzu.kernel.httpVerb')
+const ROUTE_NAME = Symbol('avanzu.kernel.routename')
 
 const controllerMap = new Set<Function>()
+
+const urlGenerator = new Router()
 
 type Middleware = AppMiddleware<Container, any, any>
 type Context = AppContext<Container, any>
@@ -43,6 +46,12 @@ export function Before(...middlewares: Middleware[]): MethodDecorator {
 export function After(...middlewares: Middleware[]): MethodDecorator {
     return function beforeMiddlewareDecorator(target: Object, propertyKey: string | symbol) {
         Reflect.defineMetadata(AFTER_MIDDLEWARE_KEY, middlewares, target, propertyKey)
+    }
+}
+
+export function Named(name: string): MethodDecorator {
+    return function (target: Object, propertyKey: string | symbol) {
+        Reflect.defineMetadata(ROUTE_NAME, name, target, propertyKey)
     }
 }
 
@@ -83,6 +92,7 @@ export type Endpoint = {
     middlewares: Middleware[]
     before: Middleware[]
     after: Middleware[]
+    name?: string
 }
 
 export type MountPoint = {
@@ -136,6 +146,9 @@ export function getMountPoints(target: Function) {
         if (Reflect.hasMetadata(AFTER_MIDDLEWARE_KEY, proto, method)) {
             endpoint.after = Reflect.getMetadata(AFTER_MIDDLEWARE_KEY, proto, method)
         }
+        if(Reflect.hasMetadata(ROUTE_NAME, proto, method)) {
+            endpoint.name = Reflect.getMetadata(ROUTE_NAME, proto, method)
+        }
 
         mount.endpoints.push(endpoint)
     }
@@ -147,9 +160,11 @@ export function getMountPoints(target: Function) {
  */
 export function mountControllers(globalPrefix?: string): Router {
     const root = new Router({ prefix: globalPrefix })
+
     for (const controller of getControllers()) {
         const mountpoints = getMountPoints(controller)
         const router = new Router({ prefix: mountpoints.prefix })
+
         for (const middleware of mountpoints.middlewares) {
             router.use(middleware)
         }
@@ -163,11 +178,28 @@ export function mountControllers(globalPrefix?: string): Router {
                 ...endpoint.after,
             ]
             router[endpoint.verb](endpoint.route, ...middlewares)
+
+            if(endpoint.name) {
+                const fullPath = getFullPath(globalPrefix, mountpoints, endpoint)
+                urlGenerator.register(fullPath, [endpoint.verb], [], { name: endpoint.name })
+            }
         }
 
         root.use(router.routes())
     }
     return root
+}
+
+
+function getFullPath(globalPrefix: string, mountpoints: MountPoint, endpoint: Endpoint) {
+    return [globalPrefix, mountpoints.prefix, endpoint.route]
+        .map(s => s?.replace(/(^\/|\/$)/g, ''))
+        .filter(Boolean)
+        .join('/')
+}
+
+export function getRouteUrl(name: string, params?: Record<string, any>, options?: Router.IUrlOptionsQuery): string | undefined {
+    return urlGenerator.url(name, params, options)
 }
 
 function createHandler(endpoint: Endpoint): Middleware {

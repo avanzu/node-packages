@@ -21,10 +21,17 @@ export class AppController {
     }
 
     @Kernel.Get('/info')
+    @Kernel.Named('AppInfo')
     async info(context: Context) {
         const service = await this.service.info()
 
         context.body = { service, authUser: this.authUser }
+    }
+
+    @Kernel.Get('/foo/:bar/:baz')
+    @Kernel.Named('WithParams')
+    async withParams(context: Context) {
+        context.body = context.params
     }
 
     /*
