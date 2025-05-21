@@ -1,6 +1,6 @@
 {
     "name": "@avanzu/kernel",
-    "version": "1.7.0",
+    "version": "1.7.1",
     "description": "Robust foundation for creating scalable (micro-)services applications",
     "author": "Marc Bach <mail@avanzu.de>",
     "homepage": "https://github.com/avanzu/node-packages/tree/main/packages/kernel#readme",

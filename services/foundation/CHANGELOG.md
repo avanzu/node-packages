@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.6.1](https://github.com/avanzu/node-packages/compare/@avanzu/foundation@1.6.0...@avanzu/foundation@1.6.1) (2025-05-21)
+
+**Note:** Version bump only for package @avanzu/foundation
+
+
+
+
+
 # [1.6.0](https://github.com/avanzu/node-packages/compare/@avanzu/foundation@1.5.4...@avanzu/foundation@1.6.0) (2025-05-14)
 
 
