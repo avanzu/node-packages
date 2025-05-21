@@ -3,10 +3,10 @@ import { Container } from './container'
 import { AppMiddleware } from './middleware'
 
 export interface AuthUser {
-    username?: string
-    id?: string | number | symbol
+    username?: string | null
+    id?: string | number | symbol | null
     authenticated: boolean
-    token?: string
+    access_token?: string | null
     isAnonymous() : boolean
 }
 

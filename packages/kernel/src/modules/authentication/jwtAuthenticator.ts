@@ -29,7 +29,7 @@ export class JWTAuthenticator implements Authenticator {
         }
 
         const token = jwt.sign(payload, this.options.secret, this.options.jwt)
-        user.token = token
+        user.access_token = token
 
         return token
     }
