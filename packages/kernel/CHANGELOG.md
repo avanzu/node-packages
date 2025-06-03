@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.7.2](https://github.com/avanzu/node-packages/compare/@avanzu/kernel@1.7.1...@avanzu/kernel@1.7.2) (2025-06-03)
+
+
+### Bug Fixes
+
+*  prevent operations from overriding each other ([0149c62](https://github.com/avanzu/node-packages/commit/0149c62addcf4d0f0f21cada29690ef18e1a12d8))
+
+
+
+
+
 ## [1.7.1](https://github.com/avanzu/node-packages/compare/@avanzu/kernel@1.7.0...@avanzu/kernel@1.7.1) (2025-05-21)
 
 **Note:** Version bump only for package @avanzu/kernel
