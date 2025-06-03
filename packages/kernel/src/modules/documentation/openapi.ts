@@ -98,12 +98,17 @@ export class OpenApi {
         if (false === endpoint.method in documentor) {
             return
         }
-        const { route, path } = documentor[String(endpoint.method)].call(documentor, context)
-        this.paths.set(route, path)
+        const { route, verb, operation } = documentor[String(endpoint.method)].call(
+            documentor,
+            context
+        )
+        const path = this.paths.has(route) ? this.paths.get(route) : OAS.path()
+        this.paths.set(route, path.method(verb, operation))
     }
 
     private useGenericDocumentor(documentor: GenricDocumentor<any>, context: DocumentorContext) {
-        const { route, path } = documentor.getInfo(context)
-        this.paths.set(route, path)
+        const { route, verb, operation } = documentor.getInfo(context)
+        const path = this.paths.has(route) ? this.paths.get(route) : OAS.path()
+        this.paths.set(route, path.method(verb, operation))
     }
 }
