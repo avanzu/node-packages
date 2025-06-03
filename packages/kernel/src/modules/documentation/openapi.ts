@@ -22,6 +22,7 @@ export type InfoBlock = {
 export class OpenApi {
     protected paths: Map<string, TPath>
     protected document: TDoc
+    protected tags: Set<string>
 
     constructor(
         protected info: InfoBlock,
@@ -31,6 +32,7 @@ export class OpenApi {
     generate() {
         this.paths = new Map()
         this.document = OAS.document()
+        this.tags = new Set()
 
         const info = OAS.info()
             .title(this.info.title)
@@ -48,9 +50,12 @@ export class OpenApi {
 
     private addTag(opts: ApiDocsOpts) {
         if (null == opts.tag) return
-        this.document = this.document.tag(
-            OAS.tag().name(opts.tag.name).description(opts.tag.description)
-        )
+        if(! this.tags.has(opts.tag.name)) {
+            this.document = this.document.tag(
+                OAS.tag().name(opts.tag.name).description(opts.tag.description)
+            )
+            this.tags.add(opts.tag.name)
+        }
     }
 
     private processController(controller: Function) {

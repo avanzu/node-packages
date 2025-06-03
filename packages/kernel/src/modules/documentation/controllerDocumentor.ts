@@ -10,8 +10,9 @@ export class ControllerDocumentor extends AbstractDocumentor implements GenricDo
 
         let operation = OAS.operation().id(operationId)
         operation = this.addInfo(operation, context)
-        operation = this.addParams(operation, context)
         operation = this.addQuery(operation, context)
+        operation = this.addQuerySchema(operation, context)
+        operation = this.addParams(operation, context)
         operation = this.addRequestSchema(operation, context)
         operation = this.addResponseSchema(operation, context)
         operation = this.addErrorCodes(operation, context)
@@ -19,6 +20,6 @@ export class ControllerDocumentor extends AbstractDocumentor implements GenricDo
         operation = this.addTag(operation, context)
 
         const path = OAS.path().method(context.endpoint.verb, operation)
-        return { route, path }
+        return { route, path, operationId, verb :context.endpoint.verb, operation }
     }
 }

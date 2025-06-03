@@ -10,11 +10,12 @@ import {
     getQuerySchema,
     getRequestSchema,
     getResponseSchema,
+    getSimpleQuerySchema,
 } from '~/decorators/docs'
 import type { DocumentorContext } from '~/decorators/docs'
 import { ErrorCodes } from '~/errors'
 
-function ErrorSchema(statusCode) {
+function ErrorSchema(statusCode: number) {
     return Type.Object({
         errorCode: Type.Enum(ErrorCodes),
         statusCode: Type.Literal(statusCode),
@@ -43,6 +44,16 @@ export abstract class AbstractDocumentor {
         const firstCapital = methodName.match(/[A-Z]/)?.index || -1
 
         return `${methodName.slice(0, firstCapital)}${controllerName}${methodName.slice(firstCapital)}`
+    }
+
+        protected addQuerySchema(operation: TOperation, context: DocumentorContext) {
+        const query = getSimpleQuerySchema(context.endpoint.target, context.endpoint.method)
+        if( null == query) return operation
+        const schema = query()
+        for(const [name, type] of Object.entries(schema)) {
+            operation = operation.parameter(OAS.param().inQuery().name(name).schema(type))
+        }
+        return operation
     }
 
     protected addInfo(operation: TOperation, context: DocumentorContext) {

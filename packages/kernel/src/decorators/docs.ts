@@ -1,6 +1,6 @@
 
 import 'reflect-metadata'
-import type { TPath } from '@avanzu/oas-builder'
+import type { TPath, TOperation } from '@avanzu/oas-builder'
 import type { Endpoint, MountPoint } from './routing'
 import type { InfoBlock } from '~/modules/documentation'
 import type { Constructor } from './util'
@@ -11,6 +11,9 @@ import { Container } from '..'
 export type EndpointInfo = {
     route: string
     path: TPath
+    operationId: string
+    operation: TOperation
+    verb: string
 }
 
 export type DocumentorContext = {
@@ -52,6 +55,7 @@ export type ContractDefinition = {
     response?: () => Responses
     errors?: () => Responses
     errorCodes?: () => ErrorStatusCodes
+    querySchema?: () => any
 }
 
 export type ApiDocsOpts = {
@@ -62,6 +66,7 @@ export type ApiDocsOpts = {
 const APIDOCS = Symbol('avanzu.kernel.apidocs.generator')
 const PARAMS = Symbol('avanzu.kernel.apidocs.params')
 const QUERY = Symbol('avanzu.kernel.apidocs.query')
+const QUERYSCHEMA = Symbol('avanzu.kernel.apidocs.queryschema')
 const REQ = Symbol('avanzu.kernel.apidocs.request')
 const RES = Symbol('avanzu.kernel.apidocs.response')
 const ERR = Symbol('avanzu.kernel.apidocs.error')
@@ -90,6 +95,9 @@ export function Contract(contract: ContractDefinition): MethodDecorator {
         if (contract.info) Reflect.defineMetadata(INFO, contract.info, target, propertyKey)
         if (contract.errorCodes)
             Reflect.defineMetadata(CODES, contract.errorCodes, target, propertyKey)
+        if (contract.querySchema) {
+            Reflect.defineMetadata(QUERYSCHEMA, contract.querySchema, target, propertyKey)
+        }
     }
 }
 
@@ -115,6 +123,10 @@ export function QuerySchema(params: () => Record<string, any>): MethodDecorator 
  */
 export function getQuerySchema(target: Function, property: string | symbol) {
     return Reflect.getMetadata(QUERY, target.prototype, property)
+}
+
+export function getSimpleQuerySchema(target: Function, property: string | symbol) {
+    return Reflect.getMetadata(QUERYSCHEMA, target.prototype, property)
 }
 
 export function RequestSchema(schema: any): MethodDecorator {
@@ -176,3 +188,4 @@ export function Info(info: ContractInfo): MethodDecorator {
 export function getInfo(target: Function, property: string | symbol) {
     return Reflect.getMetadata(INFO, target.prototype, property)
 }
+
