@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.7.3](https://github.com/avanzu/node-packages/compare/@avanzu/kernel@1.7.2...@avanzu/kernel@1.7.3) (2025-06-03)
+
+
+### Bug Fixes
+
+* updates openapi generator to support multiple methods ([709ca52](https://github.com/avanzu/node-packages/commit/709ca52a5fae1abf4aa5542bc072a5d6b461a5a0))
+
+
+
+
+
 ## [1.7.2](https://github.com/avanzu/node-packages/compare/@avanzu/kernel@1.7.1...@avanzu/kernel@1.7.2) (2025-06-03)
 
 
